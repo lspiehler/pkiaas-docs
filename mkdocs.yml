@@ -1,4 +1,5 @@
 site_name: PKIaaS.io Documentation
+repo_url: 'https://github.com/lspiehler/pkiaas-docs'
 theme:
   name: material
   features:
