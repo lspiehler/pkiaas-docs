@@ -1,0 +1,10 @@
+site_name: PKIaaS.io Documentation
+theme:
+  name: material
+  features:
+    - content.code.copy
+    - content.action.edit
+    - content.action.view
+
+plugins:
+  - search
