@@ -15,8 +15,13 @@ If you create more than one CA, you'll have the option of switching between them
 ## Using Your New CA
 Select the CA you want to work with from the dropdown at the top to the right of the navigation pane. This dropdown changes the scope of the site to manage the active CA. All actions performed—signing certificates, creating templates, creating ACME policies, etc—will be done within the context of the selected CA.
 
-## Manage Templates
-Certificate templates can be created and managed by navigating to "Certificate Templates" in the navigation pane on the left of the page. Certificate templates are used to enforce compliance of certain standards for issuing certificates from your CA. These standards include key usages, subject attributes, basic constraints, and other certificate attributes. These use of templates is important to prevent accidental misissuance and to ensure that issued certificates are complant with your security practices. All certificate signing on PKIaaS.io will be associated with a template.
+## Certificate Templates
+
+### Manage Templates
+Certificate templates can be managed by navigating to **Certificate Templates -> Manage Templates** in the navigation pane on the left of the page. Certificate templates are used to enforce compliance of certain standards for issuing certificates from your CA. These standards include key usages, subject attributes, basic constraints, and other certificate attributes. These use of templates is important to prevent accidental misissuance and to ensure that issued certificates are complant with your security practices. All certificate signing on PKIaaS.io will be associated with a template.
+
+### Create New Templates
+By default, a "Web Server" template is automatically built for every CA that is created. This template has a good out-of-the-box configuration for issuing TLS/SSL certificates for web servers, but new, custom certificate templates can be created by navigating to **Certificate Templates -> Create Template**. In the form type a name, and choose the default settings for your new template by selecting an option in the "Starter Template" dropdown. After clicking "Create Template", you'll be directed to a page where you can further edit the template configuration options. finally, click "Save" to save your settings and return to the template management page.
 
 ## Issue a Certificate
 In the navigation page on the left, navigate to **Certificate Templates -> Manage Templates** and click on the template you'd like to use. From the menu, you can choose either, "Public Certificate Request", "Submit CSR", or "Create Pre-Approved Request." These options support various workflows for issuing certificates.
