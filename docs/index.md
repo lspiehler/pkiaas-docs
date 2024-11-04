@@ -6,6 +6,7 @@ PKIaaS.io is here to make PKI functionality—usually limited to costly, complex
 
 My name is Lyas Spiehler, and I was inspired to create PKIaaS.io out of a passion and curiosity for PKI, as well as a desire to fill the gap in accessible resources for learning about and easily generating x509 certificates. PKIaaS.io enables the creation of all types of certificates—including SMIME, code signing, TLS/SSL, document signing, and more—while offering comprehensive services you’d expect from a robust PKI platform, such as CRL, OCSP, SCEP, ACME, time-stamping, certificate transparency (SCT), etc.
 
+**If you're new to PKIaaS.io, be sure to check out our [Getting Started](/getting-started/)👈 guide!**
 <!-- ## Commands
 
 * `mkdocs new [dir-name]` - Create a new project.
