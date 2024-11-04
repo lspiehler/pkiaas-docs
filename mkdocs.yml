@@ -12,5 +12,13 @@ plugins:
 
 nav:
   - Home: index.md
+  - Getting Started: getting-started.md
+  - Certificate Authorities:
+    - Overview: certificate-authorities/overview.md
+    #- Create a Certificate Authority: certificate-authorities/create-a-certificate-authority.md
+    #- List Certificate Authorities: certificate-authorities/list-certificate-authorities.md
+    #- Get Certificate Authority: certificate-authorities/get-certificate-authority.md
+    #- Update Certificate Authority: certificate-authorities/update-certificate-authority.md
+    #- Delete Certificate Authority: certificate-authorities/delete-certificate-authority.md
   - Use Cases:
     - Sample Use Case: use-cases/sample-use-case.md
