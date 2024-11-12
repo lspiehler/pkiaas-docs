@@ -15,6 +15,12 @@ nav:
   - Getting Started: getting-started.md
   - Certificate Authorities:
     - Overview: certificate-authorities/overview.md
+  - Certificate Templates:
+    - Overview: certificate-templates/overview.md
+    - Create Templates: certificate-templates/create.md
+    - Edit Templates: certificate-templates/edit.md
+    - Delete Templates: certificate-templates/delete.md
+    - Service URLs: certificate-templates/service-urls.md
     #- Create a Certificate Authority: certificate-authorities/create-a-certificate-authority.md
     #- List Certificate Authorities: certificate-authorities/list-certificate-authorities.md
     #- Get Certificate Authority: certificate-authorities/get-certificate-authority.md

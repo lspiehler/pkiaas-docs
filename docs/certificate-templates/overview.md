@@ -1,0 +1,3 @@
+# Certificate Templates
+
+Certificate templates are used to enforce compliance of predefined standards for issuing certificates with your certificate authority. These standards include key usages, subject attributes, basic constraints, and other certificate attributes. Certificate templates also serve as the entrypoint for many of the certificate issuance options on PKIaaS.io. Read more abount these certificate issuance options on the [getting started page](getting-started/#issue-a-certificate).
