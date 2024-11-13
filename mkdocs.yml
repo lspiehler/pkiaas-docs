@@ -11,6 +11,7 @@ plugins:
   - search
 
 nav:
+  - <- Return to PKIaas.io: https://pkiaas.io
   - Home: index.md
   - Getting Started: getting-started.md
   - Certificate Authorities:
