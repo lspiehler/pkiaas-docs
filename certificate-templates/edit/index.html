@@ -839,7 +839,7 @@
 <li><strong>Description</strong> - provide a description for the template</li>
 </ul>
 <h3 id="subject">Subject</h3>
-<p>To honor the subject attributes requested within the CSR, use the <strong>Supplied by the CSR</strong> option. Otherwise, the subject attributes in the CSR will be overidden by the defaults defined here.</p>
+<p>To honor the subject attributes requested within the CSR, use the <strong>Supplied by the CSR</strong> option. Otherwise, the subject attributes in the CSR will be overridden by the defaults defined here.</p>
 <h3 id="key-usage">Key Usage</h3>
 <p>Select the key usages and extended key usages to be enabled for certificates issued using this template. Custom comma-separated extended key usage OIDs can be entered into the <strong>Custom EKU OIDs</strong> field.</p>
 <h3 id="basic-constraints">Basic Constraints</h3>
@@ -858,7 +858,7 @@
 </li>
 </ul>
 <h3 id="scep">SCEP</h3>
-<p>Simple Certificate Enrollment Protocol is a protocol designed to simplify the process of managing and issuing digital certificates in a scalable and automated manner. It is commonly used in environments where devices like routers, printers, and mobile devices need to enroll for certificates to enable secure communications. The SCEP URL for the template can be found by navigating to <strong>Certificate Templates -&gt; Manage Templates</strong>, next click on a template, and choose the <strong>Show Template Service URLs</strong> option. A modal will apear revealing the template service URLs including the SCEP URL.</p>
+<p>Simple Certificate Enrollment Protocol is a protocol designed to simplify the process of managing and issuing digital certificates in a scalable and automated manner. It is commonly used in environments where devices like routers, printers, and mobile devices need to enroll for certificates to enable secure communications. The SCEP URL for the template can be found by navigating to <strong>Certificate Templates -&gt; Manage Templates</strong>, next click on a template, and choose the <strong>Show Template Service URLs</strong> option. A modal will appear revealing the template service URLs including the SCEP URL.</p>
 <ul>
 <li><strong>Enable SCEP protocol</strong> - Enable or disable SCEP for the template.</li>
 <li><strong>Enable SCEP Static Passphrase</strong> - Enable or disable a static passphrase for SCEP services on the template. This may be required for SCEP processes that require the same passphrase to be used for multiple SCEP clients.</li>
@@ -868,7 +868,7 @@
 <li><strong>Enable Microsoft SCEP basic auth</strong> - Enable or disable basic HTTP authentication for the Microsoft SCEP compatibility page. A username and password must be provided if this option is selected.</li>
 </ul>
 </li>
-<li><strong>Enable IP ACL</strong> - Enable or disable the IP-based access control list (firewall functionality) for access tp SCEP requests, the Microsoft compatibility page (if enabled) or both. Enter a list of IPs allowed to access the resources.</li>
+<li><strong>Enable IP ACL</strong> - Enable or disable the IP-based access control list (firewall functionality) for access to SCEP requests, the Microsoft compatibility page (if enabled) or both. Enter a list of IPs allowed to access the resources.</li>
 </ul>
 <h3 id="ct-logs">CT Logs</h3>
 <p>For templates associated with root CAs or intermediate CAs that chain up to root CAs that require issued certificates to be submitted to certificate transparency logs, enter a comma-separated list of URLs where these certificates should be submitted here. The CT log must support logging for the CA associated with the template. This is something that must be coordinated with the owner of the CT log.</p>
