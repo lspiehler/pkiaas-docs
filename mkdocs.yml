@@ -27,7 +27,10 @@ nav:
     #- Get Certificate Authority: certificate-authorities/get-certificate-authority.md
     #- Update Certificate Authority: certificate-authorities/update-certificate-authority.md
     #- Delete Certificate Authority: certificate-authorities/delete-certificate-authority.md
-  - Iot-HSM: iot-hsm.md
+  - Iot-HSM:
+      - Overview: iot-hsm/overview.md
+      - Installation: iot-hsm/installation.md
+      - Provisioning: iot-hsm/provisioning.md
   - Use Cases:
     - Sample Use Case: use-cases/sample-use-case.md
 
