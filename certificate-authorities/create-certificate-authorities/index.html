@@ -408,9 +408,9 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#sign-the-csr" class="md-nav__link">
+  <a href="#sign-the-csr-with-a-root-ca-on-pkiaasio" class="md-nav__link">
     <span class="md-ellipsis">
-      Sign the CSR
+      Sign the CSR with a Root CA on PKIaaS.io
     </span>
   </a>
   
@@ -605,7 +605,7 @@
             
   
   <span class="md-ellipsis">
-    Iot-HSM
+    ACME
   </span>
   
 
@@ -614,6 +614,111 @@
         
         <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            ACME
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../acme/overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../acme/create-acme-policy/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Create an ACME Policy
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../acme/generate-eab-credentials/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Generate EAB Credentials
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Iot-HSM
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
             <span class="md-nav__icon md-icon"></span>
             Iot-HSM
           </label>
@@ -703,10 +808,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
         
           
-          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
             
   
   <span class="md-ellipsis">
@@ -717,8 +822,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_7">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
             <span class="md-nav__icon md-icon"></span>
             Use Cases
           </label>
@@ -798,9 +903,9 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#sign-the-csr" class="md-nav__link">
+  <a href="#sign-the-csr-with-a-root-ca-on-pkiaasio" class="md-nav__link">
     <span class="md-ellipsis">
-      Sign the CSR
+      Sign the CSR with a Root CA on PKIaaS.io
     </span>
   </a>
   
@@ -848,7 +953,7 @@
 <h2 id="create-an-intermediatesubordinate-ca">Create an Intermediate/Subordinate CA</h2>
 <p>To create an intermediate/subordinate certificate authority, ensure that the "CSR Only" option is selected on the <strong>Certificate Authorities -&gt; Create New CA</strong> page when selecting the options for the desired CA. See <a href="../overview/">certificate authority overview</a> for documentation on all of the available options. Upon clicking "Create New CA," a new private key will be generated, and a CSR will be created. The browser will be redirected to a page containing the CSR where it can be copied to the clipboard and signed by another certificate authority.</p>
 <p><strong>Note:</strong> If at any time you need to navigate back to the CSR page, go to <strong>Certificate Authorities -&gt; Manage CAs</strong>, click on the CA and select "Download/Copy CSR" from the menu.</p>
-<h3 id="sign-the-csr">Sign the CSR</h3>
+<h3 id="sign-the-csr-with-a-root-ca-on-pkiaasio">Sign the CSR with a Root CA on PKIaaS.io</h3>
 <p>If a certificate authority not managed by PKIaaS.io will be used to sign the CSR, see the documentation for the CA on how to do so. The following instructions will detail how this can be done on a CA managed by PKIaaS.io.</p>
 <p>While logged into PKIaaS.io, select the signing root CA from the dropdown at the top of the page. This will switch the context of the admin page to the selected CA. If a template for creating certificate authorities has not already been created, navigate to <strong>Certificate Templates -&gt; Create Template</strong>. Enter "Intermediate CA" as the template name and choose "Certificate Authority" as the started template. The browser will be directed to a page where the template can optionally be customized. Click "Save" to finish creating the new template.</p>
 <p>The browser should now be at the <strong>Certificate Templates -&gt; Manage Template</strong> page. Click on the "Intermediate CA" template and select "Submit CSR" from the menu. Paste the CSR copied to the clipboard in a previous step and click submit. See the note above for instructions to navigate back to the CSR if needed.</p>
