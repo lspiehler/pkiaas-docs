@@ -1,0 +1,1 @@
+An ACME policy must be created before EAB credentials can be generated. See [Create an ACME Policy](create-acme-policy.md) if this step hasn't been completed yet.
