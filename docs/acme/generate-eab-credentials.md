@@ -1,1 +1,3 @@
 An ACME policy must be created before EAB credentials can be generated. See [Create an ACME Policy](create-acme-policy.md) if this step hasn't been completed yet.
+
+The use of EAB (External Account Binding) allows PKIaaS.io to associate ACME accounts with a specific user's PKIaaS.io account, CA, and ACME policy. After an ACME account is registered with an EAB, it is permanently associated to the policy the EAB was generated for. It is safe to delete an EAB after an ACME account had been registered using it.
