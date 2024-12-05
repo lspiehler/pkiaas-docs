@@ -7,9 +7,6 @@ theme:
     - content.action.edit
     - content.action.view
 
-plugins:
-  - search
-
 nav:
   - <- Return to PKIaas.io: https://pkiaas.io
   - Home: index.md
@@ -29,6 +26,9 @@ nav:
     - Overview: acme/overview.md
     - Create an ACME Policy: acme/create-acme-policy.md
     - Generate EAB Credentials: acme/generate-eab-credentials.md
+    - Register an ACME Account: acme/register-acme-account.md
+    - ACME Clients:
+      - Certbot: acme/acme-clients/certbot.md
     #- Create a Certificate Authority: certificate-authorities/create-a-certificate-authority.md
     #- List Certificate Authorities: certificate-authorities/list-certificate-authorities.md
     #- Get Certificate Authority: certificate-authorities/get-certificate-authority.md
@@ -40,6 +40,11 @@ nav:
       - Provisioning: iot-hsm/provisioning.md
   - Use Cases:
     - Sample Use Case: use-cases/sample-use-case.md
+  - Download PDF: pdf/document.pdf
+
+plugins:
+  - search
+  - with-pdf
 
 extra:
   analytics:

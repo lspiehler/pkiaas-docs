@@ -1,4 +1,4 @@
-To edit the settings for a certificate template, navigate to **Certificate Templates -> Manage Templates** in the navigation pane on the left of the page. Click on a template and select "Edit Template".
+To edit the settings for a certificate template, login to PKIaaS.io and navigate to **Certificate Templates -> Manage Templates** in the navigation pane on the left of the page. Click on a template and select "Edit Template".
 
 ## Options
 

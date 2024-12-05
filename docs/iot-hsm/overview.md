@@ -1,4 +1,4 @@
-# IoT-HSM
+# Overview
 
 See the [installation documentation](installation.md) to get started with IoT-HSM.
 
