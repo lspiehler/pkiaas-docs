@@ -12,7 +12,7 @@
         <link rel="prev" href="../create-acme-policy/">
       
       
-        <link rel="next" href="../../iot-hsm/overview/">
+        <link rel="next" href="../register-acme-account/">
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
@@ -654,6 +654,91 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../register-acme-account/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Register an ACME Account
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_5" id="__nav_6_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    ACME Clients
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_5">
+            <span class="md-nav__icon md-icon"></span>
+            ACME Clients
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../acme-clients/certbot/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Certbot
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -829,6 +914,26 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../pdf/document.pdf" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Download PDF
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -879,7 +984,10 @@
   <h1>Generate EAB Credentials</h1>
 
 <p>An ACME policy must be created before EAB credentials can be generated. See <a href="../create-acme-policy/">Create an ACME Policy</a> if this step hasn't been completed yet.</p>
-<p>The use of EAB (External Account Binding) allows PKIaaS.io to associate ACME accounts with a specific user's PKIaaS.io account, CA, and ACME policy. After an ACME account is registered with an EAB, it is permanently associated to the policy the EAB was generated for. It is safe to delete an EAB after an ACME account had been registered using it.</p>
+<p>The use of EAB (external account binding) allows PKIaaS.io to associate ACME accounts with a specific user's PKIaaS.io account, CA, and ACME policy. To generate an EAB for registering a new ACME account, login to PKIaaS.io and navigate to <strong>ACME -&gt; Policies</strong>. Click the gears in the "External Account Bindings" column of one of the ACME policies to navigate to the EAB management page for the policy and click "Create". Enter a unique name for the EAB. Enter the desired value for "Allowed Use Count". This value represents the number of times this EAB can be used to register unique ACME accounts. Lastly, enter the expiration date after which ACME new account registrations will no longer be authorized with this EAB and click "Create EAB".</p>
+<p>When the new EAB is generated, a modal will appear providing the ACME directory URL, the EAB KID and HMAC Key, and some example commands to use the values provided to register a new ACME account using the certbot ACME client. These values can be used to register an ACME account with any ACME client that supports external account bindings. The KID and HMAC Key will only be displayed once, so be sure to copy them before closing the modal.</p>
+<p><strong>Note:</strong> After an ACME account is registered with an EAB, it is permanently associated with the policy the EAB was generated for. It is safe to delete an EAB after an ACME account had been registered with it.</p>
+<p>Next, see <a href="../register-acme-account/">Register an ACME Account</a>.</p>
 
 
 

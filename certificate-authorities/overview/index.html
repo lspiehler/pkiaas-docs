@@ -72,7 +72,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#certificate-authorities" class="md-skip">
+        <a href="#overview" class="md-skip">
           Skip to content
         </a>
       
@@ -366,15 +366,6 @@
       Table of contents
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
-    <span class="md-ellipsis">
-      Overview
-    </span>
-  </a>
-  
-</li>
       
         <li class="md-nav__item">
   <a href="#options" class="md-nav__link">
@@ -760,6 +751,91 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../acme/register-acme-account/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Register an ACME Account
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_5" id="__nav_6_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    ACME Clients
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_5">
+            <span class="md-nav__icon md-icon"></span>
+            ACME Clients
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../acme/acme-clients/certbot/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Certbot
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -935,6 +1011,26 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../pdf/document.pdf" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Download PDF
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -960,15 +1056,6 @@
       Table of contents
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
-    <span class="md-ellipsis">
-      Overview
-    </span>
-  </a>
-  
-</li>
       
         <li class="md-nav__item">
   <a href="#options" class="md-nav__link">
@@ -1061,8 +1148,7 @@
   
 
 
-<h1 id="certificate-authorities">Certificate Authorities</h1>
-<h2 id="overview">Overview</h2>
+<h1 id="overview">Overview</h1>
 <p>A certificate authority (CA) serves as the foundation upon which all functionality on PKIaaS.io is dependent. Tasks like working with templates, issuing certificates, and managing ACME policies all operate within the scope of a CA. As such, the first step after signing into PKIaaS.io is creating a CA. Users will be automatically redirected to a setup page and prompted to create a CA before accessing other features on the site.</p>
 <p>Users can choose between creating a managed CA or one backed by an HSM. With a managed CA, the private key is securely stored using AES-256 encryption, offering a streamlined setup without additional configuration. Alternatively, the HSM-backed option integrates with a <a href="https://pkiaas.io/iot-hsm">PKIaaS.io IoT-HSM</a>, enabling key management via a YubiKey 5. In this setup, all signing operations are routed to the IoT-HSM, where they are processed by the YubiKey. For detailed guidance on creating a CA with IoT-HSM, refer to the <a href="../../iot-hsm/overview/">IoT-HSM documentation</a>.</p>
 <h2 id="options">Options</h2>
