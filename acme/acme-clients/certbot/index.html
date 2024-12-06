@@ -12,7 +12,7 @@
         <link rel="prev" href="../../register-acme-account/">
       
       
-        <link rel="next" href="../../../iot-hsm/overview/">
+        <link rel="next" href="../certify-the-web/">
       
       
       <link rel="icon" href="../../../assets/images/favicon.png">
@@ -60,7 +60,16 @@
     
     
     
-  </head>
+   <link href="../../../assets/stylesheets/glightbox.min.css" rel="stylesheet"/><style>
+    html.glightbox-open { overflow: initial; height: 100%; }
+    .gslide-title { margin-top: 0px; user-select: text; }
+    .gslide-desc { color: #666; user-select: text; }
+    .gslide-image img { background: white; }
+    .gscrollbar-fixer { padding-right: 15px; }
+    .gdesc-inner { font-size: 0.75rem; }
+    body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color);}
+    body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color);}
+    body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color);}</style> <script src="../../../assets/javascripts/glightbox.min.js"></script></head>
   
   
     <body dir="ltr">
@@ -72,7 +81,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#certbot-command-examples" class="md-skip">
+        <a href="#certbot" class="md-skip">
           Skip to content
         </a>
       
@@ -788,6 +797,27 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../certify-the-web/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Certify the Web
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -971,26 +1001,6 @@
   
 
     
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../pdf/document.pdf" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Download PDF
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
   </ul>
 </nav>
                   </div>
@@ -1066,12 +1076,14 @@
   
 
 
-<h1 id="certbot-command-examples">Certbot Command Examples</h1>
+<h1 id="certbot">Certbot</h1>
+<p>Be sure to have the EAB KID and HMAC Key ready for the steps below. See <a href="../../generate-eab-credentials/">Generate EAB Credentials</a> for more information.</p>
 <p>All values that appear in ALL CAPS in the examples below must be customized with values specific to you.</p>
 <h2 id="register-an-account-only">Register an Account Only</h2>
 <p><code>certbot register --server https://acme-v02-api.pkiaas.io/directory --email YOUREMAIL@YOURDOMAIN.COM --agree-tos --eab-kid YOUREABKID --eab-hmac-key YOUREABHMACKEY</code></p>
 <h2 id="register-an-account-and-order-a-certificate-for-apache">Register an Account and Order a Certificate for Apache</h2>
 <p><code>certbot --apache --server https://acme-v02-api.pkiaas.io/directory --email YOUREMAIL@YOURDOMAIN.COM --agree-tos -d MYDOMAIN.COM -d WWW.MYDOMAIN.COM --eab-kid YOUREABKID --eab-hmac-key YOUREABHMACKEY</code></p>
+<p>See the <a href="https://certbot.eff.org/instructions">EFF certbot website</a> for more information about certbot. </p>
 
 
 
@@ -1126,5 +1138,7 @@
       <script src="../../../assets/javascripts/bundle.83f73b43.min.js"></script>
       
     
-  </body>
+  <script id="init-glightbox">const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "slide"});
+document$.subscribe(() => { lightbox.reload() });
+</script></body>
 </html>
