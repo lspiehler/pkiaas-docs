@@ -1,4 +1,3 @@
-# Certify the Web
 
 Be sure to have the EAB KID and HMAC Key ready for the steps below. See [Generate EAB Credentials](../generate-eab-credentials.md) for more information.
 

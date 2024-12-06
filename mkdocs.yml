@@ -46,7 +46,11 @@ nav:
 plugins:
   - search
   - glightbox
-  - with-pdf
+  - with-pdf:
+      author: Lyas Spiehler
+      cover_subtitle: ""
+      copyright: Copyright © PKIaaS.io 2019-2024
+      toc_level: 3
 
 extra:
   analytics:
