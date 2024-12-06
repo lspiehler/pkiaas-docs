@@ -9,3 +9,5 @@ A few steps must be completed before requesting a certificate with an ACME clien
 1. [Create an ACME Policy](create-acme-policy.md)
 2. [Generate EAB Credentials](generate-eab-credentials.md)
 3. [Register an ACME Account](register-acme-account.md)
+
+**The ACME directory URL for all PKIaaS.io ACME requests is [https://acme-v02-api.pkiaas.io/directory](https://acme-v02-api.pkiaas.io/directory)**

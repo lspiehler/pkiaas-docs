@@ -3,7 +3,7 @@
 apt install libpango-1.0-0 libpangoft2-1.0-0
 python3 -m venv venv/pkiaas-docs
 source venv/pkiaas-docs/bin/activate
-pip3 install mkdocs-material mkdocs-with-pdf
+pip3 install mkdocs-material mkdocs-with-pdf mkdocs-glightbox
 #deactivate when done
 #deactivate
 ```

@@ -29,6 +29,7 @@ nav:
     - Register an ACME Account: acme/register-acme-account.md
     - ACME Clients:
       - Certbot: acme/acme-clients/certbot.md
+      - Certify the Web: acme/acme-clients/certify-the-web.md
     #- Create a Certificate Authority: certificate-authorities/create-a-certificate-authority.md
     #- List Certificate Authorities: certificate-authorities/list-certificate-authorities.md
     #- Get Certificate Authority: certificate-authorities/get-certificate-authority.md
@@ -40,11 +41,12 @@ nav:
       - Provisioning: iot-hsm/provisioning.md
   - Use Cases:
     - Sample Use Case: use-cases/sample-use-case.md
-  - Download PDF: pdf/document.pdf
+  #- Download PDF: pdf/document.pdf
 
 plugins:
   - search
-  - with-pdf
+  - glightbox
+  #- with-pdf
 
 extra:
   analytics:

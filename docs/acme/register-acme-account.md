@@ -4,3 +4,4 @@ In order to use the ACME protocol to request a certificate from PKIaaS.io, an AC
 
 ## ACME Clients
 * [certbot](acme-clients/certbot.md)
+* [Certify the Web](acme-clients/certify-the-web.md)
