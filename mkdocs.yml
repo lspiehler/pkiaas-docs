@@ -41,12 +41,12 @@ nav:
       - Provisioning: iot-hsm/provisioning.md
   - Use Cases:
     - Sample Use Case: use-cases/sample-use-case.md
-  #- Download PDF: pdf/document.pdf
+  - Download PDF: pdf/document.pdf
 
 plugins:
   - search
   - glightbox
-  #- with-pdf
+  - with-pdf
 
 extra:
   analytics:
