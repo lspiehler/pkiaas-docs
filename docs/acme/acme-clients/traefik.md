@@ -3,7 +3,7 @@ Be sure to have the EAB KID and HMAC Key ready for the steps below. See [Generat
 All values that appear in ALL CAPS in the examples below must be customized with values specific to you.
 
 1. Create a docker-compose.yml on your server with the following content:
-``` yaml linenums="1" hl_lines="17-20 35"
+``` yaml linenums="1" hl_lines="18-20 35"
 version: "3.3"
 
 services:
