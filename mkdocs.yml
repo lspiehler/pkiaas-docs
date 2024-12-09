@@ -30,6 +30,7 @@ nav:
     - ACME Clients:
       - Certbot: acme/acme-clients/certbot.md
       - Certify the Web: acme/acme-clients/certify-the-web.md
+      - Traefik: acme/acme-clients/traefik.md
     #- Create a Certificate Authority: certificate-authorities/create-a-certificate-authority.md
     #- List Certificate Authorities: certificate-authorities/list-certificate-authorities.md
     #- Get Certificate Authority: certificate-authorities/get-certificate-authority.md
@@ -51,6 +52,15 @@ plugins:
       cover_subtitle: ""
       copyright: Copyright © PKIaaS.io 2019-2024
       toc_level: 3
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
 
 extra:
   analytics:
