@@ -756,6 +756,27 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../acme/acme-clients/traefik/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Traefik
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1021,12 +1042,12 @@
 
 
 <h1 id="installation">Installation</h1>
-<p>To get started with IoT-HSM, it is recommend to deploy a Long-Term Support (LTS) version of <a href="https://ubuntu.com/download/server">Ubuntu Server</a>. IoT-HSM has been tested on Ubuntu 20.04, 22.04, and 24.04. Once Ubuntu is installed and updated, log in to a terminal shell and execute the following commands as the root user. You can access a root shell by entering <code>sudo su -</code> at the terminal.</p>
-<pre><code>apt update
-apt -y install curl
-curl -sL https://raw.githubusercontent.com/lspiehler/iot-hsm/master/scripts/setup_ubuntu2004.sh | bash -
-</code></pre>
-<p>After the script completes, it will be prompt to set a new password twice—this password will be used for the admin account on the IoT-HSM web interface. Once configured, open a browser and navigate to the IP address of the Ubuntu endpoint, prefixed with <code>https://</code>. For example: <code>https://192.168.1.5</code>.</p>
+<p>To get started with IoT-HSM, it is recommend to deploy a Long-Term Support (LTS) version of <a href="https://ubuntu.com/download/server">Ubuntu Server</a>. IoT-HSM has been tested on Ubuntu 20.04, 22.04, and 24.04. Once Ubuntu is installed and updated, log in to a terminal shell and execute the following commands as the root user. You can access a root shell by entering <code>sudo su -</code> at the terminal.
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>apt update
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>apt -y install curl
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>curl -sL https://raw.githubusercontent.com/lspiehler/iot-hsm/master/scripts/setup_ubuntu2004.sh | bash -
+</span></code></pre></div>
+After the script completes, it will be prompt to set a new password twice—this password will be used for the admin account on the IoT-HSM web interface. Once configured, open a browser and navigate to the IP address of the Ubuntu endpoint, prefixed with <code>https://</code>. For example: <code>https://192.168.1.5</code>.</p>
 <p>See the <a href="../provisioning/">provisioning documentation</a> to provision a certificate authority for use with IoT-HSM.</p>
 
 
