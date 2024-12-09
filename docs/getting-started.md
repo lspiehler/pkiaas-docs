@@ -6,6 +6,8 @@ Getting started with PKIaaS.io is easy! All you need to do is click "Manage PKI"
 ## Create a Certificate Authority
 All the certificates you'll create need to be signed by a certificate authority, so the first step is to create one. Navigating to any other page of the site before you've created a CA will redirect you back to a page forcing you to create one. If you're logging in for the first time, and you haven't created a CA before, you'll be asked to choose between a managed CA and a CA backed by an HSM. If you're new to PKI or you'd just like to take PKIaaS.io for a test drive, it would be best to choose the managed option to get going more quickly. Read more about these options [here](certificate-authorities/overview.md).
 
+**Note**: PKIaaS.io is a comprehensive PKI platform that requires the creation of a certificate authority to issue certificates. However, if your use case involves generating a simple self-signed certificate without the need for a certificate authority, a straightforward tool like [CertificateTools.com](https://certificatetools.com/) may be a more convenient alternative.
+
 ### CA Configuration Options
 If you're still learning about PKI, feel free to use the default options and just update the name when creating your first CA. This is the easiest option to start issuing certificates and getting a feel for the site. When you're done choosing options, click "Create New CA". You'll then be redirected to the "Manage CAs" page and your new CA will appear in the drop down at the top of the page.
 
