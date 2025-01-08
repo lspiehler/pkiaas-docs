@@ -978,6 +978,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#crl-distribution-point" class="md-nav__link">
+    <span class="md-ellipsis">
+      CRL Distribution Point
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1309,6 +1318,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#crl-distribution-point" class="md-nav__link">
+    <span class="md-ellipsis">
+      CRL Distribution Point
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1347,7 +1365,9 @@
 <h2 id="crl-generation">CRL Generation</h2>
 <p>PKIaaS.io automatically generates CRLs on demand when a HTTP request is received to download the CRL. CRLs are cached and valid for a period of 30 days from the time of generation. When the CRL expires or another certificate is revoked, the cache is deleted, and a new CRL is generated on demand during the next HTTP request to download the CRL.</p>
 <h2 id="crl-url">CRL URL</h2>
-<p>To find the CRL URL along with many other service URLs, login to <a href="https://pkiaas.io/auth/login">PKIaaS.io</a>, and navigate to <strong>Certificate Authorities -&gt; Manage CAs</strong>. Click on the desired CA, and Select "Show CA Service URLs". By default, the CRL URL is also encoded in issued certificates in the CRL Distribution Points (CDP) extension. This can be changed within a certificate template by navigating to <strong>Certificate Templates -&gt; Manage Templates</strong>, clicking on a template, and selecting "Edit Template". The CRL URL can be removed from certificates issues using the template by unchecking "Include CRL Extension in Certificate" in the <strong>CRL / OCSP / AIA / CPS</strong> section of the template settings.</p>
+<p>To find the CRL URL along with many other service URLs, login to <a href="https://pkiaas.io/auth/login">PKIaaS.io</a>, and navigate to <strong>Certificate Authorities -&gt; Manage CAs</strong>. Click on the desired CA, and Select "Show CA Service URLs". Click the CRL URL to download the CRL.</p>
+<h2 id="crl-distribution-point">CRL Distribution Point</h2>
+<p>By default, the CRL URL is also encoded in issued certificates in the CRL Distribution Points (CDP) extension. This can be changed within a certificate template by navigating to <strong>Certificate Templates -&gt; Manage Templates</strong>, clicking on a template, and selecting "Edit Template". The CRL URL can be removed from certificates issues using the template by unchecking "Include CRL Extension in Certificate" in the <strong>CRL / OCSP / AIA / CPS</strong> section of the template settings.</p>
 
 
 
