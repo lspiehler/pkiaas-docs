@@ -8,23 +8,25 @@
       
       
       
-        <link rel="canonical" href="https://lspiehler.github.io/pkiaas-docs/">
+        <link rel="canonical" href="https://lspiehler.github.io/pkiaas-docs/crl/">
       
       
+        <link rel="prev" href="../ocsp/">
       
-        <link rel="next" href="getting-started/">
+      
+        <link rel="next" href="../iot-hsm/overview/">
       
       
-      <link rel="icon" href="assets/images/favicon.png">
+      <link rel="icon" href="../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.43">
     
     
       
-        <title>PKIaaS.io Documentation</title>
+        <title>CRL - PKIaaS.io Documentation</title>
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.0253249f.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.0253249f.min.css">
       
       
 
@@ -43,7 +45,7 @@
       
     
     
-    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
   
@@ -62,11 +64,11 @@
       
         <meta  property="og:type"  content="website" >
       
-        <meta  property="og:title"  content="PKIaaS.io Documentation" >
+        <meta  property="og:title"  content="CRL - PKIaaS.io Documentation" >
       
         <meta  property="og:description"  content="None" >
       
-        <meta  property="og:image"  content="https://lspiehler.github.io/pkiaas-docs/assets/images/social/index.png" >
+        <meta  property="og:image"  content="https://lspiehler.github.io/pkiaas-docs/assets/images/social/crl.png" >
       
         <meta  property="og:image:type"  content="image/png" >
       
@@ -74,19 +76,19 @@
       
         <meta  property="og:image:height"  content="630" >
       
-        <meta  property="og:url"  content="https://lspiehler.github.io/pkiaas-docs/" >
+        <meta  property="og:url"  content="https://lspiehler.github.io/pkiaas-docs/crl/" >
       
         <meta  name="twitter:card"  content="summary_large_image" >
       
-        <meta  name="twitter:title"  content="PKIaaS.io Documentation" >
+        <meta  name="twitter:title"  content="CRL - PKIaaS.io Documentation" >
       
         <meta  name="twitter:description"  content="None" >
       
-        <meta  name="twitter:image"  content="https://lspiehler.github.io/pkiaas-docs/assets/images/social/index.png" >
+        <meta  name="twitter:image"  content="https://lspiehler.github.io/pkiaas-docs/assets/images/social/crl.png" >
       
     
     
-   <link href="assets/stylesheets/glightbox.min.css" rel="stylesheet"/><style>
+   <link href="../assets/stylesheets/glightbox.min.css" rel="stylesheet"/><style>
     html.glightbox-open { overflow: initial; height: 100%; }
     .gslide-title { margin-top: 0px; user-select: text; }
     .gslide-desc { color: #666; user-select: text; }
@@ -95,7 +97,7 @@
     .gdesc-inner { font-size: 0.75rem; }
     body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color);}
     body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color);}
-    body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color);}</style> <script src="assets/javascripts/glightbox.min.js"></script></head>
+    body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color);}</style> <script src="../assets/javascripts/glightbox.min.js"></script></head>
   
   
     <body dir="ltr">
@@ -107,7 +109,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#welcome-to-pkiaasio-documentation" class="md-skip">
+        <a href="#overview" class="md-skip">
           Skip to content
         </a>
       
@@ -123,7 +125,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="." title="PKIaaS.io Documentation" class="md-header__button md-logo" aria-label="PKIaaS.io Documentation" data-md-component="logo">
+    <a href=".." title="PKIaaS.io Documentation" class="md-header__button md-logo" aria-label="PKIaaS.io Documentation" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -143,7 +145,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Home
+              CRL
             
           </span>
         </div>
@@ -230,7 +232,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="." title="PKIaaS.io Documentation" class="md-nav__button md-logo" aria-label="PKIaaS.io Documentation" data-md-component="logo">
+    <a href=".." title="PKIaaS.io Documentation" class="md-nav__button md-logo" aria-label="PKIaaS.io Documentation" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -277,19 +279,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="." class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -298,7 +291,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -310,7 +302,7 @@
   
   
     <li class="md-nav__item">
-      <a href="getting-started/" class="md-nav__link">
+      <a href="../getting-started/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -365,7 +357,7 @@
   
   
     <li class="md-nav__item">
-      <a href="certificate-authorities/overview/" class="md-nav__link">
+      <a href="../certificate-authorities/overview/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -386,7 +378,7 @@
   
   
     <li class="md-nav__item">
-      <a href="certificate-authorities/create/" class="md-nav__link">
+      <a href="../certificate-authorities/create/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -407,7 +399,7 @@
   
   
     <li class="md-nav__item">
-      <a href="certificate-authorities/edit/" class="md-nav__link">
+      <a href="../certificate-authorities/edit/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -428,7 +420,7 @@
   
   
     <li class="md-nav__item">
-      <a href="certificate-authorities/delete/" class="md-nav__link">
+      <a href="../certificate-authorities/delete/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -491,7 +483,7 @@
   
   
     <li class="md-nav__item">
-      <a href="certificate-templates/overview/" class="md-nav__link">
+      <a href="../certificate-templates/overview/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -512,7 +504,7 @@
   
   
     <li class="md-nav__item">
-      <a href="certificate-templates/create/" class="md-nav__link">
+      <a href="../certificate-templates/create/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -533,7 +525,7 @@
   
   
     <li class="md-nav__item">
-      <a href="certificate-templates/edit/" class="md-nav__link">
+      <a href="../certificate-templates/edit/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -554,7 +546,7 @@
   
   
     <li class="md-nav__item">
-      <a href="certificate-templates/delete/" class="md-nav__link">
+      <a href="../certificate-templates/delete/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -575,7 +567,7 @@
   
   
     <li class="md-nav__item">
-      <a href="certificate-templates/service-urls/" class="md-nav__link">
+      <a href="../certificate-templates/service-urls/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -638,7 +630,7 @@
   
   
     <li class="md-nav__item">
-      <a href="acme/overview/" class="md-nav__link">
+      <a href="../acme/overview/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -659,7 +651,7 @@
   
   
     <li class="md-nav__item">
-      <a href="acme/create-acme-policy/" class="md-nav__link">
+      <a href="../acme/create-acme-policy/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -680,7 +672,7 @@
   
   
     <li class="md-nav__item">
-      <a href="acme/generate-eab-credentials/" class="md-nav__link">
+      <a href="../acme/generate-eab-credentials/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -701,7 +693,7 @@
   
   
     <li class="md-nav__item">
-      <a href="acme/register-acme-account/" class="md-nav__link">
+      <a href="../acme/register-acme-account/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -757,7 +749,7 @@
   
   
     <li class="md-nav__item">
-      <a href="acme/acme-clients/certbot/" class="md-nav__link">
+      <a href="../acme/acme-clients/certbot/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -778,7 +770,7 @@
   
   
     <li class="md-nav__item">
-      <a href="acme/acme-clients/certify-the-web/" class="md-nav__link">
+      <a href="../acme/acme-clients/certify-the-web/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -799,7 +791,7 @@
   
   
     <li class="md-nav__item">
-      <a href="acme/acme-clients/traefik/" class="md-nav__link">
+      <a href="../acme/acme-clients/traefik/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -870,7 +862,7 @@
   
   
     <li class="md-nav__item">
-      <a href="scep/overview/" class="md-nav__link">
+      <a href="../scep/overview/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -898,7 +890,7 @@
   
   
     <li class="md-nav__item">
-      <a href="ocsp/" class="md-nav__link">
+      <a href="../ocsp/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -915,10 +907,28 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="crl/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    CRL
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -927,6 +937,51 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#crl-generation" class="md-nav__link">
+    <span class="md-ellipsis">
+      CRL Generation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#crl-url" class="md-nav__link">
+    <span class="md-ellipsis">
+      CRL URL
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -973,7 +1028,7 @@
   
   
     <li class="md-nav__item">
-      <a href="iot-hsm/overview/" class="md-nav__link">
+      <a href="../iot-hsm/overview/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -994,7 +1049,7 @@
   
   
     <li class="md-nav__item">
-      <a href="iot-hsm/installation/" class="md-nav__link">
+      <a href="../iot-hsm/installation/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1015,7 +1070,7 @@
   
   
     <li class="md-nav__item">
-      <a href="iot-hsm/provisioning/" class="md-nav__link">
+      <a href="../iot-hsm/provisioning/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1078,7 +1133,7 @@
   
   
     <li class="md-nav__item">
-      <a href="post-quantum-cryptography/overview/" class="md-nav__link">
+      <a href="../post-quantum-cryptography/overview/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1099,7 +1154,7 @@
   
   
     <li class="md-nav__item">
-      <a href="post-quantum-cryptography/ml-dsa/" class="md-nav__link">
+      <a href="../post-quantum-cryptography/ml-dsa/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1162,7 +1217,7 @@
   
   
     <li class="md-nav__item">
-      <a href="use-cases/sample-use-case/" class="md-nav__link">
+      <a href="../use-cases/sample-use-case/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1190,7 +1245,7 @@
   
   
     <li class="md-nav__item">
-      <a href="pdf/document.pdf" class="md-nav__link">
+      <a href="../pdf/document.pdf" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1220,8 +1275,41 @@
   
   
   
-    
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#crl-generation" class="md-nav__link">
+    <span class="md-ellipsis">
+      CRL Generation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#crl-url" class="md-nav__link">
+    <span class="md-ellipsis">
+      CRL URL
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -1236,7 +1324,7 @@
                   
 
   
-    <a href="https://github.com/lspiehler/pkiaas-docs/edit/master/docs/index.md" title="Edit this page" class="md-content__button md-icon">
+    <a href="https://github.com/lspiehler/pkiaas-docs/edit/master/docs/crl.md" title="Edit this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -1245,31 +1333,21 @@
     
       
     
-    <a href="https://github.com/lspiehler/pkiaas-docs/raw/master/docs/index.md" title="View source of this page" class="md-content__button md-icon">
+    <a href="https://github.com/lspiehler/pkiaas-docs/raw/master/docs/crl.md" title="View source of this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
     </a>
   
 
 
-<h1 id="welcome-to-pkiaasio-documentation">Welcome to PKIaaS.io Documentation</h1>
-<p>Thank you for visiting the documentation for PKIaaS.io. This site is under construction. Contributers are welcome!</p>
-<p>PKIaaS.io is here to make PKI functionality—usually limited to costly, complex platforms designed for enterprise customers—accessible to a broader audience. PKIaaS.io was designed to serve not only small to medium-sized businesses but also home lab users, developers, testers, and PKI enthusiasts of all kinds!</p>
-<p>My name is Lyas Spiehler, and I was inspired to create PKIaaS.io out of a passion and curiosity for PKI, as well as a desire to fill the gap in accessible resources for learning about and easily generating x509 certificates. PKIaaS.io enables the creation of all types of certificates—including SMIME, code signing, TLS/SSL, document signing, and more—while offering comprehensive services you’d expect from a robust PKI platform, such as CRL, OCSP, SCEP, ACME, timestamping, certificate transparency (SCT), etc.</p>
-<p><strong>If you're new to PKIaaS.io, be sure to check out our <a href="getting-started/">Getting Started</a>👈 guide!</strong></p>
-<!-- ## Commands
+  <h1>CRL</h1>
 
-* `mkdocs new [dir-name]` - Create a new project.
-* `mkdocs serve` - Start the live-reloading docs server.
-* `mkdocs build` - Build the documentation site.
-* `mkdocs -h` - Print help message and exit.
-
-## Project layout
-
-    mkdocs.yml    # The configuration file.
-    docs/
-        index.md  # The documentation homepage.
-        ...       # Other markdown pages, images and other files. -->
+<h2 id="overview">Overview</h2>
+<p>A CRL (Certificate Revocation List) is a list published by a Certificate Authority (CA) that contains the serial numbers of digital certificates that have been revoked before their scheduled expiration. This list is part of Public Key Infrastructure (PKI) and serves as a mechanism to help entities verify whether a certificate is still valid.</p>
+<h2 id="crl-generation">CRL Generation</h2>
+<p>PKIaaS.io automatically generates CRLs on demand when a HTTP request is received to download the CRL. CRLs are cached and valid for a period of 30 days from the time of generation. When the CRL expires or another certificate is revoked, the cache is deleted, and a new CRL is generated on demand during the next HTTP request to download the CRL.</p>
+<h2 id="crl-url">CRL URL</h2>
+<p>To find the CRL URL along with many other service URLs, login to <a href="https://pkiaas.io/auth/login">PKIaaS.io</a>, and navigate to <strong>Certificate Authorities -&gt; Manage CAs</strong>. Click on the desired CA, and Select "Show CA Service URLs". By default, the CRL URL is also encoded in issued certificates in the CRL Distribution Points (CDP) extension. This can be changed within a certificate template by navigating to <strong>Certificate Templates -&gt; Manage Templates</strong>, clicking on a template, and selecting "Edit Template". The CRL URL can be removed from certificates issues using the template by unchecking "Include CRL Extension in Certificate" in the <strong>CRL / OCSP / AIA / CPS</strong> section of the template settings.</p>
 
 
 
@@ -1321,10 +1399,10 @@
     </div>
     
     
-    <script id="__config" type="application/json">{"base": ".", "features": ["content.code.copy", "content.action.edit", "content.action.view"], "search": "assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "..", "features": ["content.code.copy", "content.action.edit", "content.action.view"], "search": "../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="assets/javascripts/bundle.83f73b43.min.js"></script>
+      <script src="../assets/javascripts/bundle.83f73b43.min.js"></script>
       
     
   <script id="init-glightbox">const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "slide"});
