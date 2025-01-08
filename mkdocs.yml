@@ -39,6 +39,8 @@ nav:
     #- Get Certificate Authority: certificate-authorities/get-certificate-authority.md
     #- Update Certificate Authority: certificate-authorities/update-certificate-authority.md
     #- Delete Certificate Authority: certificate-authorities/delete-certificate-authority.md
+  - OCSP: ocsp.md
+  - CRL: crl.md
   - Iot-HSM:
       - Overview: iot-hsm/overview.md
       - Installation: iot-hsm/installation.md
