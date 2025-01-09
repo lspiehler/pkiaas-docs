@@ -9,7 +9,7 @@ theme:
     - content.action.view
 
 nav:
-  - <- Return to PKIaas.io: https://pkiaas.io
+  - ⬅ Return to PKIaas.io: https://pkiaas.io
   - Home: index.md
   - Getting Started: getting-started.md
   - Certificate Authorities:
