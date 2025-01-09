@@ -41,6 +41,7 @@ nav:
     #- Delete Certificate Authority: certificate-authorities/delete-certificate-authority.md
   - OCSP: ocsp.md
   - CRL: crl.md
+  - Timestamping: timestamping.md
   - Iot-HSM:
       - Overview: iot-hsm/overview.md
       - Installation: iot-hsm/installation.md
