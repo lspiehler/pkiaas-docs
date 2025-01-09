@@ -8,25 +8,25 @@
       
       
       
-        <link rel="canonical" href="https://lspiehler.github.io/pkiaas-docs/certificate-templates/edit/">
+        <link rel="canonical" href="https://lspiehler.github.io/pkiaas-docs/timestamping/">
       
       
-        <link rel="prev" href="../create/">
+        <link rel="prev" href="../crl/">
       
       
-        <link rel="next" href="../delete/">
+        <link rel="next" href="../iot-hsm/overview/">
       
       
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.43">
     
     
       
-        <title>Edit Templates - PKIaaS.io Documentation</title>
+        <title>Timestamping - PKIaaS.io Documentation</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.0253249f.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.0253249f.min.css">
       
       
 
@@ -45,7 +45,7 @@
       
     
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
   
@@ -64,11 +64,11 @@
       
         <meta  property="og:type"  content="website" >
       
-        <meta  property="og:title"  content="Edit Templates - PKIaaS.io Documentation" >
+        <meta  property="og:title"  content="Timestamping - PKIaaS.io Documentation" >
       
         <meta  property="og:description"  content="None" >
       
-        <meta  property="og:image"  content="https://lspiehler.github.io/pkiaas-docs/assets/images/social/certificate-templates/edit.png" >
+        <meta  property="og:image"  content="https://lspiehler.github.io/pkiaas-docs/assets/images/social/timestamping.png" >
       
         <meta  property="og:image:type"  content="image/png" >
       
@@ -76,19 +76,19 @@
       
         <meta  property="og:image:height"  content="630" >
       
-        <meta  property="og:url"  content="https://lspiehler.github.io/pkiaas-docs/certificate-templates/edit/" >
+        <meta  property="og:url"  content="https://lspiehler.github.io/pkiaas-docs/timestamping/" >
       
         <meta  name="twitter:card"  content="summary_large_image" >
       
-        <meta  name="twitter:title"  content="Edit Templates - PKIaaS.io Documentation" >
+        <meta  name="twitter:title"  content="Timestamping - PKIaaS.io Documentation" >
       
         <meta  name="twitter:description"  content="None" >
       
-        <meta  name="twitter:image"  content="https://lspiehler.github.io/pkiaas-docs/assets/images/social/certificate-templates/edit.png" >
+        <meta  name="twitter:image"  content="https://lspiehler.github.io/pkiaas-docs/assets/images/social/timestamping.png" >
       
     
     
-   <link href="../../assets/stylesheets/glightbox.min.css" rel="stylesheet"/><style>
+   <link href="../assets/stylesheets/glightbox.min.css" rel="stylesheet"/><style>
     html.glightbox-open { overflow: initial; height: 100%; }
     .gslide-title { margin-top: 0px; user-select: text; }
     .gslide-desc { color: #666; user-select: text; }
@@ -97,7 +97,7 @@
     .gdesc-inner { font-size: 0.75rem; }
     body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color);}
     body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color);}
-    body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color);}</style> <script src="../../assets/javascripts/glightbox.min.js"></script></head>
+    body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color);}</style> <script src="../assets/javascripts/glightbox.min.js"></script></head>
   
   
     <body dir="ltr">
@@ -109,7 +109,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#options" class="md-skip">
+        <a href="#overview" class="md-skip">
           Skip to content
         </a>
       
@@ -125,7 +125,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="PKIaaS.io Documentation" class="md-header__button md-logo" aria-label="PKIaaS.io Documentation" data-md-component="logo">
+    <a href=".." title="PKIaaS.io Documentation" class="md-header__button md-logo" aria-label="PKIaaS.io Documentation" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -145,7 +145,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Edit Templates
+              Timestamping
             
           </span>
         </div>
@@ -232,7 +232,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="PKIaaS.io Documentation" class="md-nav__button md-logo" aria-label="PKIaaS.io Documentation" data-md-component="logo">
+    <a href=".." title="PKIaaS.io Documentation" class="md-nav__button md-logo" aria-label="PKIaaS.io Documentation" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -282,7 +282,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../.." class="md-nav__link">
+      <a href=".." class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -302,7 +302,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting-started/" class="md-nav__link">
+      <a href="../getting-started/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -357,7 +357,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../certificate-authorities/overview/" class="md-nav__link">
+      <a href="../certificate-authorities/overview/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -378,7 +378,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../certificate-authorities/create/" class="md-nav__link">
+      <a href="../certificate-authorities/create/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -399,7 +399,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../certificate-authorities/edit/" class="md-nav__link">
+      <a href="../certificate-authorities/edit/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -420,7 +420,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../certificate-authorities/delete/" class="md-nav__link">
+      <a href="../certificate-authorities/delete/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -445,19 +445,17 @@
       
   
   
-    
   
   
-  
     
     
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
         
           
           <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
@@ -471,7 +469,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             Certificate Templates
@@ -485,7 +483,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../overview/" class="md-nav__link">
+      <a href="../certificate-templates/overview/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -506,7 +504,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../create/" class="md-nav__link">
+      <a href="../certificate-templates/create/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -524,28 +522,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  <span class="md-ellipsis">
-    Edit Templates
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../certificate-templates/edit/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -554,102 +534,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#options" class="md-nav__link">
-    <span class="md-ellipsis">
-      Options
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Options">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#general" class="md-nav__link">
-    <span class="md-ellipsis">
-      General
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#subject" class="md-nav__link">
-    <span class="md-ellipsis">
-      Subject
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#key-usage" class="md-nav__link">
-    <span class="md-ellipsis">
-      Key Usage
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#basic-constraints" class="md-nav__link">
-    <span class="md-ellipsis">
-      Basic Constraints
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#crl-ocsp-aia-cps" class="md-nav__link">
-    <span class="md-ellipsis">
-      CRL / OCSP / AIA / CPS
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#scep" class="md-nav__link">
-    <span class="md-ellipsis">
-      SCEP
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#ct-logs" class="md-nav__link">
-    <span class="md-ellipsis">
-      CT Logs
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -662,7 +546,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../delete/" class="md-nav__link">
+      <a href="../certificate-templates/delete/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -683,7 +567,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../service-urls/" class="md-nav__link">
+      <a href="../certificate-templates/service-urls/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -746,7 +630,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../acme/overview/" class="md-nav__link">
+      <a href="../acme/overview/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -767,7 +651,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../acme/create-acme-policy/" class="md-nav__link">
+      <a href="../acme/create-acme-policy/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -788,7 +672,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../acme/generate-eab-credentials/" class="md-nav__link">
+      <a href="../acme/generate-eab-credentials/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -809,7 +693,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../acme/register-acme-account/" class="md-nav__link">
+      <a href="../acme/register-acme-account/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -865,7 +749,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../acme/acme-clients/certbot/" class="md-nav__link">
+      <a href="../acme/acme-clients/certbot/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -886,7 +770,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../acme/acme-clients/certify-the-web/" class="md-nav__link">
+      <a href="../acme/acme-clients/certify-the-web/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -907,7 +791,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../acme/acme-clients/traefik/" class="md-nav__link">
+      <a href="../acme/acme-clients/traefik/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -978,7 +862,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../scep/overview/" class="md-nav__link">
+      <a href="../scep/overview/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1006,7 +890,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../ocsp/" class="md-nav__link">
+      <a href="../ocsp/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1026,7 +910,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../crl/" class="md-nav__link">
+      <a href="../crl/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1043,10 +927,28 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../timestamping/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Timestamping
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -1055,6 +957,51 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#timestamping-service" class="md-nav__link">
+    <span class="md-ellipsis">
+      Timestamping Service
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#more-information" class="md-nav__link">
+    <span class="md-ellipsis">
+      More Information
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1101,7 +1048,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../iot-hsm/overview/" class="md-nav__link">
+      <a href="../iot-hsm/overview/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1122,7 +1069,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../iot-hsm/installation/" class="md-nav__link">
+      <a href="../iot-hsm/installation/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1143,7 +1090,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../iot-hsm/provisioning/" class="md-nav__link">
+      <a href="../iot-hsm/provisioning/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1206,7 +1153,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../post-quantum-cryptography/overview/" class="md-nav__link">
+      <a href="../post-quantum-cryptography/overview/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1227,7 +1174,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../post-quantum-cryptography/ml-dsa/" class="md-nav__link">
+      <a href="../post-quantum-cryptography/ml-dsa/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1290,7 +1237,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../use-cases/sample-use-case/" class="md-nav__link">
+      <a href="../use-cases/sample-use-case/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1318,7 +1265,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../pdf/document.pdf" class="md-nav__link">
+      <a href="../pdf/document.pdf" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1356,80 +1303,29 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#options" class="md-nav__link">
+  <a href="#overview" class="md-nav__link">
     <span class="md-ellipsis">
-      Options
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Options">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#general" class="md-nav__link">
-    <span class="md-ellipsis">
-      General
+      Overview
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#subject" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#timestamping-service" class="md-nav__link">
     <span class="md-ellipsis">
-      Subject
+      Timestamping Service
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#key-usage" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#more-information" class="md-nav__link">
     <span class="md-ellipsis">
-      Key Usage
+      More Information
     </span>
   </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#basic-constraints" class="md-nav__link">
-    <span class="md-ellipsis">
-      Basic Constraints
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#crl-ocsp-aia-cps" class="md-nav__link">
-    <span class="md-ellipsis">
-      CRL / OCSP / AIA / CPS
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#scep" class="md-nav__link">
-    <span class="md-ellipsis">
-      SCEP
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#ct-logs" class="md-nav__link">
-    <span class="md-ellipsis">
-      CT Logs
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1448,7 +1344,7 @@
                   
 
   
-    <a href="https://github.com/lspiehler/pkiaas-docs/edit/master/docs/certificate-templates/edit.md" title="Edit this page" class="md-content__button md-icon">
+    <a href="https://github.com/lspiehler/pkiaas-docs/edit/master/docs/timestamping.md" title="Edit this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -1457,65 +1353,26 @@
     
       
     
-    <a href="https://github.com/lspiehler/pkiaas-docs/raw/master/docs/certificate-templates/raw.md" title="View source of this page" class="md-content__button md-icon">
+    <a href="https://github.com/lspiehler/pkiaas-docs/raw/master/docs/timestamping.md" title="View source of this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
     </a>
   
 
 
-  <h1>Edit Templates</h1>
+  <h1>Timestamping</h1>
 
-<p>To edit the settings for a certificate template, login to PKIaaS.io and navigate to <strong>Certificate Templates -&gt; Manage Templates</strong> in the navigation pane on the left of the page. Click on a template and select "Edit Template".</p>
-<h2 id="options">Options</h2>
-<h3 id="general">General</h3>
+<h2 id="overview">Overview</h2>
+<p>Timestamping is the process of adding a trusted and verifiable time and date to a piece of digital data. This establishes proof that the data existed or was signed at a specific moment in time and has not been altered since. It ensures that signed data remains verifiable and trustworthy long after the initial signing event, even after the signing certificate has expired.</p>
+<h2 id="timestamping-service">Timestamping Service</h2>
+<p>PKIaaS.io provides a timestamping service that allows users to request a trusted timestamp for code signing, PDF document signing, etc. Both the RFC 3161 and Authenticode timestamping protocols are supported. The timestamping service URL is unique to each CA and can be found by logging into <a href="https://pkiaas.io/auth/login">PKIaaS.io</a> and navigating to <strong>Certificate Authorities -&gt; Manage CAs</strong>. Click on the desired CA, and select "Show CA Service URLs".</p>
+<h2 id="more-information">More Information</h2>
+<p>See the links below for more information about various tools for timestamping documents and code.</p>
 <ul>
-<li><strong>Enabled</strong> - enables/disables the template</li>
-<li><strong>Allow unsolicited certificate web requests</strong> - enables/disables the "Public Certificate Request" URL for the template</li>
-<li><strong>Allow the use of a valid certificate to authorize an automatic renewal request</strong> - enables/disables certificate renewal authorization using a previously issued certificate using the renewal options found on the CA's CPS page<ul>
-<li><strong>Automatically revoke old certificate</strong> - revoke the old certificate used to authorize renewal</li>
-<li><strong>Require certificate to be within</strong> - don't allow renewal using a certificate to authorize renewal unless it is within the specified number of days of expiration</li>
-<li><strong>Copy subject and SANs from original certificate during renewal</strong> - use the same subject and subject alternative names from the old certificate used to authorize renewal</li>
+<li><a href="https://www.digicert.com/kb/code-signing/digicert-certificate-utility-to-sign-code.htm">https://www.digicert.com/kb/code-signing/digicert-certificate-utility-to-sign-code.htm</a></li>
+<li><a href="https://globaltrust.eu/en/adobe-acrobat-reader-dc-use-certificate-timestamp-server/">https://globaltrust.eu/en/adobe-acrobat-reader-dc-use-certificate-timestamp-server/</a></li>
+<li><a href="https://learn.microsoft.com/en-us/windows/win32/seccrypto/signtool?redirectedfrom=MSDN#timestamp-command-options">https://learn.microsoft.com/en-us/windows/win32/seccrypto/signtool</a></li>
 </ul>
-</li>
-<li><strong>Signing Algorithm</strong> - customize the hash algorithm used to sign certificates</li>
-<li><strong>Validity Period (Days)</strong> - specify the default length of time the issued certificate will be valid—for manually issued certificates. This option can be overridden at the time of signing when the request is in <strong>X509 Certificates -&gt; Pending Requests</strong></li>
-<li><strong>Description</strong> - provide a description for the template</li>
-</ul>
-<h3 id="subject">Subject</h3>
-<p>To honor the subject attributes requested within the CSR, use the <strong>Supplied by the CSR</strong> option. Otherwise, the subject attributes in the CSR will be overridden by the defaults defined here.</p>
-<h3 id="key-usage">Key Usage</h3>
-<p>Select the key usages and extended key usages to be enabled for certificates issued using this template. Custom comma-separated extended key usage OIDs can be entered into the <strong>Custom EKU OIDs</strong> field.</p>
-<h3 id="basic-constraints">Basic Constraints</h3>
-<p>The Basic Constraints extension in an X509 certificate defines whether the certificate is a Certificate Authority (CA) or an end-entity (non-CA) certificate. Set the <strong>Certificate Authority</strong> option to yes if the template will be used to sign subordinate CAs (intermediate CAs) certificate authorities. Path length defines the maximum number of subordinate CAs that can exist below this certificate in the certificate hierarchy.</p>
-<h3 id="crl-ocsp-aia-cps">CRL / OCSP / AIA / CPS</h3>
-<ul>
-<li><strong>Include AIA Extension in Certificate</strong> - The Authority Information Access (AIA) attribute is an optional but commonly included extension in an X.509 certificate. It provides information about how to access important resources or services related to the certificate issuer. Use this option to enable or disable the AIA attribute in certificates issued using this template.<ul>
-<li><strong>Custom URL</strong> - Allows customization of the URL where the issuing CA’s certificate (or chain) can be downloaded.</li>
-</ul>
-</li>
-<li><strong>Include OCSP Extension in Certificate</strong> - Enable or disable the OCSP Responder attribute within the AIA extension in certificates issued using this template.</li>
-<li><strong>Include CRL Extension in Certificate</strong> - Enable or disable the CRL Distribution Point (CDP) attribute in certificates issued using this template.</li>
-<li><strong>Include CPS Extension in Certificate</strong> - Enable or disable the Certificate Policies attribute in certificates issued using this template. This attribute contains the URL to the Certificate Practice Statement (CPS) and the policy identifier.<ul>
-<li><strong>Policy</strong> - Disable, select a predefined policy identifier, or enter a custom OID.</li>
-</ul>
-</li>
-</ul>
-<h3 id="scep">SCEP</h3>
-<p>Simple Certificate Enrollment Protocol is a protocol designed to simplify the process of managing and issuing digital certificates in a scalable and automated manner. It is commonly used in environments where devices like routers, printers, and mobile devices need to enroll for certificates to enable secure communications. The SCEP URL for the template can be found by navigating to <strong>Certificate Templates -&gt; Manage Templates</strong>, next click on a template, and choose the <strong>Show Template Service URLs</strong> option. A modal will appear revealing the template service URLs including the SCEP URL.</p>
-<ul>
-<li><strong>Enable SCEP protocol</strong> - Enable or disable SCEP for the template.</li>
-<li><strong>Enable SCEP Static Passphrase</strong> - Enable or disable a static passphrase for SCEP services on the template. This may be required for SCEP processes that require the same passphrase to be used for multiple SCEP clients.</li>
-<li><strong>Enable Microsoft Intune/Endpoint Manager Integration</strong> - Enable or disable Microsoft Intune SCEP integration for the template.</li>
-<li><strong>Strip Root from GetCACert Requests</strong> - Exclude the root CA and return only the root in responses to SCEP GetCACert requests.</li>
-<li><strong>Enable Microsoft SCEP compatibility</strong> - Enable or disable the Microsoft SCEP (NDES) compatibility. This option enabled PKIaaS.io to mimic the /CertSrv/mscep_admin/ URL on Microsoft NDES servers to generate "enrollment challenge passwords" for processes and workflows designed to work with this Microsoft NDES functionality. The URL for this page can be found by navigating to <strong>Certificate Templates -&gt; Manage Templates</strong>, next click on a template, and choose the <strong>SCEP Admin (Microsoft compatibility)</strong> option to navigate to the URL in a new tab.<ul>
-<li><strong>Enable Microsoft SCEP basic auth</strong> - Enable or disable basic HTTP authentication for the Microsoft SCEP compatibility page. A username and password must be provided if this option is selected.</li>
-</ul>
-</li>
-<li><strong>Enable IP ACL</strong> - Enable or disable the IP-based access control list (firewall functionality) for access to SCEP requests, the Microsoft compatibility page (if enabled) or both. Enter a list of IPs allowed to access the resources.</li>
-</ul>
-<h3 id="ct-logs">CT Logs</h3>
-<p>For templates associated with root CAs or intermediate CAs that chain up to root CAs that require issued certificates to be submitted to certificate transparency logs, enter a comma-separated list of URLs where these certificates should be submitted here. The CT log must support logging for the CA associated with the template. This is something that must be coordinated with the owner of the CT log.</p>
 
 
 
@@ -1567,10 +1424,10 @@
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "../..", "features": ["content.code.copy", "content.action.edit", "content.action.view"], "search": "../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "..", "features": ["content.code.copy", "content.action.edit", "content.action.view"], "search": "../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.83f73b43.min.js"></script>
+      <script src="../assets/javascripts/bundle.83f73b43.min.js"></script>
       
     
   <script id="init-glightbox">const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "slide"});
