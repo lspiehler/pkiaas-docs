@@ -34,11 +34,9 @@ nav:
       - Traefik: acme/acme-clients/traefik.md
   - SCEP:
     - Overview: scep/overview.md
-    #- Create a Certificate Authority: certificate-authorities/create-a-certificate-authority.md
-    #- List Certificate Authorities: certificate-authorities/list-certificate-authorities.md
-    #- Get Certificate Authority: certificate-authorities/get-certificate-authority.md
-    #- Update Certificate Authority: certificate-authorities/update-certificate-authority.md
-    #- Delete Certificate Authority: certificate-authorities/delete-certificate-authority.md
+    - Static Passphrase: scep/static-passphrase.md
+    - Microsoft NDES Compatibility: scep/microsoft-ndes-compatibility.md
+    - Intune Integration: scep/intune-integration.md
   - OCSP: ocsp.md
   - CRL: crl.md
   - Timestamping: timestamping.md
