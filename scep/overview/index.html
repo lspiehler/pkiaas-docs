@@ -14,7 +14,7 @@
         <link rel="prev" href="../../acme/acme-clients/traefik/">
       
       
-        <link rel="next" href="../../ocsp/">
+        <link rel="next" href="../static-passphrase/">
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
@@ -107,6 +107,11 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
+      
+        
+        <a href="#enabling-scep" class="md-skip">
+          Skip to content
+        </a>
       
     </div>
     <div data-md-component="announce">
@@ -866,6 +871,17 @@
       
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -876,6 +892,122 @@
 
       </a>
       
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#enabling-scep" class="md-nav__link">
+    <span class="md-ellipsis">
+      Enabling SCEP
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scep-url" class="md-nav__link">
+    <span class="md-ellipsis">
+      SCEP URL
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scep-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      SCEP Validation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scep-security" class="md-nav__link">
+    <span class="md-ellipsis">
+      SCEP Security
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../static-passphrase/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Static Passphrase
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../microsoft-ndes-compatibility/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Microsoft NDES Compatibility
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../intune-integration/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Intune Integration
+  </span>
+  
+
+      </a>
     </li>
   
 
@@ -1238,6 +1370,50 @@
   
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#enabling-scep" class="md-nav__link">
+    <span class="md-ellipsis">
+      Enabling SCEP
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scep-url" class="md-nav__link">
+    <span class="md-ellipsis">
+      SCEP URL
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scep-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      SCEP Validation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scep-security" class="md-nav__link">
+    <span class="md-ellipsis">
+      SCEP Security
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1269,7 +1445,20 @@
 
   <h1>Overview</h1>
 
-<p>SCEP (Simple Certificate Enrollment Protocol) is a long-established, open source protocol that automates the request and issuance of digital certificates from a certificate authority over HTTP. </p>
+<p>SCEP (Simple Certificate Enrollment Protocol) is a long-established, open source protocol that automates the request and issuance of digital certificates from a certificate authority over HTTP. SCEP is often used by mobile device management (MDM) solutions to issue certificates to managed devices. It is also often used by network devices, such as routers and switches, to obtain certificates for secure communication.</p>
+<h2 id="enabling-scep">Enabling SCEP</h2>
+<p>PKIaaS.io supports SCEP for certificate enrollment, but it is not enabled by default. SCEP can be enabled and disabled on a per-template basis. To enable SCEP for a template log in to PKIaaS.io and navigate to <strong>Certificate Templates -&gt; Manage Templates</strong>. Click on the template you wish to enable SCEP for, then click "Edit Template" and select the "SCEP" tab. From here, you can enable SCEP and configure the SCEP settings for the template.</p>
+<h2 id="scep-url">SCEP URL</h2>
+<p>The SCEP URL is unique to each template. To find the SCEP URL for a template, navigate to <strong>Certificate Templates -&gt; Manage Templates</strong>, click on the template you wish to use and select "Show Template Service URLs" from the menu. This is the URL that devices will use to communicate with PKIaaS.io to request a certificate from the template.</p>
+<h2 id="scep-validation">SCEP Validation</h2>
+<p>When a device requests a certificate via SCEP, PKIaaS.io will validate the request before issuing the certificate. Multiple validation methods are supported. See the links below for more information on each.</p>
+<ol>
+<li><a href="static-passphrase">Static Passphrase</a></li>
+<li><a href="micrsoft-ndes-compatibility">Microsoft NDES Compatibility</a></li>
+<li><a href="intune-integration">Intune Integration</a></li>
+</ol>
+<h2 id="scep-security">SCEP Security</h2>
+<p>SCEP access can be restricted to specific IP addresses. To restrict access to a specific IP address, navigate to <strong>Certificate Templates -&gt; Manage Templates</strong>, click on the template you wish to restrict access to and select the "SCEP" tab. Check the "Enable IP ACL" checkbox and enter the IP address you wish to allow SCEP requests from in the "Allowed IPs" field. Multiple IP addresses can be entered, separated by commas. Using the "Limit access to" drop down, you may choose whether to limit access to SCEP Requests, the Microsoft compatibility UI or both.</p>
 
 
 
