@@ -14,7 +14,7 @@
         <link rel="prev" href="../../acme/acme-clients/traefik/">
       
       
-        <link rel="next" href="../static-passphrase/">
+        <link rel="next" href="../intune-integration/">
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
@@ -179,6 +179,8 @@
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
         </button>
       </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
       
     </form>
     <div class="md-search__output">
@@ -932,15 +934,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#scep-security" class="md-nav__link">
-    <span class="md-ellipsis">
-      SCEP Security
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -957,11 +950,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../static-passphrase/" class="md-nav__link">
+      <a href="../intune-integration/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Static Passphrase
+    Intune Integration
   </span>
   
 
@@ -999,11 +992,32 @@
   
   
     <li class="md-nav__item">
-      <a href="../intune-integration/" class="md-nav__link">
+      <a href="../static-passphrase/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Intune Integration
+    Static Passphrase
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Security
   </span>
   
 
@@ -1403,15 +1417,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#scep-security" class="md-nav__link">
-    <span class="md-ellipsis">
-      SCEP Security
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -1453,12 +1458,10 @@
 <h2 id="scep-validation">SCEP Validation</h2>
 <p>When a device requests a certificate via SCEP, PKIaaS.io will validate the request before issuing the certificate. Multiple validation methods are supported. See the links below for more information on each.</p>
 <ol>
-<li><a href="static-passphrase">Static Passphrase</a></li>
-<li><a href="micrsoft-ndes-compatibility">Microsoft NDES Compatibility</a></li>
-<li><a href="intune-integration">Intune Integration</a></li>
+<li><a href="../static-passphrase/">Static Passphrase</a></li>
+<li><a href="../microsoft-ndes-compatibility/">Microsoft NDES Compatibility</a></li>
+<li><a href="../intune-integration/">Intune Integration</a></li>
 </ol>
-<h2 id="scep-security">SCEP Security</h2>
-<p>SCEP access can be restricted to specific IP addresses. To restrict access to a specific IP address, navigate to <strong>Certificate Templates -&gt; Manage Templates</strong>, click on the template you wish to restrict access to and select the "SCEP" tab. Check the "Enable IP ACL" checkbox and enter the IP address you wish to allow SCEP requests from in the "Allowed IPs" field. Multiple IP addresses can be entered, separated by commas. Using the "Limit access to" drop down, you may choose whether to limit access to SCEP Requests, the Microsoft compatibility UI or both.</p>
 
 
 
@@ -1510,7 +1513,7 @@
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "../..", "features": ["content.code.copy", "content.action.edit", "content.action.view"], "search": "../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["content.code.copy", "content.action.edit", "content.action.view", "search.suggest"], "search": "../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
       <script src="../../assets/javascripts/bundle.83f73b43.min.js"></script>

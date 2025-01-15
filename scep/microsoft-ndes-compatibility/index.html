@@ -11,10 +11,10 @@
         <link rel="canonical" href="https://docs.pkiaas.io/scep/microsoft-ndes-compatibility/">
       
       
-        <link rel="prev" href="../static-passphrase/">
+        <link rel="prev" href="../intune-integration/">
       
       
-        <link rel="next" href="../intune-integration/">
+        <link rel="next" href="../static-passphrase/">
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
@@ -108,6 +108,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#enable-microsoft-ndes-compatibility" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -174,6 +179,8 @@
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
         </button>
       </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
       
     </form>
     <div class="md-search__output">
@@ -880,11 +887,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../static-passphrase/" class="md-nav__link">
+      <a href="../intune-integration/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Static Passphrase
+    Intune Integration
   </span>
   
 
@@ -908,6 +915,17 @@
       
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Microsoft NDES Compatibility
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -917,6 +935,59 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#enable-microsoft-ndes-compatibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      Enable Microsoft NDES Compatibility
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#microsoft-ndes-compatibility-url" class="md-nav__link">
+    <span class="md-ellipsis">
+      Microsoft NDES Compatibility URL
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#authentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      Authentication
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#restrict-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      Restrict Access
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -930,11 +1001,32 @@
   
   
     <li class="md-nav__item">
-      <a href="../intune-integration/" class="md-nav__link">
+      <a href="../static-passphrase/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Intune Integration
+    Static Passphrase
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Security
   </span>
   
 
@@ -1301,6 +1393,50 @@
   
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#enable-microsoft-ndes-compatibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      Enable Microsoft NDES Compatibility
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#microsoft-ndes-compatibility-url" class="md-nav__link">
+    <span class="md-ellipsis">
+      Microsoft NDES Compatibility URL
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#authentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      Authentication
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#restrict-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      Restrict Access
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1332,7 +1468,15 @@
 
   <h1>Microsoft NDES Compatibility</h1>
 
-
+<p>PKIaaS.io offers Microsoft NDES compatibility to support third-party applications and processes built to work with Microsoft NDES. The feature can be enabled on a per-template basis and can be used to generate one-time challenge passwords for certificate requests from the template. The challenge passwords expire after 60 minutes.</p>
+<h2 id="enable-microsoft-ndes-compatibility">Enable Microsoft NDES Compatibility</h2>
+<p>To enable Microsoft NDES compatibility for a template, navigate to <strong>Certificate Templates -&gt; Manage Templates</strong>, click on the template you wish to enable Microsoft NDES compatibility for, then click "Edit Template" and select the "SCEP" tab. Check the "Enable Microsoft SCEP Compatibility" checkbox and save the template.</p>
+<h2 id="microsoft-ndes-compatibility-url">Microsoft NDES Compatibility URL</h2>
+<p>After enabling Microsoft NDES compatibility, the URL to access the Microsoft compatible UI can be found by navigating to <strong>Certificate Templates -&gt; Manage Templates</strong>, clicking on a template, and selecting "SCEP Admin (Microsoft Compatibility)" from the menu. This URL is unique to each template and can be used to generate one-time passcodes for certificate requests from the template.</p>
+<h2 id="authentication">Authentication</h2>
+<p>Access to the Microsoft NDES Compatibility URL is automatically authenticated using the same credentials used to log in to PKIaaS.io if there is an active session. In order to access the URL without an active session—this may be required by third-party applications designed to integrate with Microsoft NDES—basic authentication can be enabled by checking the "Enable Microsoft Basic Authentication" checkbox in the "SCEP" tab of the template configuration. Enter a username and password to use for basic authentication and save the template.</p>
+<h2 id="restrict-access">Restrict Access</h2>
+<p>To restrict access to the Microsoft NDES Compatibility URL to specific IP addresses, see <a href="../security/">SCEP Security</a>.</p>
 
 
 
@@ -1384,7 +1528,7 @@
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "../..", "features": ["content.code.copy", "content.action.edit", "content.action.view"], "search": "../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["content.code.copy", "content.action.edit", "content.action.view", "search.suggest"], "search": "../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
       <script src="../../assets/javascripts/bundle.83f73b43.min.js"></script>
