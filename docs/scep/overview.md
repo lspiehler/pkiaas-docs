@@ -9,9 +9,6 @@ The SCEP URL is unique to each template. To find the SCEP URL for a template, na
 ## SCEP Validation
 When a device requests a certificate via SCEP, PKIaaS.io will validate the request before issuing the certificate. Multiple validation methods are supported. See the links below for more information on each.
 
-1. [Static Passphrase](static-passphrase)
-2. [Microsoft NDES Compatibility](micrsoft-ndes-compatibility)
-3. [Intune Integration](intune-integration)
-
-## SCEP Security
-SCEP access can be restricted to specific IP addresses. To restrict access to a specific IP address, navigate to **Certificate Templates -> Manage Templates**, click on the template you wish to restrict access to and select the "SCEP" tab. Check the "Enable IP ACL" checkbox and enter the IP address you wish to allow SCEP requests from in the "Allowed IPs" field. Multiple IP addresses can be entered, separated by commas. Using the "Limit access to" drop down, you may choose whether to limit access to SCEP Requests, the Microsoft compatibility UI or both.
+1. [Static Passphrase](static-passphrase.md)
+2. [Microsoft NDES Compatibility](microsoft-ndes-compatibility.md)
+3. [Intune Integration](intune-integration.md)

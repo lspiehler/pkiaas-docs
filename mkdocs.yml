@@ -7,6 +7,7 @@ theme:
     - content.code.copy
     - content.action.edit
     - content.action.view
+    - search.suggest
 
 nav:
   - ⬅ Return to PKIaas.io: https://pkiaas.io
@@ -34,9 +35,10 @@ nav:
       - Traefik: acme/acme-clients/traefik.md
   - SCEP:
     - Overview: scep/overview.md
-    - Static Passphrase: scep/static-passphrase.md
-    - Microsoft NDES Compatibility: scep/microsoft-ndes-compatibility.md
     - Intune Integration: scep/intune-integration.md
+    - Microsoft NDES Compatibility: scep/microsoft-ndes-compatibility.md
+    - Static Passphrase: scep/static-passphrase.md
+    - Security: scep/security.md
   - OCSP: ocsp.md
   - CRL: crl.md
   - Timestamping: timestamping.md
