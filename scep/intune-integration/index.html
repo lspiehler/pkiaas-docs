@@ -108,6 +108,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#prerequisites" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -889,6 +894,17 @@
       
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Intune Integration
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -898,6 +914,50 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#prerequisites" class="md-nav__link">
+    <span class="md-ellipsis">
+      Prerequisites
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#enabling-intune-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Enabling Intune Integration
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#create-and-assign-scep-certificate-profiles-in-intune" class="md-nav__link">
+    <span class="md-ellipsis">
+      Create and assign SCEP certificate profiles in Intune
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -1324,6 +1384,41 @@
   
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#prerequisites" class="md-nav__link">
+    <span class="md-ellipsis">
+      Prerequisites
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#enabling-intune-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Enabling Intune Integration
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#create-and-assign-scep-certificate-profiles-in-intune" class="md-nav__link">
+    <span class="md-ellipsis">
+      Create and assign SCEP certificate profiles in Intune
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1355,7 +1450,31 @@
 
   <h1>Intune Integration</h1>
 
-
+<p>PKIaaS.io natively supports SCEP integration with Microsoft Intune allowing certificates to be validated and issued to devices managed by Intune.</p>
+<h2 id="prerequisites">Prerequisites</h2>
+<p>Before the Intune integration can be configured, communication must be authorized between PKIaaS.io and Intune. Follow Microsoft"s documentation to configure the necessary permissions and create an application registration in Azure AD. <a href="https://learn.microsoft.com/en-us/mem/intune/protect/certificate-authority-add-scep-overview#authorize-communication-between-ca-and-intune" target="_blank">https://learn.microsoft.com/en-us/mem/intune/protect/certificate-authority-add-scep-overview</a></p>
+<p>After following the Microsoft documentation, it is required to also add the "Application.Read.All" permission to the application registration created in Azure AD in the previous step for "Azure Active Directory Graph". This permission is required to allow PKIaaS.io to query the graph API for the ScepRequestValidationFEService service principal endpoint. Follow the steps below:</p>
+<ol>
+<li>Navigate to the azure app created in the first step</li>
+<li>Go to API permissions</li>
+<li>Click "Add a permission"</li>
+<li>Select the "APIs my organization uses" tab</li>
+<li>Search for "Windows"</li>
+<li>Select "Windows Azure Active Directory"</li>
+<li>Select "Application permissions"</li>
+<li>Select "Application.Read.All"</li>
+<li>Finally, grant admin consent to this permission</li>
+</ol>
+<h2 id="enabling-intune-integration">Enabling Intune Integration</h2>
+<p>To enable Intune integration, login to <a href="https://pkiaas.io/auth/login">PKIaaS.io</a>, and navigate to <strong>Certificate Templates -&gt; Manage Templates</strong>, click on the template you wish to enable Microsoft Intune integration for, then click "Edit Template" and select the "SCEP" tab. Check the "Enable Microsoft Intune/Endpoint Manager Integration" checkbox. A form will appear requiring the following information:</p>
+<ul>
+<li><strong>Tenant ID:</strong> the tenant ID for your Azure tenant (refer to step 6 from the <a href="https://learn.microsoft.com/en-us/mem/intune/protect/certificate-authority-add-scep-overview#authorize-communication-between-ca-and-intune" target="_blank">Microsoft Intune documentation</a>)</li>
+<li><strong>Application (client) ID:</strong> the application (client) ID for the application registration created previously in Azure AD (refer to step 4 from the <a href="https://learn.microsoft.com/en-us/mem/intune/protect/certificate-authority-add-scep-overview#authorize-communication-between-ca-and-intune" target="_blank">Microsoft Intune documentation</a>)</li>
+<li><strong>Client Secret:</strong> the client secret for the application registration created previously in Azure AD (refer to step 5 from the <a href="https://learn.microsoft.com/en-us/mem/intune/protect/certificate-authority-add-scep-overview#authorize-communication-between-ca-and-intune" target="_blank">Microsoft Intune documentation</a>)</li>
+</ul>
+<p>Finally, click "Save Template" to enable the integration.</p>
+<h2 id="create-and-assign-scep-certificate-profiles-in-intune">Create and assign SCEP certificate profiles in Intune</h2>
+<p>After the integration is enabled, the remainder of the configuration is done in Intune. Follow the steps in the <a href="https://learn.microsoft.com/en-us/mem/intune/protect/certificates-profile-scep" target="_blank">https://learn.microsoft.com/en-us/mem/intune/protect/certificates-profile-scep</a> to create and assign SCEP certificate profiles in Intune. Be sure to have the template SCEP URL handy while configuring the SCEP certificate profile. See <a href="../overview/#scep-url">SCEP Overview</a> for help finding the URL for the template.</p>
 
 
 
