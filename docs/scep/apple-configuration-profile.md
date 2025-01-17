@@ -1,0 +1,19 @@
+PKIaaS.io supports a feature that allows Apple devices running iOS or MacOS to request a certificate via the SCEP protocol without the need for mobile device management. This works by creating an Apple configuration profile and emailing it to an Apple user to download and install on their device. The profile contains the SCEP URL and other configuration settings that the device uses to request a certificate from PKIaaS.io.
+
+## Prerequisites
+SCEP must first be enabled on the template that will be used to issue certificates to Apple devices. Follow the steps in the [SCEP Overview](overview.md/#enabling-scep) to enable SCEP on the template.
+
+## Create an Apple Configuration Profile
+To create an Apple configuration profile to request a certificate via SCEP, login to [PKIaaS.io](https://pkiaas.io/auth/login), and navigate to **Certificate Templates -> Manage Templates**, click on the template you wish to issue the certificate from, and click "Create Pre-Approved Request". Fill out the form following the below instructions:
+
+1. Enter the desired subject alternative names, common names and other subject attributes
+2. Choose the "Apple Device" option
+3. Enter the email address of the Apple user that will receive the profile
+4. Click "Submit"
+
+## Download and Install the Apple Configuration Profile
+
+After submitting the form, an email will be sent to the Apple user with a link to download the configuration profile. The user can then download and install the profile on their device and the device will automatically request a certificate from PKIaaS.io using the SCEP protocol. See the Documentation from apple in the links below for more information on how to install the profile on an Apple device after it has been downloaded.
+
+* [Install a configuration profile on iOS, iPadOS, and visionOS devices](https://support.apple.com/en-us/102400){:target="_blank"}
+* [Install a configuration profile on macOS devices](https://support.apple.com/guide/mac-help/configuration-profiles-standardize-settings-mh35561/mac){:target="_blank"}

@@ -37,6 +37,7 @@ nav:
     - Overview: scep/overview.md
     - Intune Integration: scep/intune-integration.md
     - Microsoft NDES Compatibility: scep/microsoft-ndes-compatibility.md
+    - Apple Configuration Profile: scep/apple-configuration-profile.md
     - Static Passphrase: scep/static-passphrase.md
     - Security: scep/security.md
   - OCSP: ocsp.md
