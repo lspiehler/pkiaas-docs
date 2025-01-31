@@ -24,6 +24,11 @@ nav:
     - Edit Templates: certificate-templates/edit.md
     - Delete Templates: certificate-templates/delete.md
     - Service URLs: certificate-templates/service-urls.md
+  - Certificate Management:
+    - Pending Requests: certificate-management/pending-requests.md
+  - Certificate Issuance Workflows:
+    - Overview: certificate-issuance-workflows/overview.md
+    - Sign a CSR from the Admin UI: certificate-issuance-workflows/sign-a-csr-from-the-admin-ui.md
   - ACME:
     - Overview: acme/overview.md
     - Create an ACME Policy: acme/create-acme-policy.md
