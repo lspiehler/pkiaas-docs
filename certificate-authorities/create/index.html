@@ -6,6 +6,8 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
+        <meta name="description" content="Learn how to create root and intermediate certificate authorities on PKIaaS.io.">
+      
       
       
         <link rel="canonical" href="https://docs.pkiaas.io/certificate-authorities/create/">
@@ -66,7 +68,7 @@
       
         <meta  property="og:title"  content="Create Certificate Authorities - PKIaaS.io Documentation" >
       
-        <meta  property="og:description"  content="None" >
+        <meta  property="og:description"  content="Learn how to create root and intermediate certificate authorities on PKIaaS.io." >
       
         <meta  property="og:image"  content="https://docs.pkiaas.io/assets/images/social/certificate-authorities/create.png" >
       
@@ -82,7 +84,7 @@
       
         <meta  name="twitter:title"  content="Create Certificate Authorities - PKIaaS.io Documentation" >
       
-        <meta  name="twitter:description"  content="None" >
+        <meta  name="twitter:description"  content="Learn how to create root and intermediate certificate authorities on PKIaaS.io." >
       
         <meta  name="twitter:image"  content="https://docs.pkiaas.io/assets/images/social/certificate-authorities/create.png" >
       
@@ -109,7 +111,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#create-certificate-authorities" class="md-skip">
+        <a href="#create-a-root-ca" class="md-skip">
           Skip to content
         </a>
       
@@ -268,27 +270,7 @@
         
   
   <span class="md-ellipsis">
-    ⬅ Return to PKIaas.io
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../.." class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Home
+    Return to PKIaas.io
   </span>
   
 
@@ -313,6 +295,90 @@
   
 
       </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Post-Quantum Cryptography
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Post-Quantum Cryptography
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../post-quantum-cryptography/overview/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../post-quantum-cryptography/ml-dsa/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ML-DSA
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -388,8 +454,6 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
-        
-      
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
           
@@ -417,8 +481,6 @@
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
-  
-    
   
   
     <label class="md-nav__title" for="__toc">
@@ -1383,159 +1445,12 @@
   
   
   
-    
-    
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14" >
-        
-          
-          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="0">
-            
-  
-  <span class="md-ellipsis">
-    Post-Quantum Cryptography
-  </span>
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_14">
-            <span class="md-nav__icon md-icon"></span>
-            Post-Quantum Cryptography
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../post-quantum-cryptography/overview/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Overview
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../post-quantum-cryptography/ml-dsa/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    ML-DSA
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_15" >
-        
-          
-          <label class="md-nav__link" for="__nav_15" id="__nav_15_label" tabindex="0">
-            
-  
-  <span class="md-ellipsis">
-    Use Cases
-  </span>
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_15_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_15">
-            <span class="md-nav__icon md-icon"></span>
-            Use Cases
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../use-cases/sample-use-case/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Sample Use Case
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
     <li class="md-nav__item">
       <a href="../../pdf/document.pdf" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    📄 Download PDF
+    Download PDF
   </span>
   
 
@@ -1560,8 +1475,6 @@
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
-  
-    
   
   
     <label class="md-nav__title" for="__toc">
@@ -1634,7 +1547,8 @@
   
 
 
-<h1 id="create-certificate-authorities">Create Certificate Authorities</h1>
+  <h1>Create Certificate Authorities</h1>
+
 <h2 id="create-a-root-ca">Create a Root CA</h2>
 <p>Users can create a root certificate authority by logging into PKIaaS.io and navigating to <strong>Certificate Authorities -&gt; Create New CA</strong>. Fill out the form with the appropriate options for the desired CA. See <a href="../overview/">certificate authority overview</a> for documentation on all of the available options. When creating a root CA, it is necessary to leave the "CSR Only" option at the bottom on the form unchecked. Upon clicking "Create New CA," a new private key will be generated, and a self-signed, root certificate authority will be created and ready to issue certificates. See the <a href="../../getting-started/#issue-a-certificate">getting started</a> guide for more documentation about issuing certificates.</p>
 <h2 id="create-an-intermediatesubordinate-ca">Create an Intermediate/Subordinate CA</h2>
@@ -1644,7 +1558,7 @@
 <p>If a certificate authority not managed by PKIaaS.io will be used to sign the CSR, see the documentation for the CA on how to do so. The following instructions will detail how this can be done on a CA managed by PKIaaS.io.</p>
 <p>While logged into PKIaaS.io, select the signing root CA from the dropdown at the top of the page. This will switch the context of the admin page to the selected CA. If a template for creating certificate authorities has not already been created, navigate to <strong>Certificate Templates -&gt; Create Template</strong>. Enter "Intermediate CA" as the template name and choose "Certificate Authority" as the started template. The browser will be directed to a page where the template can optionally be customized. Click "Save" to finish creating the new template.</p>
 <p>The browser should now be at the <strong>Certificate Templates -&gt; Manage Template</strong> page. Click on the "Intermediate CA" template and select "Submit CSR" from the menu. Paste the CSR copied to the clipboard in a previous step and click submit. See the note above for instructions to navigate back to the CSR if needed.</p>
-<p>The submitted CSR must now be approved in order to be signed. Navigate to <strong>X509/Certificates -&gt; Pending Requests</strong>. Click on the pending certificate request for the new intermediate CA. A modal will apear where some certificate attributes can optionally be overriden. Click "Sign" to sign the submitted CSR and issue the certificate.</p>
+<p>The submitted CSR must now be approved in order to be signed. Navigate to <strong>X509/Certificates -&gt; Pending Requests</strong>. Click on the pending certificate request for the new intermediate CA. A modal will appear where some certificate attributes can optionally be overridden. Click "Sign" to sign the submitted CSR and issue the certificate.</p>
 <p>Finally navigate to <strong>X509/Certificates -&gt; Issued Certificates</strong>. Click on the newly issued certificate and copy it to the clipboard. This certificate must be imported to finish creating the new intermediate CA. Navigate to <strong>Certificate Authorities -&gt; Manage CAs</strong>, click on the new intermediate CA and choose "Import Signed Certificate" from the menu. Paste the signed certificate into the text area and click "Import Certificate." The intermediate CA is now ready to issue certificates. Select it from the dropdown at the top of the page to begin using it.</p>
 
 
