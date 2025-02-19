@@ -1,5 +1,7 @@
-# Provisioning
-
+---
+title: IoT-HSM Provisioning
+description: Learn how to provision a certificate authority on PKIaaS.io to delegate signing operations to a YubiKey managed by IoT-HSM.
+---
 If you haven't yet deployed IoT-HSM, see the [installation documentation](installation.md) to get started.
 
 ### Create a CA with an HSM Key on PKIaaS.io

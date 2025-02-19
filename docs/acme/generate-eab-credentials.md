@@ -1,3 +1,7 @@
+---
+title: Generate EAB Credentials
+description: Learn how to generate external account binding (EAB) credentials for registering a new ACME account on PKIaaS.io.
+---
 An ACME policy must be created before EAB credentials can be generated. See [Create an ACME Policy](create-acme-policy.md) if this step hasn't been completed yet.
 
 The use of EAB (external account binding) allows PKIaaS.io to associate ACME accounts with a specific user's PKIaaS.io account, CA, and ACME policy. To generate an EAB for registering a new ACME account, login to PKIaaS.io and navigate to **ACME -> Policies**. Click the gears in the "External Account Bindings" column of one of the ACME policies to navigate to the EAB management page for the policy and click "Create". Enter a unique name for the EAB. Enter the desired value for "Allowed Use Count". This value represents the number of times this EAB can be used to register unique ACME accounts. Lastly, enter the expiration date after which ACME new account registrations will no longer be authorized with this EAB and click "Create EAB".

@@ -1,5 +1,7 @@
-# Overview
-
+---
+title: Overview
+description: Learn about IoT-HSM and how a YubiKey can be used as a hardware security module (HSM) to securely sign certificates.
+---
 See the [installation documentation](installation.md) to get started with IoT-HSM.
 
 ## Overview

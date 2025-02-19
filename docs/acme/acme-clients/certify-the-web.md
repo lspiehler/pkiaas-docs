@@ -1,4 +1,7 @@
-
+---
+title: Certify The Web
+description: Learn how to configure Certify the Web to request certificates via ACME from the PKIaaS.io.
+---
 Be sure to have the EAB KID and HMAC Key ready for the steps below. See [Generate EAB Credentials](../generate-eab-credentials.md) for more information.
 
 1. Download Certify the Web from [https://certifytheweb.com/](https://certifytheweb.com/) and install it.

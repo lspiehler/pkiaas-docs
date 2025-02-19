@@ -1,3 +1,7 @@
+---
+title: Online Certificate Status Protocol (OCSP)
+description: Learn about the Online Certificate Status Protocol (OCSP) service on PKIaaS.io.
+---
 ## Overview
 OCSP (Online Certificate Status Protocol) is a network protocol used in Public Key Infrastructure (PKI) to check the revocation status of digital certificates. It allows clients, like web browsers, to verify whether a certificate is still valid or has been revoked without requiring a full download of a Certificate Revocation List (CRL).
 

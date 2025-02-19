@@ -1,4 +1,7 @@
-# Overview
+---
+title: Certificate Authorities Overview
+description: Learn how to create a certificate authority (CA) on PKIaaS.io.
+---
 A certificate authority (CA) serves as the foundation upon which all functionality on PKIaaS.io is built. Tasks like working with templates, issuing certificates, and managing ACME policies all operate within the scope of a CA. As such, the first step after signing into PKIaaS.io is creating a CA. Users will be automatically redirected to a setup page and prompted to create a CA before accessing other features of the site.
 
 Users can choose between creating a managed CA or one backed by an HSM. With a managed CA, the private key is securely stored using AES-256 encryption, offering a streamlined setup without additional configuration. Alternatively, the HSM-backed option integrates with a [PKIaaS.io IoT-HSM](https://pkiaas.io/iot-hsm), enabling key management via a YubiKey 5. In this setup, all signing operations are routed to the IoT-HSM, where they are processed by the YubiKey. For detailed guidance on creating a CA with IoT-HSM, refer to the [IoT-HSM documentation](../iot-hsm/overview.md).

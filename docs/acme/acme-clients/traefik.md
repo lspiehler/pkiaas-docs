@@ -1,3 +1,7 @@
+---
+title: Traefik
+description: Learn how to configure Traefik to request certificates via ACME from the PKIaaS.io.
+---
 Be sure to have the EAB KID and HMAC Key ready for the steps below. See [Generate EAB Credentials](../generate-eab-credentials.md) for more information.
 
 All values that appear in ALL CAPS in the examples below must be customized with values specific to you.

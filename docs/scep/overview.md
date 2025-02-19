@@ -1,3 +1,7 @@
+---
+title: SCEP Overview
+description: Learn about using SCEP to automate the request and issuance of digital certificates from a certificate authority on PKIaaS.io.
+---
 SCEP (Simple Certificate Enrollment Protocol) is a long-established, open source protocol that automates the request and issuance of digital certificates from a certificate authority over HTTP. SCEP is often used by mobile device management (MDM) solutions to issue certificates to managed devices. It is also often used by network devices, such as routers and switches, to obtain certificates for secure communication.
 
 ## Enabling SCEP

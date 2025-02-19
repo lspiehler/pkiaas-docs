@@ -1,4 +1,7 @@
-# Installation
+---
+title: IoT-HSM Installation
+description: Learn how to install IoT-HSM on an Ubuntu server.
+---
 To get started with IoT-HSM, it is recommend to deploy a Long-Term Support (LTS) version of [Ubuntu Server](https://ubuntu.com/download/server). IoT-HSM has been tested on Ubuntu 20.04, 22.04, and 24.04. Once Ubuntu is installed and updated, login to a terminal shell, and execute the following commands as the root user. You can access a root shell by entering `sudo su -` at the terminal.
 ```
 apt update
