@@ -10,9 +10,11 @@ theme:
     - search.suggest
 
 nav:
-  - ⬅ Return to PKIaas.io: https://pkiaas.io
-  - Home: index.md
+  - Return to PKIaas.io: https://pkiaas.io
   - Getting Started: getting-started.md
+  - Post-Quantum Cryptography:
+      - Overview: post-quantum-cryptography/overview.md
+      - ML-DSA: post-quantum-cryptography/ml-dsa.md
   - Certificate Authorities:
     - Overview: certificate-authorities/overview.md
     - Create Certificate Authorities: certificate-authorities/create.md
@@ -52,22 +54,19 @@ nav:
       - Overview: iot-hsm/overview.md
       - Installation: iot-hsm/installation.md
       - Provisioning: iot-hsm/provisioning.md
-  - Post-Quantum Cryptography:
-      - Overview: post-quantum-cryptography/overview.md
-      - ML-DSA: post-quantum-cryptography/ml-dsa.md
-  - Use Cases:
-    - Sample Use Case: use-cases/sample-use-case.md
-  - 📄 Download PDF: pdf/document.pdf
+  # - Use Cases:
+  #   - Sample Use Case: use-cases/sample-use-case.md
+  # - Download PDF: pdf/document.pdf
 
 plugins:
   - search
   - social
   - glightbox
-  - with-pdf:
-      author: Lyas Spiehler
-      cover_subtitle: ""
-      copyright: Copyright © PKIaaS.io 2019-2024
-      toc_level: 3
+  # - with-pdf:
+  #     author: Lyas Spiehler
+  #     cover_subtitle: ""
+  #     copyright: Copyright © PKIaaS.io 2019-2024
+  #     toc_level: 3
 
 markdown_extensions:
   - pymdownx.highlight:
@@ -78,9 +77,9 @@ markdown_extensions:
   - pymdownx.snippets
   - pymdownx.superfences
   - attr_list
-  - pymdownx.emoji:
-      emoji_index: !!python/name:material.extensions.emoji.twemoji
-      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  # - pymdownx.emoji:
+  #     emoji_index: !!python/name:material.extensions.emoji.twemoji
+  #     emoji_generator: !!python/name:material.extensions.emoji.to_svg
 
 extra:
   analytics:
