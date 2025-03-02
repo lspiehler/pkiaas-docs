@@ -266,7 +266,7 @@
   
   
     <li class="md-nav__item">
-      <a href="https://pkiaas.io" class="md-nav__link">
+      <a href="https://www.pkiaas.io" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1558,7 +1558,7 @@
 <h2 id="ocsp-signing-certificate">OCSP Signing Certificate</h2>
 <p>By default, PKIaaS.io generates a certificate with the "OCSP Signing" extended key usage (EKU) attribute for each CA when the CA is created. The certificate will appear in <strong>X509 Certificates -&gt; Issued Certificates</strong> with the common name "PKIaaS.io OCSP Responder". This certificate is used to sign OCSP responses for the CA. When the certificate expires or is manually revoked, a new OCSP signing certificate will be generated on demand during the next OCSP request.</p>
 <h2 id="ocsp-responder-url">OCSP Responder URL</h2>
-<p>To find the OCSP responder URL along with many other service URLs, login to <a href="https://pkiaas.io/auth/login">PKIaaS.io</a>, and navigate to <strong>Certificate Authorities -&gt; Manage CAs</strong>. Click on the desired CA, and Select "Show CA Service URLs". A valid OCSP request must be sent to the OCSP responder URL to receive a signed OCSP response. Tools like the <a href="https://certificatetools.com/ocsp-checker">OCSP Checker</a> can be used to return the OCSP response for a certificate.</p>
+<p>To find the OCSP responder URL along with many other service URLs, login to <a href="https://www.pkiaas.io/auth/login">PKIaaS.io</a>, and navigate to <strong>Certificate Authorities -&gt; Manage CAs</strong>. Click on the desired CA, and Select "Show CA Service URLs". A valid OCSP request must be sent to the OCSP responder URL to receive a signed OCSP response. Tools like the <a href="https://certificatetools.com/ocsp-checker">OCSP Checker</a> can be used to return the OCSP response for a certificate.</p>
 <h2 id="ocsp-in-the-aia-extension">OCSP in the AIA Extension</h2>
 <p>By default, the OCSP URL is also encoded in issued certificates in the Authority Information Access (AIA) extension. This can be changed within a certificate template by navigating to <strong>Certificate Templates -&gt; Manage Templates</strong>, clicking on a template, and selecting "Edit Template". The OCSP URL can be removed from certificates issues using the template by unchecking "Include OCSP Extension in Certificate" in the <strong>CRL / OCSP / AIA / CPS</strong> section of the template settings.</p>
 
