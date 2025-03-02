@@ -10,7 +10,7 @@ theme:
     - search.suggest
 
 nav:
-  - Return to PKIaas.io: https://pkiaas.io
+  - Return to PKIaas.io: https://www.pkiaas.io
   - Getting Started: getting-started.md
   - Post-Quantum Cryptography:
       - Overview: post-quantum-cryptography/overview.md

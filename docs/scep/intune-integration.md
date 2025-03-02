@@ -20,7 +20,7 @@ After following the Microsoft documentation, it is required to also add the "App
 9. Finally, grant admin consent to this permission
 
 ## Enabling Intune Integration
-To enable Intune integration, login to [PKIaaS.io](https://pkiaas.io/auth/login), and navigate to **Certificate Templates -> Manage Templates**, click on the template you wish to enable Microsoft Intune integration for, then click "Edit Template" and select the "SCEP" tab. Check the "Enable Microsoft Intune/Endpoint Manager Integration" checkbox. A form will appear requiring the following information:
+To enable Intune integration, login to [PKIaaS.io](https://www.pkiaas.io/auth/login), and navigate to **Certificate Templates -> Manage Templates**, click on the template you wish to enable Microsoft Intune integration for, then click "Edit Template" and select the "SCEP" tab. Check the "Enable Microsoft Intune/Endpoint Manager Integration" checkbox. A form will appear requiring the following information:
 
 * **Tenant ID:** the tenant ID for your Azure tenant (refer to step 6 from the [Microsoft Intune documentation](https://learn.microsoft.com/en-us/mem/intune/protect/certificate-authority-add-scep-overview#authorize-communication-between-ca-and-intune){:target="_blank"})
 * **Application (client) ID:** the application (client) ID for the application registration created previously in Azure AD (refer to step 4 from the [Microsoft Intune documentation](https://learn.microsoft.com/en-us/mem/intune/protect/certificate-authority-add-scep-overview#authorize-communication-between-ca-and-intune){:target="_blank"})

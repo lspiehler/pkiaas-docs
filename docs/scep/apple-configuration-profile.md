@@ -8,7 +8,7 @@ PKIaaS.io supports a feature that allows Apple devices running iOS or MacOS to r
 SCEP must first be enabled on the template that will be used to issue certificates to Apple devices. Follow the steps in the [SCEP Overview](overview.md/#enabling-scep) to enable SCEP on the template.
 
 ## Create an Apple Configuration Profile
-To create an Apple configuration profile to request a certificate via SCEP, login to [PKIaaS.io](https://pkiaas.io/auth/login), and navigate to **Certificate Templates -> Manage Templates**, click on the template you wish to issue the certificate from, and click "Create Pre-Approved Request". Fill out the form following the below instructions:
+To create an Apple configuration profile to request a certificate via SCEP, login to [PKIaaS.io](https://www.pkiaas.io/auth/login), and navigate to **Certificate Templates -> Manage Templates**, click on the template you wish to issue the certificate from, and click "Create Pre-Approved Request". Fill out the form following the below instructions:
 
 1. Enter the desired subject alternative names, common names and other subject attributes
 2. Choose the "Apple Device" option

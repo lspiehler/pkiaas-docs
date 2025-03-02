@@ -6,7 +6,7 @@ description: Learn how to use the PKIaaS.io timestamping service to add trusted 
 Timestamping is the process of adding a trusted and verifiable time and date to a piece of digital data. This establishes proof that the data existed or was signed at a specific moment in time and has not been altered since. It ensures that signed data remains verifiable and trustworthy long after the initial signing event, even after the signing certificate has expired.
 
 ## Timestamping Service
-PKIaaS.io provides a timestamping service that allows users to request a trusted timestamp for code signing, PDF document signing, etc. Both the RFC 3161 and Authenticode timestamping protocols are supported. The timestamping service URL is unique to each CA and can be found by logging into [PKIaaS.io](https://pkiaas.io/auth/login) and navigating to **Certificate Authorities -> Manage CAs**. Click on the desired CA, and select "Show CA Service URLs".
+PKIaaS.io provides a timestamping service that allows users to request a trusted timestamp for code signing, PDF document signing, etc. Both the RFC 3161 and Authenticode timestamping protocols are supported. The timestamping service URL is unique to each CA and can be found by logging into [PKIaaS.io](https://www.pkiaas.io/auth/login) and navigating to **Certificate Authorities -> Manage CAs**. Click on the desired CA, and select "Show CA Service URLs".
 
 ## More Information
 See the links below for more information about various tools for timestamping documents and code.
