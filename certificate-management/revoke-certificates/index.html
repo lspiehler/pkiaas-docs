@@ -6,17 +6,17 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Learn how to create a certificate authority (CA) on PKIaaS.io.">
+        <meta name="description" content="Learn how to revoke certificates on PKIaaS.io.">
       
       
       
-        <link rel="canonical" href="https://docs.pkiaas.io/certificate-authorities/overview/">
+        <link rel="canonical" href="https://docs.pkiaas.io/certificate-management/revoke-certificates/">
       
       
-        <link rel="prev" href="../../post-quantum-cryptography/ml-dsa/">
+        <link rel="prev" href="../pending-requests/">
       
       
-        <link rel="next" href="../create/">
+        <link rel="next" href="../../certificate-issuance-workflows/overview/">
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
@@ -24,7 +24,7 @@
     
     
       
-        <title>Certificate Authorities Overview - PKIaaS.io Documentation</title>
+        <title>Revoke Certificates - PKIaaS.io Documentation</title>
       
     
     
@@ -66,11 +66,11 @@
       
         <meta  property="og:type"  content="website" >
       
-        <meta  property="og:title"  content="Certificate Authorities Overview - PKIaaS.io Documentation" >
+        <meta  property="og:title"  content="Revoke Certificates - PKIaaS.io Documentation" >
       
-        <meta  property="og:description"  content="Learn how to create a certificate authority (CA) on PKIaaS.io." >
+        <meta  property="og:description"  content="Learn how to revoke certificates on PKIaaS.io." >
       
-        <meta  property="og:image"  content="https://docs.pkiaas.io/assets/images/social/certificate-authorities/overview.png" >
+        <meta  property="og:image"  content="https://docs.pkiaas.io/assets/images/social/certificate-management/revoke-certificates.png" >
       
         <meta  property="og:image:type"  content="image/png" >
       
@@ -78,15 +78,15 @@
       
         <meta  property="og:image:height"  content="630" >
       
-        <meta  property="og:url"  content="https://docs.pkiaas.io/certificate-authorities/overview/" >
+        <meta  property="og:url"  content="https://docs.pkiaas.io/certificate-management/revoke-certificates/" >
       
         <meta  name="twitter:card"  content="summary_large_image" >
       
-        <meta  name="twitter:title"  content="Certificate Authorities Overview - PKIaaS.io Documentation" >
+        <meta  name="twitter:title"  content="Revoke Certificates - PKIaaS.io Documentation" >
       
-        <meta  name="twitter:description"  content="Learn how to create a certificate authority (CA) on PKIaaS.io." >
+        <meta  name="twitter:description"  content="Learn how to revoke certificates on PKIaaS.io." >
       
-        <meta  name="twitter:image"  content="https://docs.pkiaas.io/assets/images/social/certificate-authorities/overview.png" >
+        <meta  name="twitter:image"  content="https://docs.pkiaas.io/assets/images/social/certificate-management/revoke-certificates.png" >
       
     
     
@@ -111,7 +111,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#options" class="md-skip">
+        <a href="#revoke-a-certificate" class="md-skip">
           Skip to content
         </a>
       
@@ -147,7 +147,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Certificate Authorities Overview
+              Revoke Certificates
             
           </span>
         </div>
@@ -387,19 +387,17 @@
       
   
   
-    
   
   
-  
     
     
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
         
           
           <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
@@ -413,7 +411,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             Certificate Authorities
@@ -424,28 +422,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  <span class="md-ellipsis">
-    Overview
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../certificate-authorities/overview/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -454,84 +434,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#options" class="md-nav__link">
-    <span class="md-ellipsis">
-      Options
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Options">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#subject-attributes" class="md-nav__link">
-    <span class="md-ellipsis">
-      Subject Attributes
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#private-key" class="md-nav__link">
-    <span class="md-ellipsis">
-      Private Key
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#hash-algorithm-validity-and-path-length" class="md-nav__link">
-    <span class="md-ellipsis">
-      Hash Algorithm, Validity, and Path Length
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#key-usage" class="md-nav__link">
-    <span class="md-ellipsis">
-      Key Usage
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#intermediate-ca" class="md-nav__link">
-    <span class="md-ellipsis">
-      Intermediate CA
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -544,7 +446,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../create/" class="md-nav__link">
+      <a href="../../certificate-authorities/create/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -565,7 +467,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../edit/" class="md-nav__link">
+      <a href="../../certificate-authorities/edit/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -586,7 +488,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../delete/" class="md-nav__link">
+      <a href="../../certificate-authorities/delete/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -758,17 +660,19 @@
       
   
   
+    
   
   
+  
     
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
         
           
           <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
@@ -782,7 +686,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             Certificate Management
@@ -796,7 +700,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../certificate-management/pending-requests/" class="md-nav__link">
+      <a href="../pending-requests/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -814,10 +718,28 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../certificate-management/revoke-certificates/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Revoke Certificates
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -826,6 +748,42 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#revoke-a-certificate" class="md-nav__link">
+    <span class="md-ellipsis">
+      Revoke a Certificate
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#unrevoke-a-certificate" class="md-nav__link">
+    <span class="md-ellipsis">
+      Unrevoke a Certificate
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1532,62 +1490,20 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#options" class="md-nav__link">
+  <a href="#revoke-a-certificate" class="md-nav__link">
     <span class="md-ellipsis">
-      Options
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Options">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#subject-attributes" class="md-nav__link">
-    <span class="md-ellipsis">
-      Subject Attributes
+      Revoke a Certificate
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#private-key" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#unrevoke-a-certificate" class="md-nav__link">
     <span class="md-ellipsis">
-      Private Key
+      Unrevoke a Certificate
     </span>
   </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#hash-algorithm-validity-and-path-length" class="md-nav__link">
-    <span class="md-ellipsis">
-      Hash Algorithm, Validity, and Path Length
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#key-usage" class="md-nav__link">
-    <span class="md-ellipsis">
-      Key Usage
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#intermediate-ca" class="md-nav__link">
-    <span class="md-ellipsis">
-      Intermediate CA
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1606,7 +1522,7 @@
                   
 
   
-    <a href="https://github.com/lspiehler/pkiaas-docs/edit/master/docs/certificate-authorities/overview.md" title="Edit this page" class="md-content__button md-icon">
+    <a href="https://github.com/lspiehler/pkiaas-docs/edit/master/docs/certificate-management/revoke-certificates.md" title="Edit this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -1615,28 +1531,20 @@
     
       
     
-    <a href="https://github.com/lspiehler/pkiaas-docs/raw/master/docs/certificate-authorities/overview.md" title="View source of this page" class="md-content__button md-icon">
+    <a href="https://github.com/lspiehler/pkiaas-docs/raw/master/docs/certificate-management/revoke-certificates.md" title="View source of this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
     </a>
   
 
 
-  <h1>Overview</h1>
+  <h1>Revoke Certificates</h1>
 
-<p>A certificate authority (CA) serves as the foundation upon which all functionality on PKIaaS.io is built. Tasks like working with templates, issuing certificates, and managing ACME policies all operate within the scope of a CA. As such, the first step after signing into PKIaaS.io is creating a CA. Users will be automatically redirected to a setup page and prompted to create a CA before accessing other features of the site.</p>
-<p>Users can choose between creating a managed CA or one backed by an HSM. With a managed CA, the private key is securely stored using AES-256 encryption, offering a streamlined setup without additional configuration. Alternatively, the HSM-backed option integrates with a <a href="https://www.pkiaas.io/iot-hsm">PKIaaS.io IoT-HSM</a>, enabling key management via a YubiKey 5. In this setup, all signing operations are routed to the IoT-HSM, where they are processed by the YubiKey. For detailed guidance on creating a CA with IoT-HSM, refer to the <a href="../../iot-hsm/overview/">IoT-HSM documentation</a>.</p>
-<h2 id="options">Options</h2>
-<h3 id="subject-attributes">Subject Attributes</h3>
-<p>When creating a certificate authority (CA), users are provided with a range of flexible options to tailor their setup. The first six fields customize the subject attributes of the CA, with only the "Certificate Authority Name" (common name) being mandatory.</p>
-<h3 id="private-key">Private Key</h3>
-<p>Next, users can configure the private key settings. Various types of private key types are supported including RSA, ECC, and CRYSTALS-dilithium. Here, users can also opt to use HSM (as previously mentioned) or import an existing private key.</p>
-<h3 id="hash-algorithm-validity-and-path-length">Hash Algorithm, Validity, and Path Length</h3>
-<p>Further customization options include selecting the signature hash algorithm, specifying the path length, and setting the certificate authority's validity period. The signature algorithm chosen here determines how the CA's certificate is self-signed. Depending on the private key used, additional signature options may become available for signing certificates within the certificate templates after the CA is established. For more details on "Path Length," refer to RFC5280, which explains the "basic constraints" x509v3 attributes.</p>
-<h3 id="key-usage">Key Usage</h3>
-<p>It is not recommended to make changes to the default "Key Usage" and "Extended Key Usage" options. Making changes could result in issues with your certificate authority.</p>
-<h3 id="intermediate-ca">Intermediate CA</h3>
-<p>Finally, the "CSR Only" option is designed for cases where the CA being created will function as an intermediate or subordinate certificate authority rather than a root CA. This option generates a Certificate Signing Request (CSR) that must be signed by another CA. The signing can be performed by an external CA (such as Microsoft or EJBCA) or another PKIaaS.io CA. Once the signed certificate is obtained, it must be imported before the CA can be activated and used.</p>
+<h2 id="revoke-a-certificate">Revoke a Certificate</h2>
+<p>To revoke a certificate, login to PKIaaS.io and navigate to <strong>X509 Certificates -&gt; Issued Certificates</strong> in the navigation pane on the left of the page. Click on the certificate you'd like to revoke and select the "Revocation" tab in the modal. Choose an option from the "Revocation Reason" dropdown and click "Revoke".</p>
+<h2 id="unrevoke-a-certificate">Unrevoke a Certificate</h2>
+<p>A certificate can only be unrevoked if it was revoked using the certificate hold revocation reason. To unrevoke a certificate, navigate to <strong>X509 Certificates -&gt; Issued Certificates</strong> in the navigation pane on the left of the page. Click on the certificate you'd like to unrevoke and select the "Revocation" tab in the modal. If the certificate was revoked using the "certificateHold" revocation reason, an "Unrevoke" button will be available to undo the revocation.</p>
+<p><strong>Note:</strong> Any revocation reason other than "certificateHold" will result in a permanent revocation that cannot be undone.</p>
 
 
 
