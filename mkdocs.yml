@@ -28,6 +28,7 @@ nav:
     - Service URLs: certificate-templates/service-urls.md
   - Certificate Management:
     - Pending Requests: certificate-management/pending-requests.md
+    - Revoke Certificates: certificate-management/revoke-certificates.md
   - Certificate Issuance Workflows:
     - Overview: certificate-issuance-workflows/overview.md
     - Sign a CSR from the Admin UI: certificate-issuance-workflows/sign-a-csr-from-the-admin-ui.md
