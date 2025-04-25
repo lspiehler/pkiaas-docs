@@ -7,18 +7,6 @@ PKIaaS.io natively supports SCEP integration with Microsoft Intune allowing cert
 ## Prerequisites
 Before the Intune integration can be configured, communication must be authorized between PKIaaS.io and Intune. Follow Microsoft"s documentation to configure the necessary permissions and create an application registration in Azure AD. [https://learn.microsoft.com/en-us/mem/intune/protect/certificate-authority-add-scep-overview](https://learn.microsoft.com/en-us/mem/intune/protect/certificate-authority-add-scep-overview#authorize-communication-between-ca-and-intune){:target="_blank"}
 
-After following the Microsoft documentation, it is required to also add the "Application.Read.All" permission to the application registration created in Azure AD in the previous step for "Azure Active Directory Graph". This permission is required to allow PKIaaS.io to query the graph API for the ScepRequestValidationFEService service principal endpoint. Follow the steps below:
-
-1. Navigate to the azure app created in the first step
-2. Go to API permissions
-3. Click "Add a permission"
-4. Select the "APIs my organization uses" tab
-5. Search for "Windows"
-6. Select "Windows Azure Active Directory"
-7. Select "Application permissions"
-8. Select "Application.Read.All"
-9. Finally, grant admin consent to this permission
-
 ## Enabling Intune Integration
 To enable Intune integration, login to [PKIaaS.io](https://www.pkiaas.io/auth/login), and navigate to **Certificate Templates -> Manage Templates**, click on the template you wish to enable Microsoft Intune integration for, then click "Edit Template" and select the "SCEP" tab. Check the "Enable Microsoft Intune/Endpoint Manager Integration" checkbox. A form will appear requiring the following information:
 
