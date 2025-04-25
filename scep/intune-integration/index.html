@@ -1561,18 +1561,6 @@
 <p>PKIaaS.io natively supports SCEP integration with Microsoft Intune allowing certificates to be validated and issued to devices managed by Intune.</p>
 <h2 id="prerequisites">Prerequisites</h2>
 <p>Before the Intune integration can be configured, communication must be authorized between PKIaaS.io and Intune. Follow Microsoft"s documentation to configure the necessary permissions and create an application registration in Azure AD. <a href="https://learn.microsoft.com/en-us/mem/intune/protect/certificate-authority-add-scep-overview#authorize-communication-between-ca-and-intune" target="_blank">https://learn.microsoft.com/en-us/mem/intune/protect/certificate-authority-add-scep-overview</a></p>
-<p>After following the Microsoft documentation, it is required to also add the "Application.Read.All" permission to the application registration created in Azure AD in the previous step for "Azure Active Directory Graph". This permission is required to allow PKIaaS.io to query the graph API for the ScepRequestValidationFEService service principal endpoint. Follow the steps below:</p>
-<ol>
-<li>Navigate to the azure app created in the first step</li>
-<li>Go to API permissions</li>
-<li>Click "Add a permission"</li>
-<li>Select the "APIs my organization uses" tab</li>
-<li>Search for "Windows"</li>
-<li>Select "Windows Azure Active Directory"</li>
-<li>Select "Application permissions"</li>
-<li>Select "Application.Read.All"</li>
-<li>Finally, grant admin consent to this permission</li>
-</ol>
 <h2 id="enabling-intune-integration">Enabling Intune Integration</h2>
 <p>To enable Intune integration, login to <a href="https://www.pkiaas.io/auth/login">PKIaaS.io</a>, and navigate to <strong>Certificate Templates -&gt; Manage Templates</strong>, click on the template you wish to enable Microsoft Intune integration for, then click "Edit Template" and select the "SCEP" tab. Check the "Enable Microsoft Intune/Endpoint Manager Integration" checkbox. A form will appear requiring the following information:</p>
 <ul>
