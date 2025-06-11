@@ -110,6 +110,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#launch-certificate-management" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -1332,6 +1337,17 @@
       
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Request Certificates
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -1341,6 +1357,68 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#launch-certificate-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      Launch Certificate Management
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#select-the-enrollment-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      Select the Enrollment Policy
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#select-the-certificate-template" class="md-nav__link">
+    <span class="md-ellipsis">
+      Select the Certificate Template
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configure-certificate-request-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configure Certificate Request Settings
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#request-the-certificate" class="md-nav__link">
+    <span class="md-ellipsis">
+      Request the Certificate
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -1577,6 +1655,59 @@
   
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#launch-certificate-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      Launch Certificate Management
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#select-the-enrollment-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      Select the Enrollment Policy
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#select-the-certificate-template" class="md-nav__link">
+    <span class="md-ellipsis">
+      Select the Certificate Template
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configure-certificate-request-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configure Certificate Request Settings
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#request-the-certificate" class="md-nav__link">
+    <span class="md-ellipsis">
+      Request the Certificate
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1610,16 +1741,26 @@
 
 <p>Before requesting certificates using the PKIaaS.io native Windows integration, an enrollment policy must be added to the Windows client. See <a href="../add-enrollment-policy/">Add Enrollment Policy</a> if this step hasn't been completed yet.</p>
 <ol>
-<li>Use the command certmgr.msc (for user certificates) or certlm.msc (for machine certificates) to open the Certificate Manager. Right-click on "Personal" and select "All Tasks -&gt; Advanced Operations -&gt; Manage Enrollment Policies...". This will open the Certificate Enrollment wizard.<br />
+<li>
+<h3 id="launch-certificate-management">Launch Certificate Management</h3>
+Use the command certmgr.msc (for user certificates) or certlm.msc (for machine certificates) to open the Certificate Manager. Right-click on "Personal" and select "All Tasks -&gt; Advanced Operations -&gt; Manage Enrollment Policies...". This will open the Certificate Enrollment wizard.<br />
 <a class="glightbox" href="../../images/request-new-certificate.png" data-type="image" data-width="auto" data-height="auto" data-desc-position="bottom"><img alt="Request New Certificate" src="../../images/request-new-certificate.png" /></a></li>
-<li>Click "Next" to continue, select the enrollment policy server that was added previously. You may be prompted to enter the username and password for the CEP service if you are using Username/Password authentication. If you are using X.509 Certificate authentication, select the certificate to use for authentication.<br />
+<li>
+<h3 id="select-the-enrollment-policy">Select the Enrollment Policy</h3>
+Click "Next" to continue, select the enrollment policy server that was added previously. You may be prompted to enter the username and password for the CEP service if you are using Username/Password authentication. If you are using X.509 Certificate authentication, select the certificate to use for authentication.<br />
 <a class="glightbox" href="../../images/enrollment-policies.png" data-type="image" data-width="auto" data-height="auto" data-desc-position="bottom"><img alt="Enrollment Policies" src="../../images/enrollment-policies.png" /></a></li>
-<li>A list of CES enabled certificate templates will be displayed. If the template you want to use is not listed, ensure that the template is CES enabled and that it is configured with the correct template type (Computer or User) for the certificate you want to request. Select the template you want to use and click "Next".<br />
+<li>
+<h3 id="select-the-certificate-template">Select the Certificate Template</h3>
+A list of CES enabled certificate templates will be displayed. If the template you want to use is not listed, ensure that the template is CES enabled and that it is configured with the correct template type (Computer or User) for the certificate you want to request. Select the template you want to use and click "Next".<br />
 <a class="glightbox" href="../../images/ces-enabled-templates.png" data-type="image" data-width="auto" data-height="auto" data-desc-position="bottom"><img alt="CES Enabled Templates" src="../../images/ces-enabled-templates.png" /></a><br />
 <strong>Note:</strong> If a template was added or modified recently, it may take up to an hour for the changes to propagate to the Windows client due to caching. For immediate access to the new or modified template, the enrollment policy must be removed and re-added on the Windows client.</li>
-<li>Click the warning link beneath the template "More information is required to enroll for this certificate. Click here to configure settings." This will open the certificate properties dialog where you can configure the certificate request settings including subject attributes, subject alternative names (SANs), and cryptographic options. The options available will depend on the template configuration. Once you have configured the settings, click "OK" to close the dialog.<br />
+<li>
+<h3 id="configure-certificate-request-settings">Configure Certificate Request Settings</h3>
+Click the warning link beneath the template "More information is required to enroll for this certificate. Click here to configure settings." This will open the certificate properties dialog where you can configure the certificate request settings including subject attributes, subject alternative names (SANs), and cryptographic options. The options available will depend on the template configuration. Once you have configured the settings, click "OK" to close the dialog.<br />
 <a class="glightbox" href="../../images/certificate-properties-dialog.png" data-type="image" data-width="auto" data-height="auto" data-desc-position="bottom"><img alt="Certificate Properties Dialog" src="../../images/certificate-properties-dialog.png" /></a></li>
-<li>Finally, click "Enroll" to request the certificate. The certificate will be requested from the PKIaaS.io CES service using the selected template and the configured settings. Unless it is cached from a previous request, you will be prompted to enter the username and password associated with the template for the CES service. If the request is successful, the certificate will be issued and added to the "Personal" store in the Certificate Manager.
+<li>
+<h3 id="request-the-certificate">Request the Certificate</h3>
+Finally, click "Enroll" to request the certificate. The certificate will be requested from the PKIaaS.io CES service using the selected template and the configured settings. Unless it is cached from a previous request, you will be prompted to enter the username and password associated with the template for the CES service. If the request is successful, the certificate will be issued and added to the "Personal" store in the Certificate Manager.
 <a class="glightbox" href="../../images/certificate-enrollment.png" data-type="image" data-width="auto" data-height="auto" data-desc-position="bottom"><img alt="Certificate Enrollment" src="../../images/certificate-enrollment.png" /></a></li>
 </ol>
 
