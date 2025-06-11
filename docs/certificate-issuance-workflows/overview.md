@@ -9,3 +9,5 @@ PKIaaS.io supports multiple workflows for issuing certificates. See the links be
 ## Automated Workflows
 * [Issue Certificates via ACME](../acme/overview.md)
 * [Issue Certificates via SCEP](../scep/overview.md)
+
+**Note**: All expired certificates are automatically removed from the system 30 days after expiration. This ensures the certificate management system remains performant and only retains valid, relevant certificates.

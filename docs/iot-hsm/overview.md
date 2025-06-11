@@ -3,8 +3,6 @@ title: Overview
 description: Learn about IoT-HSM and how a YubiKey can be used as a hardware security module (HSM) to securely sign certificates.
 ---
 See the [installation documentation](installation.md) to get started with IoT-HSM.
-
-## Overview
 IoT-HSM is a lightweight application designed to enable a persistent connection between one or more YubiKeys and PKIaaS.io. Once deployed and provisioned for a Certificate Authority (CA), it securely forwards all signing requests for the CA from PKIaaS.io to the IoT-HSM, where the connected YubiKey handles the signing. To ensure robust security, all communications with the IoT-HSM are digitally signed with end-to-end encryption via S/MIME. Advantages of using IoT-HMS with YubiKeys include:
 
 * IoT-HSM is an extremely affordable HSM solution (only the cost of the [YubiKey](https://www.yubico.com/product/yubikey-5-series/yubikey-5-nfc/){:target="_blank"})

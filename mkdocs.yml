@@ -12,6 +12,7 @@ theme:
 nav:
   - Return to PKIaas.io: https://www.pkiaas.io
   - Getting Started: getting-started.md
+  - Patreon Subscription: patreon-subscription.md
   - Post-Quantum Cryptography:
       - Overview: post-quantum-cryptography/overview.md
       - ML-DSA: post-quantum-cryptography/ml-dsa.md
@@ -48,6 +49,10 @@ nav:
     - Apple Configuration Profile: scep/apple-configuration-profile.md
     - Static Passphrase: scep/static-passphrase.md
     - Security: scep/security.md
+  - Windows Integration:
+      - Overview: windows-integration/overview.md
+      - Add Enrollment Policy: windows-integration/add-enrollment-policy.md
+      - Request Certificates: windows-integration/request-certificates.md
   - OCSP: ocsp.md
   - CRL: crl.md
   - Timestamping: timestamping.md
@@ -57,6 +62,7 @@ nav:
       - Provisioning: iot-hsm/provisioning.md
   # - Use Cases:
   #   - Sample Use Case: use-cases/sample-use-case.md
+  - Troubleshooting: troubleshooting.md
   - Download PDF: pdf/document.pdf
 
 plugins:
