@@ -1357,48 +1357,6 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Client Configuration">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#install-the-root-ca-certificate" class="md-nav__link">
-    <span class="md-ellipsis">
-      Install the Root CA Certificate
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#configure-certificate-enrollment-policy" class="md-nav__link">
-    <span class="md-ellipsis">
-      Configure Certificate Enrollment Policy
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#launch-certificate-manager" class="md-nav__link">
-    <span class="md-ellipsis">
-      Launch Certificate Manager
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#add-the-enrollment-policy" class="md-nav__link">
-    <span class="md-ellipsis">
-      Add the Enrollment Policy
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
       
     </ul>
@@ -1674,48 +1632,6 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Client Configuration">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#install-the-root-ca-certificate" class="md-nav__link">
-    <span class="md-ellipsis">
-      Install the Root CA Certificate
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#configure-certificate-enrollment-policy" class="md-nav__link">
-    <span class="md-ellipsis">
-      Configure Certificate Enrollment Policy
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#launch-certificate-manager" class="md-nav__link">
-    <span class="md-ellipsis">
-      Launch Certificate Manager
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#add-the-enrollment-policy" class="md-nav__link">
-    <span class="md-ellipsis">
-      Add the Enrollment Policy
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
       
     </ul>
@@ -1755,21 +1671,15 @@
 <h2 id="client-configuration">Client Configuration</h2>
 <p>To configure Windows clients for certificate issuance and renewal with PKIaaS.io, follow these steps:</p>
 <ol>
+<li><strong>Install the Root CA Certificate</strong>: Download the root CA certificate from PKIaaS.io and install it on the Windows client. This is necessary to trust the certificates issued by PKIaaS.io. The root CA certificate can be downloaded by navigating to <strong>Certificate Authorities -&gt; Manage CAs</strong> in the navigation pane on the left side of the page. Click on the CA you want to download, and select <strong>Get CA Certificate(s)</strong>. A download option is available beneath the "Certificate" tab. Import the certificate into the "Trusted Root Certification Authorities" store on the Windows client.</li>
 <li>
-<h3 id="install-the-root-ca-certificate">Install the Root CA Certificate</h3>
-Download the root CA certificate from PKIaaS.io and install it on the Windows client. This is necessary to trust the certificates issued by PKIaaS.io. The root CA certificate can be downloaded by navigating to <strong>Certificate Authorities -&gt; Manage CAs</strong> in the navigation pane on the left side of the page. Click on the CA you want to download, and select <strong>Get CA Certificate(s)</strong>. A download option is available beneath the "Certificate" tab. Import the certificate into the "Trusted Root Certification Authorities" store on the Windows client.</li>
-<li>
-<h3 id="configure-certificate-enrollment-policy">Configure Certificate Enrollment Policy</h3>
+<p><strong>Configure Certificate Enrollment Policy</strong>: </p>
 <ul>
-<li>
-<h3 id="launch-certificate-manager">Launch Certificate Manager</h3>
-Use the command certmgr.msc (for user certificates) or certlm.msc (for machine certificates) to open the Certificate Manager. Right-click on "Personal" and select "All Tasks -&gt; Advanced Operations -&gt; Manage Enrollment Policies...". This will open the Certificate Enrollment wizard. Click "Next" to proceed.</li>
+<li>Use the command certmgr.msc (for user certificates) or certlm.msc (for machine certificates) to open the Certificate Manager. Right-click on "Personal" and select "All Tasks -&gt; Advanced Operations -&gt; Manage Enrollment Policies...". This will open the Certificate Enrollment wizard. Click "Next" to proceed.</li>
 </ul>
 <p><a class="glightbox" href="../../images/manage-enrollment-policies.png" data-type="image" data-width="auto" data-height="auto" data-desc-position="bottom"><img alt="Manage enrollment Policies" src="../../images/manage-enrollment-policies.png" /></a></p>
 <ul>
-<li>
-<h3 id="add-the-enrollment-policy">Add the Enrollment Policy</h3>
-Click "Add" to add a new enrollment policy server. Enter the URL of the PKIaaS.io CEP service. The URL can be found by navigating to <strong>Certificate Authorities -&gt; Manage CAs</strong> in the navigation pane on the left side of the page. Click on a CA, and select <strong>Show CA Service URLs</strong>. Use the "CEP (User/Pass)" or "CEP (Cert Auth)" URL, depending on the authentication method you want to use. Select "Username/password" or "X.509 Certificate" as the authentication type, based on the desired configuration and the URL supplied and click "Validate Server". You will be prompted to enter the username and password for the CEP service. If you are using X.509 Certificate authentication, you will need to select the certificate to use for authentication. Click "Add" to save the enrollment policy server.</li>
+<li>Click "Add" to add a new enrollment policy server. Enter the URL of the PKIaaS.io CEP service. The URL can be found by navigating to <strong>Certificate Authorities -&gt; Manage CAs</strong> in the navigation pane on the left side of the page. Click on a CA, and select <strong>Show CA Service URLs</strong>. Use the "CEP (User/Pass)" or "CEP (Cert Auth)" URL, depending on the authentication method you want to use. Select "Username/password" or "X.509 Certificate" as the authentication type, based on the desired configuration and the URL supplied and click "Validate Server". You will be prompted to enter the username and password for the CEP service. If you are using X.509 Certificate authentication, you will need to select the certificate to use for authentication. Click "Add" to save the enrollment policy server.</li>
 </ul>
 <p><a class="glightbox" href="../../images/add-enrollment-policy-server.png" data-type="image" data-width="auto" data-height="auto" data-desc-position="bottom"><img alt="Add Enrollment Policy Server" src="../../images/add-enrollment-policy-server.png" /></a></p>
 </li>
