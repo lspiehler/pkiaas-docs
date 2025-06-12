@@ -2,170 +2,174 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://docs.pkiaas.io/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
     </url>
     <url>
          <loc>https://docs.pkiaas.io/crl/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
     </url>
     <url>
          <loc>https://docs.pkiaas.io/getting-started/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
     </url>
     <url>
          <loc>https://docs.pkiaas.io/ocsp/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
     </url>
     <url>
          <loc>https://docs.pkiaas.io/patreon-subscription/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
     </url>
     <url>
          <loc>https://docs.pkiaas.io/timestamping/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
     </url>
     <url>
          <loc>https://docs.pkiaas.io/troubleshooting/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
     </url>
     <url>
          <loc>https://docs.pkiaas.io/acme/create-acme-policy/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
     </url>
     <url>
          <loc>https://docs.pkiaas.io/acme/generate-eab-credentials/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
     </url>
     <url>
          <loc>https://docs.pkiaas.io/acme/overview/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
     </url>
     <url>
          <loc>https://docs.pkiaas.io/acme/register-acme-account/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
     </url>
     <url>
          <loc>https://docs.pkiaas.io/acme/acme-clients/certbot/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
     </url>
     <url>
          <loc>https://docs.pkiaas.io/acme/acme-clients/certify-the-web/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
     </url>
     <url>
          <loc>https://docs.pkiaas.io/acme/acme-clients/traefik/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
     </url>
     <url>
          <loc>https://docs.pkiaas.io/certificate-authorities/create/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.pkiaas.io/certificate-authorities/delegate/</loc>
+         <lastmod>2025-06-12</lastmod>
     </url>
     <url>
          <loc>https://docs.pkiaas.io/certificate-authorities/delete/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
     </url>
     <url>
          <loc>https://docs.pkiaas.io/certificate-authorities/edit/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
     </url>
     <url>
          <loc>https://docs.pkiaas.io/certificate-authorities/overview/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
     </url>
     <url>
          <loc>https://docs.pkiaas.io/certificate-issuance-workflows/overview/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
     </url>
     <url>
          <loc>https://docs.pkiaas.io/certificate-issuance-workflows/sign-a-csr-from-the-admin-ui/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
     </url>
     <url>
          <loc>https://docs.pkiaas.io/certificate-management/pending-requests/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
     </url>
     <url>
          <loc>https://docs.pkiaas.io/certificate-management/revoke-certificates/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
     </url>
     <url>
          <loc>https://docs.pkiaas.io/certificate-templates/create/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
     </url>
     <url>
          <loc>https://docs.pkiaas.io/certificate-templates/delete/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
     </url>
     <url>
          <loc>https://docs.pkiaas.io/certificate-templates/edit/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
     </url>
     <url>
          <loc>https://docs.pkiaas.io/certificate-templates/overview/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
     </url>
     <url>
          <loc>https://docs.pkiaas.io/certificate-templates/service-urls/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
     </url>
     <url>
          <loc>https://docs.pkiaas.io/iot-hsm/installation/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
     </url>
     <url>
          <loc>https://docs.pkiaas.io/iot-hsm/overview/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
     </url>
     <url>
          <loc>https://docs.pkiaas.io/iot-hsm/provisioning/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
     </url>
     <url>
          <loc>https://docs.pkiaas.io/post-quantum-cryptography/ml-dsa/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
     </url>
     <url>
          <loc>https://docs.pkiaas.io/post-quantum-cryptography/overview/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
     </url>
     <url>
          <loc>https://docs.pkiaas.io/scep/apple-configuration-profile/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
     </url>
     <url>
          <loc>https://docs.pkiaas.io/scep/intune-integration/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
     </url>
     <url>
          <loc>https://docs.pkiaas.io/scep/microsoft-ndes-compatibility/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
     </url>
     <url>
          <loc>https://docs.pkiaas.io/scep/overview/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
     </url>
     <url>
          <loc>https://docs.pkiaas.io/scep/security/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
     </url>
     <url>
          <loc>https://docs.pkiaas.io/scep/static-passphrase/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
     </url>
     <url>
          <loc>https://docs.pkiaas.io/use-cases/sample-use-case/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
     </url>
     <url>
          <loc>https://docs.pkiaas.io/windows-integration/add-enrollment-policy/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
     </url>
     <url>
          <loc>https://docs.pkiaas.io/windows-integration/overview/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
     </url>
     <url>
          <loc>https://docs.pkiaas.io/windows-integration/request-certificates/</loc>
-         <lastmod>2025-06-11</lastmod>
+         <lastmod>2025-06-12</lastmod>
     </url>
 </urlset>
