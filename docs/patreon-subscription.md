@@ -1,5 +1,5 @@
 ---
-title: Overview
+title: Patreon Subscription
 description: Discover how supporting PKIaaS.io on Patreon helps remove account limitations and unlocks extra features.
 ---
 PKIaaS.io relies on community support. By subscribing on Patreon, you help sustain the platform's development and maintenance. Patreon subscribers enjoy lifted account restrictions and direct communication with support.
