@@ -21,6 +21,7 @@ nav:
     - Create Certificate Authorities: certificate-authorities/create.md
     - Edit Certificate Authorities: certificate-authorities/edit.md
     - Delete Certificate Authorities: certificate-authorities/delete.md
+    - Delegate CA Access: certificate-authorities/delegate.md
   - Certificate Templates:
     - Overview: certificate-templates/overview.md
     - Create Templates: certificate-templates/create.md
