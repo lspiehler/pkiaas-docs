@@ -1360,9 +1360,9 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#enabling-windows-integration" class="md-nav__link">
+  <a href="#enable-windows-integration" class="md-nav__link">
     <span class="md-ellipsis">
-      Enabling Windows Integration
+      Enable Windows Integration
     </span>
   </a>
   
@@ -1692,9 +1692,9 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#enabling-windows-integration" class="md-nav__link">
+  <a href="#enable-windows-integration" class="md-nav__link">
     <span class="md-ellipsis">
-      Enabling Windows Integration
+      Enable Windows Integration
     </span>
   </a>
   
@@ -1771,8 +1771,8 @@
 <h2 id="authentication">Authentication</h2>
 <p>PKIaaS.io supports Username/Password and X.509 Certificate authentication methods on Windows clients for both Certificate Enrollment Policy Web Service (CEP) and Certificate Enrollment Web Service (CES). X.509 Certificate authentication with the CES service can only be used for certificate renewal. Username and password must be used for new certificate enrollment.</p>
 <p>The username and password for CEP and CES can be defined in the CA edit and template edit pages, respectively, in their respective tabs. The username and password can be unique for each service or the option "Use CEP Credentials" can be selected within the template configuration to use the same credentials as CEP. The username and password may also be unique for each template, allowing for granular control over which templates can be used by users.</p>
-<h2 id="enabling-windows-integration">Enabling Windows Integration</h2>
-<p>CEP can be enabled by navigating to <strong>Certificate Authorities -&gt; Manage CAs</strong> in the navigation pane on the left side of the page. Click on the CA you want to enable CEP on, and select <strong>Edit CA</strong>. Navigate to the <strong>CEP</strong> tab and select the "Enable Microsoft Certificate Enrollment Policy Web Service (CEP)" checkbox. A mandatory username and password field will appear, allowing you to set the credentials for the CEP service. Click "Save" to apply the changes.</p>
+<h2 id="enable-windows-integration">Enable Windows Integration</h2>
+<p>CEP can be enabled by logging into <a href="https://www.pkiaas.io/auth/login">PKIaaS.io</a> and navigating to <strong>Certificate Authorities -&gt; Manage CAs</strong> in the navigation pane on the left side of the page. Click on the CA you want to enable CEP on, and select <strong>Edit CA</strong>. Navigate to the <strong>CEP</strong> tab and select the "Enable Microsoft Certificate Enrollment Policy Web Service (CEP)" checkbox. A mandatory username and password field will appear, allowing you to set the credentials for the CEP service. Click "Save" to apply the changes.</p>
 <p>CES can be enabled by navigating to <strong>Certificate Templates -&gt; Manage Templates</strong> in the navigation pane on the left side of the page. Click on the template you want to enable CES on, and select <strong>Edit Template</strong>. Navigate to the <strong>CES</strong> tab and select the "Enable Microsoft Certificate Enrollment Web Service (CES)" checkbox. This option is not available unless CEP has been enabled on the CA the template is associated with. Additional fields will appear, allowing the CES service to be configured. The username and password can be set to the same credentials as CEP by selecting the "Use CEP Credentials" checkbox, or they can be set to unique values. The username and password cannot be left blank if the "Use CEP Credentials" option is not selected. Click "Save" to apply the changes.</p>
 <p>CES must be manually enabled on each template that will be used for certificate issuance on Windows clients. All CES enabled templates will appear on windows clients when requesting certificates, however, unique usernames and passwords can be set for each template to control access to certificate issuance by each template.</p>
 <h2 id="template-types">Template Types</h2>
