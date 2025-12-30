@@ -60,21 +60,24 @@ nav:
   - Iot-HSM:
       - Overview: iot-hsm/overview.md
       - Installation: iot-hsm/installation.md
-      - Provisioning: iot-hsm/provisioning.md
+      - Create an HSM CA: iot-hsm/create-hsm-ca.md
+      - Configuration: iot-hsm/configuration.md
+      - Use a YubiKey: iot-hsm/yubikey.md
+      - Use Google Cloud KMS: iot-hsm/google-cloud-kms.md
   # - Use Cases:
   #   - Sample Use Case: use-cases/sample-use-case.md
   - Troubleshooting: troubleshooting.md
-  - Download PDF: pdf/document.pdf
+  # - Download PDF: pdf/document.pdf
 
 plugins:
   - search
   - social
   - glightbox
-  - with-pdf:
-      author: Lyas Spiehler
-      cover_subtitle: ""
-      copyright: Copyright © PKIaaS.io 2019-2024
-      toc_level: 3
+  # - with-pdf:
+  #     author: Lyas Spiehler
+  #     cover_subtitle: ""
+  #     copyright: Copyright © PKIaaS.io 2019-2024
+  #     toc_level: 3
 
 markdown_extensions:
   - pymdownx.highlight:
