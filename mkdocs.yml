@@ -64,6 +64,7 @@ nav:
       - Configuration: iot-hsm/configuration.md
       - Use a YubiKey: iot-hsm/yubikey.md
       - Use Google Cloud KMS: iot-hsm/google-cloud-kms.md
+      - Use SoftHSM2: iot-hsm/softhsm2.md
   # - Use Cases:
   #   - Sample Use Case: use-cases/sample-use-case.md
   - Troubleshooting: troubleshooting.md

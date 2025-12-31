@@ -6,6 +6,7 @@ If you haven't yet created an HSM CA and retrieved the provisioning certificate,
 
 * [Yubikey](yubikey.md)
 * [Google Cloud KMS](google-cloud-kms.md)
+* [SoftHSM2](softhsm2.md) (Not recommended for production use)
 
 ### Prepare the Private Key on the IoT-HSM
 Login to the IoT-HSM. From the "HSM Options..." dropdown on one of the available HSMs, choose "Provision a New Slot." This will navigate to the provisioning wizard. Choose the slot to provision and a key option.
@@ -25,7 +26,14 @@ Import a certificate after signing the CSR generated using the "Intermediate CA"
 **Note:** If at any time you need to navigate back to this page, go to the IoT-HSM home page, select the slot being provisioned from the "Configured Slots..." drop down, and click "Complete Provisioning."
 
 ### Import the New Certificate from the IoT-HSM to PKIaaS.io
-Navigate to the IoT-HSM home page. Select the newly provisioned slot from the "Configured Slots..." drop down and click "View Certificate." Copy the certificate to the clipboard and on PKIaaS.io, navigate to **Certificate Authorities -> Manage CAs**, click on the CA being provisioned, and select "Import Signed Certificate." Paste the certificate copied from the IoT-HSM into the text area and click "Import Certificate." A prompt will appear instructing to restart the IoT-HSM device. On the IoT-HSM home page, click "Reload" in the navigation bar at the top. Click "Import Certificate" again on the PKIaaS.io import signed CA page. If the imported certificate is an intermediate CA and PKIaaS.io is unable to download the certificate chain, a modal will appear prompting for the chain, including all intermediates and the root, to be supplied before the import can be completed.
+
+This is the final important step that will associate the newly provisioned HSM with the CA on PKIaaS.io.
+
+Navigate to the IoT-HSM home page. Select the newly provisioned slot from the "Configured Slots..." drop down and click "View Certificate." Copy the certificate to the clipboard and on PKIaaS.io, navigate to **Certificate Authorities -> Manage CAs**, click on the CA being provisioned, and select "Import Signed Certificate." Paste the certificate copied from the IoT-HSM into the text area and click "Import Certificate."
+
+A prompt will appear instructing to restart the IoT-HSM device. On the IoT-HSM home page, click "Reload" in the navigation bar at the top. Click "Import Certificate" again on the PKIaaS.io import signed CA page. If the imported certificate is an intermediate CA and PKIaaS.io is unable to download the certificate chain, a modal will appear prompting for the chain, including all intermediates and the root, to be supplied before the import can be completed.
 
 ### Provisioning Complete
 When the steps have all be completed successfully, all signing requests for the provisioned CA will be delegated to the HSM on the IoT-HSM. Signing operations will fail if the IoT-HSM is not online with the HSM configured/inserted.
+
+The number of successfully connected HSM slots will appear at the top right of the IoT-HSM home page. It may be necessary to refresh the page to see the updated status, as it may take a few moments to connect to PKIaaS.io. When a slot is selected from the "Configured Slots..." dropdown on one of the HSMs, the status will be displayed, indicating whether the slot is connected successfully.

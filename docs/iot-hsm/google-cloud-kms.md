@@ -33,6 +33,8 @@ In the Google Cloud Console, use the navigation menu to go to "Security" > "Key 
 - **Key rotation**: *Not available for asymmetric keys*
 - **Duration of 'scheduled destruction' state**: *The number of days for which a key version remains in the "Scheduled for destruction" state after a request to destroy is submitted. During this time, users can restore the key. The value cannot be changed once the key is created. Default is 30 days*
 
+**Note:** IoT-HSM can manage multiple Google Cloud KMS keys, but the keys must exist on the same key ring because only one key ring may be configured per appliance. Additional appliances must be deployed to manage keys on more then one key ring.
+
 ### Create a Service Account
 In the Google Cloud Console, use the navigation menu to go to "IAM & Admin" > "Service Accounts". Click "Create service account" and provide a name, service account ID, and optionally a description for the service account. After creating the service account, assign it the following roles:
 
@@ -52,6 +54,6 @@ Log into the IoT-HSM management interface and navigate to "Configure Google KMS"
 
 Navigate to the IoT-HSM home page using the link at the top left and you should see a new "Cloud KMS Token".
 
-![Google Cloud KMS on IoT-HSM main page](../images/google-cloud-kms.png)
+![Google Cloud KMS on IoT-HSM home page](../images/google-cloud-kms.png)
 
 Next, see the [configuration documentation](configuration.md) to continue configuring Google Cloud KMS with IoT-HSM.
