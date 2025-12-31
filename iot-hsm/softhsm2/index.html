@@ -6,14 +6,14 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Learn how to provision a certificate authority on PKIaaS.io to delegate signing operations to a YubiKey managed by IoT-HSM.">
+        <meta name="description" content="Learn how to configure SoftHSM2 with IoT-HSM for use as an HSM with PKIaaS.io.">
       
       
       
-        <link rel="canonical" href="https://docs.pkiaas.io/iot-hsm/provisioning/">
+        <link rel="canonical" href="https://docs.pkiaas.io/iot-hsm/softhsm2/">
       
       
-        <link rel="prev" href="../installation/">
+        <link rel="prev" href="../google-cloud-kms/">
       
       
         <link rel="next" href="../../troubleshooting/">
@@ -24,7 +24,7 @@
     
     
       
-        <title>IoT-HSM Provisioning - PKIaaS.io Documentation</title>
+        <title>Provision a SoftHSM2 - PKIaaS.io Documentation</title>
       
     
     
@@ -66,11 +66,11 @@
       
         <meta  property="og:type"  content="website" >
       
-        <meta  property="og:title"  content="IoT-HSM Provisioning - PKIaaS.io Documentation" >
+        <meta  property="og:title"  content="Provision a SoftHSM2 - PKIaaS.io Documentation" >
       
-        <meta  property="og:description"  content="Learn how to provision a certificate authority on PKIaaS.io to delegate signing operations to a YubiKey managed by IoT-HSM." >
+        <meta  property="og:description"  content="Learn how to configure SoftHSM2 with IoT-HSM for use as an HSM with PKIaaS.io." >
       
-        <meta  property="og:image"  content="https://docs.pkiaas.io/assets/images/social/iot-hsm/provisioning.png" >
+        <meta  property="og:image"  content="https://docs.pkiaas.io/assets/images/social/iot-hsm/softhsm2.png" >
       
         <meta  property="og:image:type"  content="image/png" >
       
@@ -78,15 +78,15 @@
       
         <meta  property="og:image:height"  content="630" >
       
-        <meta  property="og:url"  content="https://docs.pkiaas.io/iot-hsm/provisioning/" >
+        <meta  property="og:url"  content="https://docs.pkiaas.io/iot-hsm/softhsm2/" >
       
         <meta  name="twitter:card"  content="summary_large_image" >
       
-        <meta  name="twitter:title"  content="IoT-HSM Provisioning - PKIaaS.io Documentation" >
+        <meta  name="twitter:title"  content="Provision a SoftHSM2 - PKIaaS.io Documentation" >
       
-        <meta  name="twitter:description"  content="Learn how to provision a certificate authority on PKIaaS.io to delegate signing operations to a YubiKey managed by IoT-HSM." >
+        <meta  name="twitter:description"  content="Learn how to configure SoftHSM2 with IoT-HSM for use as an HSM with PKIaaS.io." >
       
-        <meta  name="twitter:image"  content="https://docs.pkiaas.io/assets/images/social/iot-hsm/provisioning.png" >
+        <meta  name="twitter:image"  content="https://docs.pkiaas.io/assets/images/social/iot-hsm/softhsm2.png" >
       
     
     
@@ -111,7 +111,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#create-a-ca-with-an-hsm-key-on-pkiaasio" class="md-skip">
+        <a href="#create-a-softhsm2-hsm" class="md-skip">
           Skip to content
         </a>
       
@@ -147,7 +147,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              IoT-HSM Provisioning
+              Provision a SoftHSM2
             
           </span>
         </div>
@@ -1513,6 +1513,90 @@
                 
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../create-hsm-ca/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Create an HSM CA
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Configuration
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../yubikey/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Use a YubiKey
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../google-cloud-kms/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Use Google Cloud KMS
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
     
   
   
@@ -1527,7 +1611,7 @@
           
   
   <span class="md-ellipsis">
-    Provisioning
+    Use SoftHSM2
   </span>
   
 
@@ -1538,7 +1622,7 @@
         
   
   <span class="md-ellipsis">
-    Provisioning
+    Use SoftHSM2
   </span>
   
 
@@ -1558,78 +1642,9 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#create-a-ca-with-an-hsm-key-on-pkiaasio" class="md-nav__link">
+  <a href="#create-a-softhsm2-hsm" class="md-nav__link">
     <span class="md-ellipsis">
-      Create a CA with an HSM Key on PKIaaS.io
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#retrieve-hsm-provisioning-certificate-from-pkiaasio" class="md-nav__link">
-    <span class="md-ellipsis">
-      Retrieve HSM Provisioning Certificate from PKIaaS.io
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#prepare-the-private-key-on-the-iot-hsm" class="md-nav__link">
-    <span class="md-ellipsis">
-      Prepare the Private Key on the IoT-HSM
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#import-the-hsm-provisioning-certificate-to-the-iot-hsm" class="md-nav__link">
-    <span class="md-ellipsis">
-      Import the HSM Provisioning Certificate to the IoT-HSM
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Import the HSM Provisioning Certificate to the IoT-HSM">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#self-signed-root-ca" class="md-nav__link">
-    <span class="md-ellipsis">
-      Self-Signed Root CA
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#intermediate-ca" class="md-nav__link">
-    <span class="md-ellipsis">
-      Intermediate CA
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#import-the-new-certificate-from-the-iot-hsm-to-pkiaasio" class="md-nav__link">
-    <span class="md-ellipsis">
-      Import the New Certificate from the IoT-HSM to PKIaaS.io
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#provisioning-complete" class="md-nav__link">
-    <span class="md-ellipsis">
-      Provisioning Complete
+      Create a SoftHSM2 HSM
     </span>
   </a>
   
@@ -1671,26 +1686,6 @@
   
 
     
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../pdf/document.pdf" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Download PDF
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
   </ul>
 </nav>
                   </div>
@@ -1716,78 +1711,9 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#create-a-ca-with-an-hsm-key-on-pkiaasio" class="md-nav__link">
+  <a href="#create-a-softhsm2-hsm" class="md-nav__link">
     <span class="md-ellipsis">
-      Create a CA with an HSM Key on PKIaaS.io
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#retrieve-hsm-provisioning-certificate-from-pkiaasio" class="md-nav__link">
-    <span class="md-ellipsis">
-      Retrieve HSM Provisioning Certificate from PKIaaS.io
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#prepare-the-private-key-on-the-iot-hsm" class="md-nav__link">
-    <span class="md-ellipsis">
-      Prepare the Private Key on the IoT-HSM
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#import-the-hsm-provisioning-certificate-to-the-iot-hsm" class="md-nav__link">
-    <span class="md-ellipsis">
-      Import the HSM Provisioning Certificate to the IoT-HSM
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Import the HSM Provisioning Certificate to the IoT-HSM">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#self-signed-root-ca" class="md-nav__link">
-    <span class="md-ellipsis">
-      Self-Signed Root CA
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#intermediate-ca" class="md-nav__link">
-    <span class="md-ellipsis">
-      Intermediate CA
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#import-the-new-certificate-from-the-iot-hsm-to-pkiaasio" class="md-nav__link">
-    <span class="md-ellipsis">
-      Import the New Certificate from the IoT-HSM to PKIaaS.io
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#provisioning-complete" class="md-nav__link">
-    <span class="md-ellipsis">
-      Provisioning Complete
+      Create a SoftHSM2 HSM
     </span>
   </a>
   
@@ -1808,7 +1734,7 @@
                   
 
   
-    <a href="https://github.com/lspiehler/pkiaas-docs/edit/master/docs/iot-hsm/provisioning.md" title="Edit this page" class="md-content__button md-icon">
+    <a href="https://github.com/lspiehler/pkiaas-docs/edit/master/docs/iot-hsm/softhsm2.md" title="Edit this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -1817,33 +1743,19 @@
     
       
     
-    <a href="https://github.com/lspiehler/pkiaas-docs/raw/master/docs/iot-hsm/provisioning.md" title="View source of this page" class="md-content__button md-icon">
+    <a href="https://github.com/lspiehler/pkiaas-docs/raw/master/docs/iot-hsm/softhsm2.md" title="View source of this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
     </a>
   
 
 
-  <h1>Provisioning</h1>
+  <h1>Use SoftHSM2</h1>
 
-<p>If you haven't yet deployed IoT-HSM, see the <a href="../installation/">installation documentation</a> to get started.</p>
-<h3 id="create-a-ca-with-an-hsm-key-on-pkiaasio">Create a CA with an HSM Key on PKIaaS.io</h3>
-<p>In order for a certificate authority on PKIaaS.io to delegate signing operations to a YubiKey managed by IoT-HSM, it must first be provisioned to do so. The first step in this process is to select the "HSM" option as the "Key Type" when creating a new certificate authority on the <strong>Certificate Authorities -&gt; Create new CA</strong> page.</p>
-<h3 id="retrieve-hsm-provisioning-certificate-from-pkiaasio">Retrieve HSM Provisioning Certificate from PKIaaS.io</h3>
-<p>After clicking "Create New CA," the browser will navigate to a page showing the "HSM Provisioning Certificate." This will be used as a template to configure the new CA on one of the YubiKey slots.</p>
-<p><strong>Note:</strong> If at any time you need to navigate back to this page, go to <strong>Certificate Authorities -&gt; Manage CAs</strong>, click on the CA and select "Download HSM Provisioning Certificate" from the menu.</p>
-<h3 id="prepare-the-private-key-on-the-iot-hsm">Prepare the Private Key on the IoT-HSM</h3>
-<p>Login to the IoT-HSM. From the "HSM Options..." dropdown, choose "Provision a New Slot." This will navigate to the provisioning wizard. Choose the slot to provision and a key option. The "Generate" option (recommended) will generate a new private key on the YubiKey slot using the "Key Type" option provided. The "Import" option allows an existing private key to be imported to the YubiKey slot. This option should only be used when the private key has been handled with extreme care and is ideal under circumstances when it is important to have a backup of the private key or if multiple IoT-HSMs will be provisioned with the same private key for redundancy.</p>
-<h3 id="import-the-hsm-provisioning-certificate-to-the-iot-hsm">Import the HSM Provisioning Certificate to the IoT-HSM</h3>
-<h4 id="self-signed-root-ca">Self-Signed Root CA</h4>
-<p>After preparing the private key, the next page in the provisioning wizard is where the "HSM Provisioning Certificate" generated in a previous step will be submitted. If a self-signed root CA is being generated, leave the first option selected, paste the provisioning certificate into the text area, and click submit.</p>
-<h4 id="intermediate-ca">Intermediate CA</h4>
-<p>If this CA will be an intermediate CA, select the option to generate a CSR, paste the provisioning certificate into the text area, and click submit. A modal will appear with a CSR that will need to be signed by the root CA issuing the certificate for this intermediate. Finally, select the last option in the dropdown and paste the certificate signed by the root using the provided CSR and click submit.</p>
-<p><strong>Note:</strong> If at any time you need to navigate back to this page, go to the IoT-HSM home page, select the slot being provisioned from the "Configured Slots..." drop down, and click "Complete Provisioning."</p>
-<h3 id="import-the-new-certificate-from-the-iot-hsm-to-pkiaasio">Import the New Certificate from the IoT-HSM to PKIaaS.io</h3>
-<p>Navigate to the IoT-HSM home page. Select the newly provisioned slot from the "Configured Slots..." drop down and click "View Certificate." Copy the certificate to the clipboard and on PKIaaS.io, navigate to <strong>Certificate Authorities -&gt; Manage CAs</strong>, click on the CA being provisioned, and select "Import Signed Certificate." Paste the certificate copied from the IoT-HSM into the text area and click "Import Certificate." A prompt will appear instructing to restart the IoT-HSM device. On the IoT-HSM home page, click "Reload" in the navigation bar at the top. Click "Import Certificate" again on the PKIaaS.io import signed CA page. If the imported certificate is an intermediate CA and PKIaaS.io is unable to download the certificate chain, a modal will appear prompting for the chain, including all intermediates and the root, to be supplied before the import can be completed.</p>
-<h3 id="provisioning-complete">Provisioning Complete</h3>
-<p>When the steps have all be completed successfully, all signing requests for the provisioned CA will be delegated to the YubiKey on the IoT-HSM. Signing operations will fail if the IoT-HSM is not online with the YubiKey inserted.</p>
+<h3 id="create-a-softhsm2-hsm">Create a SoftHSM2 HSM</h3>
+<p>All that is required to create a SoftHSM2 slot is to navigate to the IoT-HSM in a browser and click "Create SoftHSM2" in the top left of the navigation bar. SoftHSM2 is a software-based HSM that provides a virtual device for cryptographic operations. It should be used only for testing IoT-HSM and is not intended for production use.</p>
+<p><a class="glightbox" href="../../images/softhsm2.png" data-type="image" data-width="auto" data-height="auto" data-desc-position="bottom"><img alt="SoftHSM2 on IoT-HSM home page" src="../../images/softhsm2.png" /></a></p>
+<p>Next, see the <a href="../configuration/">configuration documentation</a> to continue configuring SoftHSM2 with IoT-HSM.</p>
 
 
 

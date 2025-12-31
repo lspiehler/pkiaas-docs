@@ -6,17 +6,17 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Learn how to delegate access to a certificate authority on PKIaaS.io.">
+        <meta name="description" content="Learn how to provision a certificate authority on PKIaaS.io to delegate signing operations to an HSM managed by IoT-HSM.">
       
       
       
-        <link rel="canonical" href="https://docs.pkiaas.io/certificate-authorities/delegate/">
+        <link rel="canonical" href="https://docs.pkiaas.io/iot-hsm/create-hsm-ca/">
       
       
-        <link rel="prev" href="../delete/">
+        <link rel="prev" href="../installation/">
       
       
-        <link rel="next" href="../../certificate-templates/overview/">
+        <link rel="next" href="../configuration/">
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
@@ -24,7 +24,7 @@
     
     
       
-        <title>Delegate Access to a CA - PKIaaS.io Documentation</title>
+        <title>IoT-HSM Provisioning - PKIaaS.io Documentation</title>
       
     
     
@@ -66,11 +66,11 @@
       
         <meta  property="og:type"  content="website" >
       
-        <meta  property="og:title"  content="Delegate Access to a CA - PKIaaS.io Documentation" >
+        <meta  property="og:title"  content="IoT-HSM Provisioning - PKIaaS.io Documentation" >
       
-        <meta  property="og:description"  content="Learn how to delegate access to a certificate authority on PKIaaS.io." >
+        <meta  property="og:description"  content="Learn how to provision a certificate authority on PKIaaS.io to delegate signing operations to an HSM managed by IoT-HSM." >
       
-        <meta  property="og:image"  content="https://docs.pkiaas.io/assets/images/social/certificate-authorities/delegate.png" >
+        <meta  property="og:image"  content="https://docs.pkiaas.io/assets/images/social/iot-hsm/create-hsm-ca.png" >
       
         <meta  property="og:image:type"  content="image/png" >
       
@@ -78,15 +78,15 @@
       
         <meta  property="og:image:height"  content="630" >
       
-        <meta  property="og:url"  content="https://docs.pkiaas.io/certificate-authorities/delegate/" >
+        <meta  property="og:url"  content="https://docs.pkiaas.io/iot-hsm/create-hsm-ca/" >
       
         <meta  name="twitter:card"  content="summary_large_image" >
       
-        <meta  name="twitter:title"  content="Delegate Access to a CA - PKIaaS.io Documentation" >
+        <meta  name="twitter:title"  content="IoT-HSM Provisioning - PKIaaS.io Documentation" >
       
-        <meta  name="twitter:description"  content="Learn how to delegate access to a certificate authority on PKIaaS.io." >
+        <meta  name="twitter:description"  content="Learn how to provision a certificate authority on PKIaaS.io to delegate signing operations to an HSM managed by IoT-HSM." >
       
-        <meta  name="twitter:image"  content="https://docs.pkiaas.io/assets/images/social/certificate-authorities/delegate.png" >
+        <meta  name="twitter:image"  content="https://docs.pkiaas.io/assets/images/social/iot-hsm/create-hsm-ca.png" >
       
     
     
@@ -111,7 +111,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#delegating-a-ca" class="md-skip">
+        <a href="#create-a-ca-with-an-hsm-key-on-pkiaasio" class="md-skip">
           Skip to content
         </a>
       
@@ -147,7 +147,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Delegate Access to a CA
+              IoT-HSM Provisioning
             
           </span>
         </div>
@@ -407,19 +407,17 @@
       
   
   
-    
   
   
-  
     
     
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
         
           
           <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
@@ -433,7 +431,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             Certificate Authorities
@@ -447,7 +445,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../overview/" class="md-nav__link">
+      <a href="../../certificate-authorities/overview/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -468,7 +466,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../create/" class="md-nav__link">
+      <a href="../../certificate-authorities/create/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -489,7 +487,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../edit/" class="md-nav__link">
+      <a href="../../certificate-authorities/edit/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -510,7 +508,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../delete/" class="md-nav__link">
+      <a href="../../certificate-authorities/delete/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -528,28 +526,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  <span class="md-ellipsis">
-    Delegate CA Access
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../certificate-authorities/delegate/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -558,60 +538,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#delegating-a-ca" class="md-nav__link">
-    <span class="md-ellipsis">
-      Delegating a CA
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#resending-invitations" class="md-nav__link">
-    <span class="md-ellipsis">
-      Resending Invitations
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#remove-delegated-access" class="md-nav__link">
-    <span class="md-ellipsis">
-      Remove Delegated Access
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#limitations" class="md-nav__link">
-    <span class="md-ellipsis">
-      Limitations
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1508,17 +1434,19 @@
       
   
   
+    
   
   
+  
     
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_15" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_15" checked>
         
           
           <label class="md-nav__link" for="__nav_15" id="__nav_15_label" tabindex="0">
@@ -1532,7 +1460,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_15_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_15_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_15">
             <span class="md-nav__icon md-icon"></span>
             Iot-HSM
@@ -1546,7 +1474,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../iot-hsm/overview/" class="md-nav__link">
+      <a href="../overview/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1567,7 +1495,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../iot-hsm/installation/" class="md-nav__link">
+      <a href="../installation/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1585,10 +1513,28 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../iot-hsm/create-hsm-ca/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Create an HSM CA
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -1597,6 +1543,42 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#create-a-ca-with-an-hsm-key-on-pkiaasio" class="md-nav__link">
+    <span class="md-ellipsis">
+      Create a CA with an HSM Key on PKIaaS.io
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#retrieve-hsm-provisioning-certificate-from-pkiaasio" class="md-nav__link">
+    <span class="md-ellipsis">
+      Retrieve HSM Provisioning Certificate from PKIaaS.io
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1609,7 +1591,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../iot-hsm/configuration/" class="md-nav__link">
+      <a href="../configuration/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1630,7 +1612,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../iot-hsm/yubikey/" class="md-nav__link">
+      <a href="../yubikey/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1651,7 +1633,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../iot-hsm/google-cloud-kms/" class="md-nav__link">
+      <a href="../google-cloud-kms/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1672,7 +1654,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../iot-hsm/softhsm2/" class="md-nav__link">
+      <a href="../softhsm2/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1738,36 +1720,18 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#delegating-a-ca" class="md-nav__link">
+  <a href="#create-a-ca-with-an-hsm-key-on-pkiaasio" class="md-nav__link">
     <span class="md-ellipsis">
-      Delegating a CA
+      Create a CA with an HSM Key on PKIaaS.io
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#resending-invitations" class="md-nav__link">
+  <a href="#retrieve-hsm-provisioning-certificate-from-pkiaasio" class="md-nav__link">
     <span class="md-ellipsis">
-      Resending Invitations
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#remove-delegated-access" class="md-nav__link">
-    <span class="md-ellipsis">
-      Remove Delegated Access
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#limitations" class="md-nav__link">
-    <span class="md-ellipsis">
-      Limitations
+      Retrieve HSM Provisioning Certificate from PKIaaS.io
     </span>
   </a>
   
@@ -1788,7 +1752,7 @@
                   
 
   
-    <a href="https://github.com/lspiehler/pkiaas-docs/edit/master/docs/certificate-authorities/delegate.md" title="Edit this page" class="md-content__button md-icon">
+    <a href="https://github.com/lspiehler/pkiaas-docs/edit/master/docs/iot-hsm/create-hsm-ca.md" title="Edit this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -1797,55 +1761,22 @@
     
       
     
-    <a href="https://github.com/lspiehler/pkiaas-docs/raw/master/docs/certificate-authorities/delegate.md" title="View source of this page" class="md-content__button md-icon">
+    <a href="https://github.com/lspiehler/pkiaas-docs/raw/master/docs/iot-hsm/create-hsm-ca.md" title="View source of this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
     </a>
   
 
 
-  <h1>Delegate CA Access</h1>
+  <h1>Create an HSM CA</h1>
 
-<p>To allow multiple users to share management of a certificate authority (CA) on PKIaaS.io, you can delegate access to the CA. Delegation enables other users to issue certificates, manage templates, and perform other administrative tasks without needing to share account credentials.</p>
-<h2 id="delegating-a-ca">Delegating a CA</h2>
-<p>To delegate access to a CA, follow these steps:</p>
-<ol>
-<li>Log in to <a href="https://www.pkiaas.io/auth/login">PKIaaS.io</a>.</li>
-<li>Navigate to <strong>Certificate Authorities -&gt; Manage CAs</strong> in the left navigation pane.</li>
-<li>Click on the CA you want to delegate.</li>
-<li>Select <strong>Delegate Access</strong> from the menu.</li>
-<li>On the delegation page, click "Invite".</li>
-<li>Enter the email address of the user you want to delegate access to. You may optionally choose an authentication provider to force the user to login with while logging in to accept the invitation and whether to require the login email to match the email address provided.</li>
-<li>Click "Send Invitation" to send the invitation email to the user.</li>
-<li>The invited user will receive an email with a link to accept the invitation. Once accepted, the user will have access to the delegated CA. The invitation must be accepted within 7 days, or it will expire.</li>
-</ol>
-<p><strong>Note:</strong> When sending a delegation invitation, use of the "Authentication Provider" option and "Require login email to match invitation email" is recommended to improve security. Without these options, any user with access to the link in the invitation email can accept the invitation.</p>
-<h2 id="resending-invitations">Resending Invitations</h2>
-<p>If the invited user does not receive the invitation email or it expires, the invitation can be resent. To resend an invitation:</p>
-<ol>
-<li>Log in to <a href="https://www.pkiaas.io/auth/login">PKIaaS.io</a>.</li>
-<li>Navigate to <strong>Certificate Authorities -&gt; Manage CAs</strong> in the left navigation pane.</li>
-<li>Click on the CA you want to resend the invitation for.</li>
-<li>Select <strong>Delegate Access</strong> from the menu.</li>
-<li>On the delegation page, select the user you want to resend the invitation to.</li>
-<li>Click the "Resend" button.</li>
-</ol>
-<h2 id="remove-delegated-access">Remove Delegated Access</h2>
-<p>To remove delegated access for a user:</p>
-<ol>
-<li>Log in to <a href="https://www.pkiaas.io/auth/login">PKIaaS.io</a>.</li>
-<li>Navigate to <strong>Certificate Authorities -&gt; Manage CAs</strong> in the left navigation pane.</li>
-<li>Click on the CA you want to remove delegated access from.</li>
-<li>Select <strong>Delegate Access</strong> from the menu.</li>
-<li>On the delegation page, select the user you want to remove.</li>
-<li>Click the "Remove" button.</li>
-</ol>
-<h2 id="limitations">Limitations</h2>
-<ul>
-<li>The owner of the CA must be a Patreon subscriber to lift account limitations for all delegated users.</li>
-<li>PKIaaS.io currently does not support RBAC (Role-Based Access Control) for delegated CAs. All delegated users will have full administrative access to the CA, including the ability to delete it and delegate to other users.</li>
-<li>Delegated users may remove access to other delegated users, except the CA owner.</li>
-</ul>
+<p>If you haven't yet deployed IoT-HSM, see the <a href="../installation/">installation documentation</a> to get started.</p>
+<h3 id="create-a-ca-with-an-hsm-key-on-pkiaasio">Create a CA with an HSM Key on PKIaaS.io</h3>
+<p>In order for a certificate authority on PKIaaS.io to delegate signing operations to an HSM managed by IoT-HSM, it must first be provisioned to do so. The first step in this process is to select the "HSM" option as the "Key Type" when creating a new certificate authority on the <strong>Certificate Authorities -&gt; Create new CA</strong> page.</p>
+<h3 id="retrieve-hsm-provisioning-certificate-from-pkiaasio">Retrieve HSM Provisioning Certificate from PKIaaS.io</h3>
+<p>After clicking "Create New CA," the browser will navigate to a page showing the "HSM Provisioning Certificate." This will be used as a template to configure the new CA on the IoT-HSM appliance.</p>
+<p><strong>Note:</strong> If at any time you need to navigate back to this page, go to <strong>Certificate Authorities -&gt; Manage CAs</strong>, click on the CA and select "Download HSM Provisioning Certificate" from the menu.</p>
+<p>See the <a href="../configuration/">configuration documentation</a> to configure IoT-HSM to sign requests for the new CA.</p>
 
 
 

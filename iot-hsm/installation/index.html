@@ -16,7 +16,7 @@
         <link rel="prev" href="../overview/">
       
       
-        <link rel="next" href="../provisioning/">
+        <link rel="next" href="../create-hsm-ca/">
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
@@ -109,6 +109,11 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
+      
+        
+        <a href="#virtual-or-physical-machine" class="md-skip">
+          Skip to content
+        </a>
       
     </div>
     <div data-md-component="announce">
@@ -1497,6 +1502,17 @@
       
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Installation
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -1506,6 +1522,41 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#virtual-or-physical-machine" class="md-nav__link">
+    <span class="md-ellipsis">
+      Virtual or Physical Machine
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#container-deployment" class="md-nav__link">
+    <span class="md-ellipsis">
+      Container Deployment
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -1519,11 +1570,95 @@
   
   
     <li class="md-nav__item">
-      <a href="../provisioning/" class="md-nav__link">
+      <a href="../create-hsm-ca/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Provisioning
+    Create an HSM CA
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Configuration
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../yubikey/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Use a YubiKey
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../google-cloud-kms/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Use Google Cloud KMS
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../softhsm2/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Use SoftHSM2
   </span>
   
 
@@ -1560,26 +1695,6 @@
   
 
     
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../pdf/document.pdf" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Download PDF
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
   </ul>
 </nav>
                   </div>
@@ -1597,6 +1712,32 @@
   
   
   
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#virtual-or-physical-machine" class="md-nav__link">
+    <span class="md-ellipsis">
+      Virtual or Physical Machine
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#container-deployment" class="md-nav__link">
+    <span class="md-ellipsis">
+      Container Deployment
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -1629,13 +1770,22 @@
 
   <h1>Installation</h1>
 
-<p>To get started with IoT-HSM, it is recommend to deploy a Long-Term Support (LTS) version of <a href="https://ubuntu.com/download/server">Ubuntu Server</a>. IoT-HSM has been tested on Ubuntu 20.04, 22.04, and 24.04. Once Ubuntu is installed and updated, login to a terminal shell, and execute the following commands as the root user. You can access a root shell by entering <code>sudo su -</code> at the terminal.
+<h2 id="virtual-or-physical-machine">Virtual or Physical Machine</h2>
+<p>When installing IoT-HSM, it is recommend to deploy a Long-Term Support (LTS) version of <a href="https://ubuntu.com/download/server">Ubuntu Server</a>. IoT-HSM has been tested on Ubuntu 24.04 and 25.10. Once Ubuntu is installed and updated, login to a shell, and execute the following commands as the root user. You can become root by entering the command <code>sudo su -</code>.
 <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>apt update
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>apt -y install curl
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>curl -sL https://raw.githubusercontent.com/lspiehler/iot-hsm/master/scripts/setup_ubuntu2004.sh | bash -
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>curl -sL https://raw.githubusercontent.com/lspiehler/iot-hsm/master/scripts/setup_ubuntu.sh | bash -
 </span></code></pre></div>
-After the script completes, it will be prompt to set a new password twice—this password will be used for the admin account on the IoT-HSM web interface. Once configured, open a browser and navigate to the IP address of the Ubuntu endpoint, prefixed with <code>https://</code>. For example: <code>https://192.168.1.5</code>.</p>
-<p>See the <a href="../provisioning/">provisioning documentation</a> to provision a certificate authority for use with IoT-HSM.</p>
+After the script completes, it will prompt to set a new password twice. This password will be used for the admin account on the IoT-HSM web interface. Once configured, open a browser and navigate to the IP address of the Ubuntu endpoint, prefixed with <code>https://</code>. For example: <code>https://192.168.1.5</code>.</p>
+<p>See the <a href="../create-hsm-ca/">Create an HSM CA</a> documentation to create a certificate authority for use with IoT-HSM.</p>
+<h2 id="container-deployment">Container Deployment</h2>
+<p>Below is an example command that can be used to deploy IoT-HSM as a container.
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>docker run -it -d --restart=always --name iot-hsm -e LISTENIP=0.0.0.0 -p 3000:3000 -v iot-hsm:/var/lib/softhsm/tokens -v /var/node/iot-hsm/state:/var/node/iot-hsm/state ghcr.io/lspiehler/iot-hsm:latest
+</span></code></pre></div>
+IoT-HSM was designed to support all container platforms like those provided by GCP, Azure, and AWS. Advanced knowledge of those platforms may be required for successful deployment. Be sure to mount the appropriate volumes for persistent storage.</p>
+<p>No authentication or TLS support is provided by the IoT-HSM containerized deployment. Additional containers (e.g., nginx or Traefik reverse proxies deployed as a sidecar) or cloud resources (load balancers, application gateways, etc) are required to provide these features if desired.</p>
+<p><strong>Note:</strong> Yubikeys are not supported on IoT-HSM container deployments at this time.</p>
+<p>See the <a href="../create-hsm-ca/">Create an HSM CA</a> documentation to create a certificate authority for use with IoT-HSM.</p>
 
 
 
