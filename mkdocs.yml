@@ -16,6 +16,7 @@ nav:
   - Post-Quantum Cryptography:
       - Overview: post-quantum-cryptography/overview.md
       - ML-DSA: post-quantum-cryptography/ml-dsa.md
+      - SLH-DSA: post-quantum-cryptography/slh-dsa.md
   - Certificate Authorities:
     - Overview: certificate-authorities/overview.md
     - Create Certificate Authorities: certificate-authorities/create.md
