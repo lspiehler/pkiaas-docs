@@ -16,7 +16,7 @@
         <link rel="prev" href="../overview/">
       
       
-        <link rel="next" href="../../certificate-authorities/overview/">
+        <link rel="next" href="../slh-dsa/">
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
@@ -24,7 +24,7 @@
     
     
       
-        <title>ML-DSA (formerly Dilithium) - PKIaaS.io Documentation</title>
+        <title>ML-DSA (formerly CRYSTALS-Dilithium) - PKIaaS.io Documentation</title>
       
     
     
@@ -66,7 +66,7 @@
       
         <meta  property="og:type"  content="website" >
       
-        <meta  property="og:title"  content="ML-DSA (formerly Dilithium) - PKIaaS.io Documentation" >
+        <meta  property="og:title"  content="ML-DSA (formerly CRYSTALS-Dilithium) - PKIaaS.io Documentation" >
       
         <meta  property="og:description"  content="Learn how to create a quantum safe certificate authority (CA) using the (FIPS 204, formerly Dilithium) post-quantum cryptographic algorithm with PKIaaS.io." >
       
@@ -82,7 +82,7 @@
       
         <meta  name="twitter:card"  content="summary_large_image" >
       
-        <meta  name="twitter:title"  content="ML-DSA (formerly Dilithium) - PKIaaS.io Documentation" >
+        <meta  name="twitter:title"  content="ML-DSA (formerly CRYSTALS-Dilithium) - PKIaaS.io Documentation" >
       
         <meta  name="twitter:description"  content="Learn how to create a quantum safe certificate authority (CA) using the (FIPS 204, formerly Dilithium) post-quantum cryptographic algorithm with PKIaaS.io." >
       
@@ -147,7 +147,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              ML-DSA (formerly Dilithium)
+              ML-DSA (formerly CRYSTALS-Dilithium)
             
           </span>
         </div>
@@ -471,6 +471,27 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../slh-dsa/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    SLH-DSA
+  </span>
+  
+
+      </a>
     </li>
   
 
@@ -1841,17 +1862,17 @@
 <h2 id="create-a-ml-dsa-certificate-authority">Create a ML-DSA Certificate Authority</h2>
 <p>Login to <a href="https://www.pkiaas.io/auth/login">PKIaaS.io</a>, and navigate to <strong>Certificate Authorities -&gt; Create New CA</strong>. From the <strong>Key Type</strong> dropdown, select "ML-DSA". In the <strong>Parameter Set</strong> drop down, "65" (security level 2) will be selected by default. A different parameter set may be selected if desired to customize the security level of the private key for the CA. See more information about ML-DSA security levels below. Refer to <a href="../../certificate-authorities/overview/">Certificate Authorities Overview</a> for more information on the available options in the new CA form. After the form has been completed, click <strong>Create New CA</strong> to create the ML-DSA CA.</p>
 <h3 id="security-levels-parameter-sets">Security Levels (Parameter Sets)</h3>
-<p>ML-DSA offers parameter sets that meet three security levels: ML-DSA-44, ML-DSA-65, and ML-DSA-87. ML-DSA-44 is intended to meet NIST's level 2 security category, ML-DSA-65 is intended to meet level 3, and ML-DSA-87 is intended to meet level 5. See <a href="https://www.ietf.org/archive/id/draft-salter-lamps-cms-ml-dsa-00.html#name-introduction">https://www.ietf.org/archive/id/draft-salter-lamps-cms-ml-dsa-00.html</a> for more information.</p>
+<p>ML-DSA offers parameter sets that meet three security levels: ML-DSA-44, ML-DSA-65, and ML-DSA-87. ML-DSA-44 is intended to meet NIST's level 2 security level, ML-DSA-65 is intended to meet level 3, and ML-DSA-87 is intended to meet level 5. See <a href="https://www.ietf.org/archive/id/draft-salter-lamps-cms-ml-dsa-00.html#name-introduction">https://www.ietf.org/archive/id/draft-salter-lamps-cms-ml-dsa-00.html</a> for more information.</p>
 <ul>
-<li><strong>Security Level 2 (ML-DSA-44)</strong> - Attacks on algorithms in the level 2 category are intended to be at least as hard as performing a collision search on SHA256.</li>
-<li><strong>Security Level 3 (ML-DSA-65)</strong> - Attacks on algorithms in the level 3 category are intended to be at least as hard as performing an exhaustive key search on AES192.</li>
-<li><strong>Security Level 5 (ML-DSA-87)</strong> - Attacks on algorithms in the level 5 category are intended to be at least as hard as performing an exhaustive key search on AES256.</li>
+<li><strong>Security Level 2 (ML-DSA-44)</strong> - 160-bit AES equivalent and 4096-bit RSA equivalent</li>
+<li><strong>Security Level 3 (ML-DSA-65)</strong> - 192-bit AES equivalent and 7680-bit RSA equivalent</li>
+<li><strong>Security Level 5 (ML-DSA-87)</strong> - 256-bit AES equivalent and 15360-bit RSA equivalent</li>
 </ul>
 <h2 id="generate-ml-dsa-private-keys-and-csrs">Generate ML-DSA Private Keys and CSRs</h2>
-<p>In order to issue a quantum-safe ML-DSA certificate, a CSR must be generated with a ML-DSA private key. This can be done using tools like OpenSSL with the liboqs provider or online at <a href="https://certificatetools.com/">https://certificatetools.com/</a> by selecting one of the "Generate ML-DSA-(44|65|87) Private Key (liboqs)" options from the <strong>Private Key</strong> dropdown.</p>
+<p>In order to issue an ML-DSA certificate, a CSR must be generated with a ML-DSA private key. This can be done using tools like OpenSSL OpenSSL (version 3.5 or higher) or online at <a href="https://certificatetools.com/">https://certificatetools.com/</a> by selecting one of the ML-DSA private key options from the <strong>Private Key</strong> dropdown.</p>
 <p><strong>Note</strong>: In production, it is recommended to generate the private key and CSR on a secure system that is not connected to the internet.</p>
 <h2 id="issue-a-ml-dsa-certificate">Issue a ML-DSA Certificate</h2>
-<p>Navigate to <strong>Certificate Templates -&gt; Manage Templates</strong>, and click on the desired template. From the menu select <strong>Submit CSR</strong>. Paste the contents of a base64 certificate signing request (CSR) generated with a ML-DSA private key and click <strong>Submit</strong>. Navigate to <strong>X509 Certificates -&gt; Pending Requests</strong> to review and approve the request. Click on the pending request to view the details, optionally override requested attributes or validity, and click <strong>Sign</strong> to issue the certificate. Navigate to <strong>X509 Certificates -&gt; Issued Certificates</strong> to view and download the issued certificate.</p>
+<p>Navigate to <strong>Certificate Templates -&gt; Manage Templates</strong>, and click on the desired template. From the menu select <strong>Submit CSR</strong>. Paste the contents of a certificate signing request (CSR) generated with a ML-DSA private key and click <strong>Submit</strong>. Navigate to <strong>X509 Certificates -&gt; Pending Requests</strong> to review and approve the request. Click on the pending request to view the details, optionally override requested attributes or validity, and click <strong>Sign</strong> to issue the certificate. Navigate to <strong>X509 Certificates -&gt; Issued Certificates</strong> to view and download the issued certificate.</p>
 
 
 

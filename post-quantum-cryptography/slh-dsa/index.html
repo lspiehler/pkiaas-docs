@@ -6,17 +6,17 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Learn how to generate external account binding (EAB) credentials for registering a new ACME account on PKIaaS.io.">
+        <meta name="description" content="Learn how to create a quantum safe certificate authority (CA) using the (FIPS 205, formerly SPHINCS+) post-quantum cryptographic algorithm with PKIaaS.io.">
       
       
       
-        <link rel="canonical" href="https://docs.pkiaas.io/acme/generate-eab-credentials/">
+        <link rel="canonical" href="https://docs.pkiaas.io/post-quantum-cryptography/slh-dsa/">
       
       
-        <link rel="prev" href="../create-acme-policy/">
+        <link rel="prev" href="../ml-dsa/">
       
       
-        <link rel="next" href="../register-acme-account/">
+        <link rel="next" href="../../certificate-authorities/overview/">
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
@@ -24,7 +24,7 @@
     
     
       
-        <title>Generate EAB Credentials - PKIaaS.io Documentation</title>
+        <title>SLH-DSA (formerly SPHINCS+) - PKIaaS.io Documentation</title>
       
     
     
@@ -66,11 +66,11 @@
       
         <meta  property="og:type"  content="website" >
       
-        <meta  property="og:title"  content="Generate EAB Credentials - PKIaaS.io Documentation" >
+        <meta  property="og:title"  content="SLH-DSA (formerly SPHINCS+) - PKIaaS.io Documentation" >
       
-        <meta  property="og:description"  content="Learn how to generate external account binding (EAB) credentials for registering a new ACME account on PKIaaS.io." >
+        <meta  property="og:description"  content="Learn how to create a quantum safe certificate authority (CA) using the (FIPS 205, formerly SPHINCS+) post-quantum cryptographic algorithm with PKIaaS.io." >
       
-        <meta  property="og:image"  content="https://docs.pkiaas.io/assets/images/social/acme/generate-eab-credentials.png" >
+        <meta  property="og:image"  content="https://docs.pkiaas.io/assets/images/social/post-quantum-cryptography/slh-dsa.png" >
       
         <meta  property="og:image:type"  content="image/png" >
       
@@ -78,15 +78,15 @@
       
         <meta  property="og:image:height"  content="630" >
       
-        <meta  property="og:url"  content="https://docs.pkiaas.io/acme/generate-eab-credentials/" >
+        <meta  property="og:url"  content="https://docs.pkiaas.io/post-quantum-cryptography/slh-dsa/" >
       
         <meta  name="twitter:card"  content="summary_large_image" >
       
-        <meta  name="twitter:title"  content="Generate EAB Credentials - PKIaaS.io Documentation" >
+        <meta  name="twitter:title"  content="SLH-DSA (formerly SPHINCS+) - PKIaaS.io Documentation" >
       
-        <meta  name="twitter:description"  content="Learn how to generate external account binding (EAB) credentials for registering a new ACME account on PKIaaS.io." >
+        <meta  name="twitter:description"  content="Learn how to create a quantum safe certificate authority (CA) using the (FIPS 205, formerly SPHINCS+) post-quantum cryptographic algorithm with PKIaaS.io." >
       
-        <meta  name="twitter:image"  content="https://docs.pkiaas.io/assets/images/social/acme/generate-eab-credentials.png" >
+        <meta  name="twitter:image"  content="https://docs.pkiaas.io/assets/images/social/post-quantum-cryptography/slh-dsa.png" >
       
     
     
@@ -109,6 +109,11 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
+      
+        
+        <a href="#create-a-slh-dsa-certificate-authority" class="md-skip">
+          Skip to content
+        </a>
       
     </div>
     <div data-md-component="announce">
@@ -142,7 +147,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Generate EAB Credentials
+              SLH-DSA (formerly SPHINCS+)
             
           </span>
         </div>
@@ -318,17 +323,19 @@
       
   
   
+    
   
   
+  
     
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
         
           
           <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
@@ -342,7 +349,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             Post-Quantum Cryptography
@@ -356,7 +363,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../post-quantum-cryptography/overview/" class="md-nav__link">
+      <a href="../overview/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -377,7 +384,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../post-quantum-cryptography/ml-dsa/" class="md-nav__link">
+      <a href="../ml-dsa/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -395,10 +402,28 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../post-quantum-cryptography/slh-dsa/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    SLH-DSA
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -407,6 +432,66 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#create-a-slh-dsa-certificate-authority" class="md-nav__link">
+    <span class="md-ellipsis">
+      Create a SLH-DSA Certificate Authority
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Create a SLH-DSA Certificate Authority">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#security-levels-parameter-sets" class="md-nav__link">
+    <span class="md-ellipsis">
+      Security Levels (Parameter Sets)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#generate-slh-dsa-private-keys-and-csrs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Generate SLH-DSA Private Keys and CSRs
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#issue-a-slh-dsa-certificate" class="md-nav__link">
+    <span class="md-ellipsis">
+      Issue a SLH-DSA Certificate
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -885,19 +970,17 @@
       
   
   
-    
   
   
-  
     
     
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" >
         
           
           <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="0">
@@ -911,7 +994,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_9">
             <span class="md-nav__icon md-icon"></span>
             ACME
@@ -925,7 +1008,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../overview/" class="md-nav__link">
+      <a href="../../acme/overview/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -946,7 +1029,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../create-acme-policy/" class="md-nav__link">
+      <a href="../../acme/create-acme-policy/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -964,17 +1047,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../acme/generate-eab-credentials/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -983,7 +1059,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -996,7 +1071,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../register-acme-account/" class="md-nav__link">
+      <a href="../../acme/register-acme-account/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1052,7 +1127,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../acme-clients/certbot/" class="md-nav__link">
+      <a href="../../acme/acme-clients/certbot/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1073,7 +1148,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../acme-clients/certify-the-web/" class="md-nav__link">
+      <a href="../../acme/acme-clients/certify-the-web/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1094,7 +1169,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../acme-clients/traefik/" class="md-nav__link">
+      <a href="../../acme/acme-clients/traefik/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -1703,6 +1778,56 @@
   
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#create-a-slh-dsa-certificate-authority" class="md-nav__link">
+    <span class="md-ellipsis">
+      Create a SLH-DSA Certificate Authority
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Create a SLH-DSA Certificate Authority">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#security-levels-parameter-sets" class="md-nav__link">
+    <span class="md-ellipsis">
+      Security Levels (Parameter Sets)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#generate-slh-dsa-private-keys-and-csrs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Generate SLH-DSA Private Keys and CSRs
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#issue-a-slh-dsa-certificate" class="md-nav__link">
+    <span class="md-ellipsis">
+      Issue a SLH-DSA Certificate
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1716,7 +1841,7 @@
                   
 
   
-    <a href="https://github.com/lspiehler/pkiaas-docs/edit/master/docs/acme/generate-eab-credentials.md" title="Edit this page" class="md-content__button md-icon">
+    <a href="https://github.com/lspiehler/pkiaas-docs/edit/master/docs/post-quantum-cryptography/slh-dsa.md" title="Edit this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -1725,20 +1850,29 @@
     
       
     
-    <a href="https://github.com/lspiehler/pkiaas-docs/raw/master/docs/acme/generate-eab-credentials.md" title="View source of this page" class="md-content__button md-icon">
+    <a href="https://github.com/lspiehler/pkiaas-docs/raw/master/docs/post-quantum-cryptography/slh-dsa.md" title="View source of this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
     </a>
   
 
 
-  <h1>Generate EAB Credentials</h1>
+  <h1>SLH-DSA</h1>
 
-<p>An ACME policy must be created before EAB credentials can be generated. See <a href="../create-acme-policy/">Create an ACME Policy</a> if this step hasn't been completed yet.</p>
-<p>The use of EAB (external account binding) allows PKIaaS.io to associate ACME accounts with a specific user's PKIaaS.io account, CA, and ACME policy. To generate an EAB for registering a new ACME account, login to PKIaaS.io and navigate to <strong>ACME -&gt; Policies</strong>. Click the gears in the "External Account Bindings" column of one of the ACME policies to navigate to the EAB management page for the policy and click "Create". Enter a unique name for the EAB. Enter the desired value for "Allowed Use Count". This value represents the number of times this EAB can be used to register unique ACME accounts. Lastly, enter the expiration date after which ACME new account registrations will no longer be authorized with this EAB and click "Create EAB".</p>
-<p>When the new EAB is generated, a modal will appear providing the ACME directory URL, the EAB KID and HMAC Key, and some example commands to use the values provided to register a new ACME account using the certbot ACME client. These values can be used to register an ACME account with any ACME client that supports external account bindings. The KID and HMAC Key will only be displayed once, so be sure to copy them before closing the modal.</p>
-<p><strong>Note:</strong> After an ACME account is registered with an EAB, it is permanently associated with the policy the EAB was generated for. It is safe to delete an EAB after an ACME account had been registered with it.</p>
-<p>Next, see <a href="../register-acme-account/">Register an ACME Account</a>.</p>
+<h2 id="create-a-slh-dsa-certificate-authority">Create a SLH-DSA Certificate Authority</h2>
+<p>Login to <a href="https://www.pkiaas.io/auth/login">PKIaaS.io</a>, and navigate to <strong>Certificate Authorities -&gt; Create New CA</strong>. From the <strong>Key Type</strong> dropdown, select "SLH-DSA". Select the desired parameter set from the <strong>Parameter Set</strong> drop down. See more information about SLH-DSA security levels below. Refer to <a href="../../certificate-authorities/overview/">Certificate Authorities Overview</a> for more information on the available options in the new CA form. After the form has been completed, click <strong>Create New CA</strong> to create the SLH-DSA CA.</p>
+<h3 id="security-levels-parameter-sets">Security Levels (Parameter Sets)</h3>
+<p>SLH-DSA offers 12 parameter sets that meet three security levels. SLH-DSA-SHA2-128s, SLH-DSA-SHA2-128f, SLH-DSA-SHAKE-128s and SLH-DSA-SHAKE-128f are intended to meet NIST's level 1 security level. SLH-DSA-SHA2-192s, SLH-DSA-SHA2-192f, SLH-DSA-SHAKE-192s and SLH-DSA-SHAKE-192f are intended to meet level 3. SLH-DSA-SHA2-256s, SLH-DSA-SHA2-256f, SLH-DSA-SHAKE-256s and SLH-DSA-SHAKE-256f are intended to meet level 5. See <a href="https://www.ietf.org/archive/id/draft-ietf-lamps-x509-slhdsa-01.html#name-introduction">https://www.ietf.org/archive/id/draft-ietf-lamps-x509-slhdsa-01.html</a> for more information.</p>
+<ul>
+<li><strong>Security Level 1 (SLH-DSA-SHA2|SHAKE-128s|f)</strong> - 128-bit AES equivalent and 3072-bit RSA equivalent</li>
+<li><strong>Security Level 3 (SLH-DSA-SHA2|SHAKE-192s|f)</strong> - 192-bit AES equivalent and 7680-bit RSA equivalent</li>
+<li><strong>Security Level 5 (SLH-DSA-SHA2|SHAKE-256s|f)</strong> - 256-bit AES equivalent and 15360-bit RSA equivalent</li>
+</ul>
+<h2 id="generate-slh-dsa-private-keys-and-csrs">Generate SLH-DSA Private Keys and CSRs</h2>
+<p>In order to issue an SLH-DSA certificate, a CSR must be generated with a SLH-DSA private key. This can be done using tools like OpenSSL (version 3.5 or higher) or online at <a href="https://certificatetools.com/">https://certificatetools.com/</a> by selecting one of the SLH-DSA private key options from the <strong>Private Key</strong> dropdown.</p>
+<p><strong>Note</strong>: In production, it is recommended to generate the private key and CSR on a secure system that is not connected to the internet.</p>
+<h2 id="issue-a-slh-dsa-certificate">Issue a SLH-DSA Certificate</h2>
+<p>Navigate to <strong>Certificate Templates -&gt; Manage Templates</strong>, and click on the desired template. From the menu select <strong>Submit CSR</strong>. Paste the contents of a certificate signing request (CSR) generated with a SLH-DSA private key and click <strong>Submit</strong>. Navigate to <strong>X509 Certificates -&gt; Pending Requests</strong> to review and approve the request. Click on the pending request to view the details, optionally override requested attributes or validity, and click <strong>Sign</strong> to issue the certificate. Navigate to <strong>X509 Certificates -&gt; Issued Certificates</strong> to view and download the issued certificate.</p>
 
 
 
