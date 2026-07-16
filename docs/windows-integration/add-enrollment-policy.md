@@ -2,7 +2,7 @@
 title: Add Enrollment Policy
 description: Learn how to configure Windows clients for certificate issuance and renewal with PKIaaS.io native windows integration.
 ---
-Before adding an enrollment policy and configuring Windows to request certificates from PKIaaS.io, CEP and CEP must be enabled on your CA and templates. See [Enabling Windows Integration](overview.md/#enabling-windows-integration) if this step hasn't been completed yet.
+Before adding an enrollment policy and configuring Windows to request certificates from PKIaaS.io, CEP and CEP must be enabled on your CA and templates. See [Enabling Windows Integration](overview.md#enable-windows-integration) if this step hasn't been completed yet.
 
 ## Client Configuration
 To configure Windows clients for certificate issuance and renewal with PKIaaS.io, follow these steps:
