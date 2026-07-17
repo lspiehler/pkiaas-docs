@@ -1,6 +1,6 @@
 ---
 title: Request Certificates
-description: Learn how to request certificates using native windows integration on PKIaaS.io.
+description: Learn how to request certificates using native Windows integration on PKIaaS.io.
 ---
 Before requesting certificates using the PKIaaS.io native Windows integration, an enrollment policy must be added to the Windows client. See [Add Enrollment Policy](add-enrollment-policy.md) if this step hasn't been completed yet.
 

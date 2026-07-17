@@ -2,7 +2,7 @@
 title: Welcome to PKIaaS.io Documentation
 description: PKIaaS.io is a platform that makes PKI functionality accessible to everyone. Learn how to create a certificate authority, issue certificates, and more with our comprehensive documentation.
 ---
-Thank you for visiting the documentation for PKIaaS.io. This site is under construction. Contributers are welcome!
+Thank you for visiting the documentation for PKIaaS.io. This site is under construction. Contributors are welcome!
 
 PKIaaS.io is here to make PKI functionality—usually limited to costly, complex platforms designed for enterprise customers—accessible to a broader audience. PKIaaS.io was designed to serve not only small to medium-sized businesses but also home lab users, developers, testers, and PKI enthusiasts of all kinds!
 

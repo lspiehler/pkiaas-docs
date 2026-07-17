@@ -34,6 +34,6 @@ Navigate to the IoT-HSM home page. Select the newly provisioned slot from the "C
 A prompt will appear instructing to restart the IoT-HSM device. On the IoT-HSM home page, click "Reload" in the navigation bar at the top. Click "Import Certificate" again on the PKIaaS.io import signed CA page. If the imported certificate is an intermediate CA and PKIaaS.io is unable to download the certificate chain, a modal will appear prompting for the chain, including all intermediates and the root, to be supplied before the import can be completed.
 
 ### Provisioning Complete
-When the steps have all be completed successfully, all signing requests for the provisioned CA will be delegated to the HSM on the IoT-HSM. Signing operations will fail if the IoT-HSM is not online with the HSM configured/inserted.
+When the steps have all been completed successfully, all signing requests for the provisioned CA will be delegated to the HSM on the IoT-HSM. Signing operations will fail if the IoT-HSM is not online with the HSM configured/inserted.
 
 The number of successfully connected HSM slots will appear at the top right of the IoT-HSM home page. It may be necessary to refresh the page to see the updated status, as it may take a few moments to connect to PKIaaS.io. When a slot is selected from the "Configured Slots..." dropdown on one of the HSMs, the status will be displayed, indicating whether the slot is connected successfully.

@@ -1,6 +1,6 @@
 ---
 title: Certify The Web
-description: Learn how to configure Certify the Web to request certificates via ACME from the PKIaaS.io.
+description: Learn how to configure Certify the Web to request certificates via ACME from PKIaaS.io.
 ---
 Be sure to have the EAB KID and HMAC Key ready for the steps below. See [Generate EAB Credentials](../generate-eab-credentials.md) for more information.
 
@@ -16,7 +16,7 @@ Be sure to have the EAB KID and HMAC Key ready for the steps below. See [Generat
     * Click **Save**  
     ![Create Certificate Authority](../../images/create-certificate-authority.png)
 4. Click the **New Account** button on the far left of the Edit Certificate Authorities button clicked in step 3.
-    * From the **Certificate Authority** dropdown, select the CA title that was entered in step 5.
+    * From the **Certificate Authority** dropdown, select the CA title that was entered in step 3.
     * Enter the **Email Address** to be associated with the new ACME account.
     * Check **Yes, I Agree** to agree to the terms and conditions for the CA.
     ![New ACME Account](../../images/new-acme-account.png)
@@ -24,7 +24,7 @@ Be sure to have the EAB KID and HMAC Key ready for the steps below. See [Generat
     * Enter the **Key Id** and **Key (HMAC)** using the "EAB KID" and "EAB HMAC Key" provided when generating the EAB credentials.
     * Click **Register Contact**.
     ![ACME Account EAB Credentials](../../images/acme-account-eab-credentials.png)
-6. The ACME account is now registered and ready to requests certificates from PKIaaS.io. Be sure to select the new CA created in step 3 when creating a new certificate request.  
+6. The ACME account is now registered and ready to request certificates from PKIaaS.io. Be sure to select the new CA created in step 3 when creating a new certificate request.  
 ![Request Certificate from New CA](../../images/request-certificate-from-new-ca.png)
 
 See Certify the Web's [Certificate Manager Documentation](https://docs.certifytheweb.com/docs/intro) for more information about Certify The Web.

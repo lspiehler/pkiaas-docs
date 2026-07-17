@@ -12,7 +12,7 @@ Users can choose between creating a managed CA or one backed by an HSM. With a m
 When creating a certificate authority (CA), users are provided with a range of flexible options to tailor their setup. The first six fields customize the subject attributes of the CA, with only the "Certificate Authority Name" (common name) being mandatory.
 
 ### Private Key
-Next, users can configure the private key settings. Various types of private key types are supported including RSA, ECC, and CRYSTALS-dilithium. Here, users can also opt to use HSM (as previously mentioned) or import an existing private key.
+Next, users can configure the private key settings. Various private key types are supported including RSA, ECC, and CRYSTALS-dilithium. Here, users can also opt to use HSM (as previously mentioned) or import an existing private key.
 
 ### Hash Algorithm, Validity, and Path Length
 Further customization options include selecting the signature hash algorithm, specifying the path length, and setting the certificate authority's validity period. The signature algorithm chosen here determines how the CA's certificate is self-signed. Depending on the private key used, additional signature options may become available for signing certificates within the certificate templates after the CA is established. For more details on "Path Length," refer to RFC5280, which explains the "basic constraints" x509v3 attributes.

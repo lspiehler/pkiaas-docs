@@ -6,7 +6,7 @@ See the [installation documentation](installation.md) to get started with IoT-HS
 
 IoT-HSM is a lightweight application designed to allow Google Cloud KMS keys and YubiKeys to be used to protect CA private keys on PKIaaS.io. Once deployed and provisioned for a Certificate Authority (CA), it securely forwards all signing requests for the CA from PKIaaS.io to the IoT-HSM, where the configured HSM handles the signing. To ensure robust security, all communications with the IoT-HSM are digitally signed with end-to-end encryption via S/MIME. Advantages of using IoT-HSM include:
 
-* IoT-HSM is an extremely affordable HSM solution only the cost of the [YubiKey](https://www.yubico.com/product/yubikey-5-series/yubikey-5-nfc/){:target="_blank"} (approximately $50) or [Google Cloud KMS key](https://cloud.google.com/kms/pricing{:target="_blank"}) (approximately $1 - $3 per month depending on usage)
+* IoT-HSM is an extremely affordable HSM solution at only the cost of the [YubiKey](https://www.yubico.com/product/yubikey-5-series/yubikey-5-nfc/){:target="_blank"} (approximately $50) or [Google Cloud KMS key](https://cloud.google.com/kms/pricing){:target="_blank"} (approximately $1 - $3 per month depending on usage)
 * Private keys can be imported or generated and never leave the device
 * One or more HSMs can be managed by a single IoT-HSM appliance
 * Multiple slots on a YubiKey can be provisioned with different private keys, allowing for multiple CAs to be managed by a single YubiKey

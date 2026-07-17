@@ -4,7 +4,7 @@ description: Learn how to install IoT-HSM on an Ubuntu server.
 ---
 
 ## Virtual or Physical Machine
-When installing IoT-HSM, it is recommend to deploy a Long-Term Support (LTS) version of [Ubuntu Server](https://ubuntu.com/download/server). IoT-HSM has been tested on Ubuntu 24.04 and 25.10. Once Ubuntu is installed and updated, login to a shell, and execute the following commands as the root user. You can become root by entering the command `sudo su -`.
+When installing IoT-HSM, it is recommended to deploy a Long-Term Support (LTS) version of [Ubuntu Server](https://ubuntu.com/download/server). IoT-HSM has been tested on Ubuntu 24.04 and 25.10. Once Ubuntu is installed and updated, login to a shell, and execute the following commands as the root user. You can become root by entering the command `sudo su -`.
 ```
 apt update
 apt -y install curl
