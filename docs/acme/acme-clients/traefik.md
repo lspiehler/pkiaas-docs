@@ -1,6 +1,6 @@
 ---
 title: Traefik
-description: Learn how to configure Traefik to request certificates via ACME from the PKIaaS.io.
+description: Learn how to configure Traefik to request certificates via ACME from PKIaaS.io.
 ---
 Be sure to have the EAB KID and HMAC Key ready for the steps below. See [Generate EAB Credentials](../generate-eab-credentials.md) for more information.
 
@@ -48,12 +48,12 @@ services:
 ```
 2. Create a "letsencrypt" directory in the same directory you created the docker-compose.yml file.
 3. Replace the values for **certificatesresolvers.myresolver.acme.eab.kid**, **certificatesresolvers.myresolver.acme.eab.hmacencoded**, and **certificatesresolvers.myresolver.acme.email** with your own correct values.
-4. Replace whoami.example.com by your own domain within the traefik.http.routers.whoami.rule label of the whoami service.
+4. Replace whoami.example.com with your own domain within the traefik.http.routers.whoami.rule label of the whoami service.
 5. Optionally uncomment the following line if you want to test/debug:
 ```
 #- "--log.level=DEBUG"
 ```
 6. Run `docker-compose up -d` within the folder where you created the previous file.
-7. Wait a a few moments for the certificate request to complete, and visit https://your_own_domain to confirm everything worked as expected.
+7. Wait a few moments for the certificate request to complete, and visit https://your_own_domain to confirm everything worked as expected.
 
 See the [Traefik website](https://doc.traefik.io/traefik/user-guides/docker-compose/acme-http/) for more information about Traefik. 

@@ -1,6 +1,6 @@
 ---
 title: Post-Quantum Cryptography Overview
-description: Learn how to create a quantum safe PKI using post-quantum cryptography (PQC) with PKIaaS.io.
+description: Learn how to create a quantum-safe PKI using post-quantum cryptography (PQC) with PKIaaS.io.
 ---
 Post-quantum cryptography (PQC) refers to cryptographic algorithms designed to remain secure against the potential threats posed by quantum computers. Quantum computers have the potential to break many of the cryptographic algorithms that are currently in use, including RSA and ECC. As a result, the National Institute of Standards and Technology (NIST) has been working to standardize post-quantum cryptographic algorithms.
 

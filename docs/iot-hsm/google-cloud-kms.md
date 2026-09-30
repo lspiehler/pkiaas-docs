@@ -33,7 +33,7 @@ In the Google Cloud Console, use the navigation menu to go to "Security" > "Key 
 - **Key rotation**: *Not available for asymmetric keys*
 - **Duration of 'scheduled destruction' state**: *The number of days for which a key version remains in the "Scheduled for destruction" state after a request to destroy is submitted. During this time, users can restore the key. The value cannot be changed once the key is created. Default is 30 days*
 
-**Note:** IoT-HSM can manage multiple Google Cloud KMS keys, but the keys must exist on the same key ring because only one key ring may be configured per appliance. Additional appliances must be deployed to manage keys on more then one key ring.
+**Note:** IoT-HSM can manage multiple Google Cloud KMS keys, but the keys must exist on the same key ring because only one key ring may be configured per appliance. Additional appliances must be deployed to manage keys on more than one key ring.
 
 ### Create a Service Account
 In the Google Cloud Console, use the navigation menu to go to "IAM & Admin" > "Service Accounts". Click "Create service account" and provide a name, service account ID, and optionally a description for the service account. After creating the service account, assign it the following roles:
@@ -44,7 +44,7 @@ In the Google Cloud Console, use the navigation menu to go to "IAM & Admin" > "S
 
 If roles for the service account need to be updated, they can be managed by selecting the service account and then navigating to "Permissions" and clicking "Manage Access".
 
-**If IoT-HSM has been deployed as a VM or container on GCP, it can use the default service account associated with the VM or container for authentication. In this case, no service account key is needed. This is highly recommended as it simplifies the authentication process and reduces the risk of key exposure. Be sure to enable the "Cloud Platform" API within the access scope configuration on the VM. All documentation regarding service account keys are not applicable in this scenario.**
+**If IoT-HSM has been deployed as a VM or container on GCP, it can use the default service account associated with the VM or container for authentication. In this case, no service account key is needed. This is highly recommended as it simplifies the authentication process and reduces the risk of key exposure. Be sure to enable the "Cloud Platform" API within the access scope configuration on the VM. All documentation regarding service account keys is not applicable in this scenario.**
 
 ### Create Service Account Key
 Select the service account you created earlier, then click "Keys" and "Add Key" to create a new key. Choose the JSON key type and click "Create". The key file will be downloaded automatically. Store this file securely, as it contains the credentials needed to authenticate as the service account.

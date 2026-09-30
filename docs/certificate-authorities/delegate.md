@@ -12,7 +12,7 @@ To delegate access to a CA, follow these steps:
 3. Click on the CA you want to delegate.
 4. Select **Delegate Access** from the menu.
 5. On the delegation page, click "Invite".
-6. Enter the email address of the user you want to delegate access to. You may optionally choose an authentication provider to force the user to login with while logging in to accept the invitation and whether to require the login email to match the email address provided.
+6. Enter the email address of the user you want to delegate access to. You may optionally choose an authentication provider to force the user to log in with while logging in to accept the invitation and whether to require the login email to match the email address provided.
 7. Click "Send Invitation" to send the invitation email to the user.
 8. The invited user will receive an email with a link to accept the invitation. Once accepted, the user will have access to the delegated CA. The invitation must be accepted within 7 days, or it will expire.
 

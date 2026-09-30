@@ -8,7 +8,7 @@ To subscribe, log in to [PKIaaS.io](https://www.pkiaas.io/auth/login), click on 
 
 Unsubscribed users are subject to the following limitations:
 
-* Maximum of 10 certificates per account (excluding service certificates, e.g. SCEP, OCSP, etc)
+* Maximum of 10 certificates per account (excluding service certificates, e.g., SCEP, OCSP)
 * 30-day certificate validity period
 * No certificate revocation
 
