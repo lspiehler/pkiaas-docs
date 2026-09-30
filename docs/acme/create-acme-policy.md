@@ -1,6 +1,6 @@
 ---
 title: Create an ACME Policy
-description: Learn how to create an ACME policy and optionally pre-approve domains.
+description: Create an ACME policy on PKIaaS.io to bind ACME requests to a certificate template, and pre-approve domains to skip HTTP and DNS challenges.
 ---
 An ACME policy associates ACME certificate requests with a specified certificate template and allows a comma-separated list of "pre-approved domains" to be supplied. Pre-approved domains will be automatically authorized and will not be required to do any ACME HTTP or DNS challenges. Wildcard domains are supported to pre-approve an entire root domain and all subdomains.
 

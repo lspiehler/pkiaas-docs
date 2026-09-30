@@ -1,6 +1,6 @@
 ---
 title: Microsoft NDES Compatibility
-description: Learn how to enable Microsoft NDES compatibility for the SCEP protocol on PKIaaS.io.
+description: Enable Microsoft NDES compatibility on PKIaaS.io to generate one-time SCEP challenge passwords for tools built against Microsoft NDES servers.
 ---
 PKIaaS.io offers Microsoft NDES compatibility to support third-party applications and processes built to work with Microsoft NDES. The feature can be enabled on a per-template basis and can be used to generate one-time challenge passwords for certificate requests from the template. The challenge passwords expire after 60 minutes.
 

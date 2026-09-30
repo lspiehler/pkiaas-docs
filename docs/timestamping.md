@@ -1,6 +1,6 @@
 ---
 title: Timestamping
-description: Learn how to use the PKIaaS.io timestamping service to add trusted timestamps to digital data.
+description: Add trusted RFC 3161 and Authenticode timestamps to signed code and PDFs with the PKIaaS.io timestamping service, unique to each CA.
 ---
 ## Overview
 Timestamping is the process of adding a trusted and verifiable time and date to a piece of digital data. This establishes proof that the data existed or was signed at a specific moment in time and has not been altered since. It ensures that signed data remains verifiable and trustworthy long after the initial signing event, even after the signing certificate has expired.

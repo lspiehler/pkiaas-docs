@@ -1,6 +1,6 @@
 ---
 title: Create Certificate Authorities
-description: Learn how to create root and intermediate certificate authorities on PKIaaS.io.
+description: Create a root or intermediate certificate authority on PKIaaS.io, including generating a CSR and importing the signed certificate to activate it.
 ---
 ## Create a Root CA
 Users can create a root certificate authority by logging in to PKIaaS.io and navigating to **Certificate Authorities -> Create New CA**. Fill out the form with the appropriate options for the desired CA. See [certificate authority overview](overview.md) for documentation on all of the available options. When creating a root CA, it is necessary to leave the "CSR Only" option at the bottom of the form unchecked. Upon clicking "Create New CA," a new private key will be generated, and a self-signed, root certificate authority will be created and ready to issue certificates. See the [getting started](../getting-started.md#issue-a-certificate) guide for more documentation about issuing certificates.

@@ -1,6 +1,6 @@
 ---
 title: Certificate Authorities Overview
-description: Learn how to create a certificate authority (CA) on PKIaaS.io.
+description: Create a managed or HSM-backed certificate authority on PKIaaS.io and choose subject attributes, key type, hash algorithm, validity, and path length.
 ---
 A certificate authority (CA) serves as the foundation upon which all functionality on PKIaaS.io is built. Tasks like working with templates, issuing certificates, and managing ACME policies all operate within the scope of a CA. As such, the first step after signing into PKIaaS.io is creating a CA. Users will be automatically redirected to a setup page and prompted to create a CA before accessing other features of the site.
 

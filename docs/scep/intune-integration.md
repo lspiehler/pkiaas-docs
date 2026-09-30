@@ -1,6 +1,6 @@
 ---
 title: Microsoft Intune Integration
-description: Learn how to integrate PKIaaS.io with Microsoft Intune for SCEP certificate issuance.
+description: Integrate PKIaaS.io with Microsoft Intune to validate and issue SCEP certificates to managed devices using an Azure app registration.
 ---
 PKIaaS.io natively supports SCEP integration with Microsoft Intune, allowing certificates to be validated and issued to devices managed by Intune.
 

@@ -1,6 +1,6 @@
 ---
 title: Register an ACME Account
-description: Learn how to register an ACME account with PKIaaS.io using an external account binding (EAB) on PKIaaS.io.
+description: Register an ACME account with PKIaaS.io using external account binding, then issue certificates with Certbot, Certify the Web, or Traefik.
 ---
 An ACME EAB credential must be generated before an ACME account can be registered with PKIaaS.io. See [Generate EAB Credentials](generate-eab-credentials.md) if this step hasn't been completed yet.
 

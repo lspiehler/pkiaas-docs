@@ -1,6 +1,6 @@
 ---
 title: Delegate Access to a CA
-description: Learn how to delegate access to a certificate authority on PKIaaS.io.
+description: Delegate a PKIaaS.io certificate authority to teammates by email invitation, with optional authentication provider and email matching rules.
 ---
 To allow multiple users to share management of a certificate authority (CA) on PKIaaS.io, you can delegate access to the CA. Delegation enables other users to issue certificates, manage templates, and perform other administrative tasks without needing to share account credentials.
 

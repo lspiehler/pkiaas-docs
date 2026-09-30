@@ -1,6 +1,6 @@
 ---
 title: Revoke Certificates
-description: Learn how to revoke certificates on PKIaaS.io.
+description: Revoke and unrevoke certificates on PKIaaS.io, pick a revocation reason, and learn which reasons can be undone using certificate hold.
 ---
 ## Revoke a Certificate
 To revoke a certificate, log in to PKIaaS.io and navigate to **X509 Certificates -> Issued Certificates** in the navigation pane on the left of the page. Click on the certificate you'd like to revoke and select the "Revocation" tab in the modal. Choose an option from the "Revocation Reason" dropdown and click "Revoke".

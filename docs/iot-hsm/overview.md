@@ -1,6 +1,6 @@
 ---
 title: Overview
-description: Learn about IoT-HSM and the different supported HSMs that can be used with PKIaaS.io.
+description: IoT-HSM turns a YubiKey 5 or Google Cloud KMS key into an HSM for PKIaaS.io, protecting CA private keys for roughly the cost of the key itself.
 ---
 See the [installation documentation](installation.md) to get started with IoT-HSM.
 

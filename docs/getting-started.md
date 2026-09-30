@@ -1,6 +1,6 @@
 ---
 title: Getting Started
-description: Learn how easy it is to get started issuing certificates with your own certificate authority on PKIaaS.io.
+description: Create your first certificate authority on PKIaaS.io, set up a certificate template, and issue a certificate in a few minutes for free.
 ---
 ## Login
 Getting started with PKIaaS.io is easy! All you need to do is click "Manage PKI" at the top right of the main page and choose the login you'd like to use.

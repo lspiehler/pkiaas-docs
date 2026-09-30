@@ -1,6 +1,6 @@
 ---
 title: IoT-HSM Installation
-description: Learn how to install IoT-HSM on an Ubuntu server.
+description: Install IoT-HSM on Ubuntu Server or run it as a container, then connect it to PKIaaS.io to keep your CA private keys in hardware.
 ---
 
 ## Virtual or Physical Machine

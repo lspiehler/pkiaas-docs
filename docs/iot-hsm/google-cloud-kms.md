@@ -1,6 +1,6 @@
 ---
 title: Configure Google Cloud KMS
-description: Learn how to configure Google Cloud KMS with IoT-HSM for use as an HSM with PKIaaS.io.
+description: Configure a Google Cloud KMS key as an HSM for IoT-HSM, covering key rings, supported algorithms, service accounts, and required IAM roles.
 ---
 
 ### Log in to the Google Cloud Console

@@ -1,6 +1,6 @@
 ---
 title: Windows Integration Overview
-description: Learn how to integrate PKIaaS.io with Windows for certificate issuance and automatic renewal.
+description: Issue and auto-renew certificates on Windows clients with the PKIaaS.io hosted CEP and CES services, including off-domain machines.
 ---
 PKIaaS.io supports Microsoft Certificate Enrollment Policy Web Service and Certificate Enrollment Web Service, also known as CEP and CES, to enable certificate issuance and automatic renewal for Windows devices. This integration allows Windows clients to request certificates from PKIaaS.io seamlessly using the native Windows certificate enrollment features. For more information about CEP and CES, see the Microsoft documentation below:
 

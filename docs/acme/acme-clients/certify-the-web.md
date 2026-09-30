@@ -1,6 +1,6 @@
 ---
 title: Certify The Web
-description: Learn how to configure Certify the Web to request certificates via ACME from PKIaaS.io.
+description: Configure Certify the Web to register an ACME account with PKIaaS.io using EAB credentials and issue certificates on Windows servers.
 ---
 Be sure to have the EAB KID and HMAC Key ready for the steps below. See [Generate EAB Credentials](../generate-eab-credentials.md) for more information.
 

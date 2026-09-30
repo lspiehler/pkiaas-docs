@@ -1,6 +1,6 @@
 ---
 title: Certificate Issuance Workflows Overview
-description: Learn about the different workflows for issuing certificates on PKIaaS.io.
+description: Compare the manual and automated ways to issue certificates on PKIaaS.io, from signing a CSR in the admin UI to enrolling via ACME or SCEP.
 ---
 PKIaaS.io supports multiple workflows for issuing certificates. See the links below for more information on each workflow:
 ## Manual Workflows

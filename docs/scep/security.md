@@ -1,5 +1,5 @@
 ---
 title: SCEP Security
-description: Learn how to secure the SCEP protocol on PKIaaS.io.
+description: Restrict SCEP access on PKIaaS.io with an IP allowlist covering SCEP requests, the Microsoft NDES compatibility UI, or both.
 ---
 SCEP access can be restricted to specific IP addresses. To restrict access to a specific IP address, navigate to **Certificate Templates -> Manage Templates**, click on the template you wish to restrict access to and select the "SCEP" tab. Check the "Enable IP ACL" checkbox and enter the IP address you wish to allow SCEP requests from in the "Allowed IPs" field. Multiple IP addresses can be entered, separated by commas. Using the "Limit access to" dropdown, you may choose whether to limit access to SCEP requests, the Microsoft compatibility UI, or both.

@@ -1,6 +1,6 @@
 ---
 title: Certificate Revocation List (CRL)
-description: Learn about Certificate Revocation Lists (CRLs) and how to access them from PKIaaS.io.
+description: Learn how PKIaaS.io generates and caches certificate revocation lists, where to find your CRL URL, and how the CRL distribution point is set.
 ---
 ## Overview
 A CRL (Certificate Revocation List) is a list published by a Certificate Authority (CA) that contains the serial numbers of digital certificates that have been revoked before their scheduled expiration. This list is part of Public Key Infrastructure (PKI) and serves as a mechanism to help entities verify whether a certificate is still valid.

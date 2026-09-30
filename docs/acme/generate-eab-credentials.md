@@ -1,6 +1,6 @@
 ---
 title: Generate EAB Credentials
-description: Learn how to generate external account binding (EAB) credentials for registering a new ACME account on PKIaaS.io.
+description: Generate external account binding credentials on PKIaaS.io to register an ACME account against a specific certificate authority and policy.
 ---
 An ACME policy must be created before EAB credentials can be generated. See [Create an ACME Policy](create-acme-policy.md) if this step hasn't been completed yet.
 

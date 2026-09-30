@@ -1,6 +1,6 @@
 ---
 title: Certbot
-description: Learn how to configure Certbot to request certificates via ACME from PKIaaS.io.
+description: Configure Certbot to register an ACME account with PKIaaS.io using EAB credentials and order certificates for Apache and other web servers.
 ---
 Be sure to have the EAB KID and HMAC Key ready for the steps below. See [Generate EAB Credentials](../generate-eab-credentials.md) for more information.
 
