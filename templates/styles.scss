@@ -1,0 +1,10 @@
+// Workaround for missing images in the generated PDF.
+// The plugin's built-in rule `article, section + section { min-height: 100vh }`
+// makes WeasyPrint silently drop every raster image during layout of the
+// combined document. `page-break-before: always` still guarantees each
+// article starts on a new page, so removing the min-height only affects
+// trailing whitespace on short chapters.
+article,
+section + section {
+  min-height: 0 !important;
+}
