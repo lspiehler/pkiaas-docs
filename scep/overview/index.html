@@ -2301,6 +2301,7 @@
 <p>PKIaaS.io supports SCEP for certificate enrollment, but it is not enabled by default. SCEP can be enabled and disabled on a per-template basis. To enable SCEP for a template, log in to PKIaaS.io and navigate to <strong>Certificate Templates -&gt; Manage Templates</strong>. Click on the template you wish to enable SCEP for, then click "Edit Template" and select the "SCEP" tab. From here, you can enable SCEP and configure the SCEP settings for the template.</p>
 <h2 id="scep-url">SCEP URL</h2>
 <p>The SCEP URL is unique to each template. To find the SCEP URL for a template, navigate to <strong>Certificate Templates -&gt; Manage Templates</strong>, click on the template you wish to use and select "Show Template Service URLs" from the menu. This is the URL that devices will use to communicate with PKIaaS.io to request a certificate from the template.</p>
+<p>The SCEP URL is available over both HTTPS and HTTP. Use HTTPS whenever the device supports it, since it also protects the device's initial download of the CA certificate. The HTTP URL is provided for devices that don't support HTTPS.</p>
 <h2 id="scep-validation">SCEP Validation</h2>
 <p>When a device requests a certificate via SCEP, PKIaaS.io will validate the request before issuing the certificate. Multiple validation methods are supported. See the links below for more information on each.</p>
 <ol>
