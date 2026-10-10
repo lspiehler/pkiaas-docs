@@ -69,7 +69,7 @@ nav:
   # - Use Cases:
   #   - Sample Use Case: use-cases/sample-use-case.md
   - Troubleshooting: troubleshooting.md
-  - Download PDF: pdf/document.pdf
+  - Download PDF: /pdf/document.pdf
 
 plugins:
   - search
@@ -80,6 +80,9 @@ plugins:
       cover_subtitle: ""
       copyright: Copyright © PKIaaS.io 2019-2024
       toc_level: 3
+
+hooks:
+  - hooks/pdf.py
 
 markdown_extensions:
   - pymdownx.highlight:
