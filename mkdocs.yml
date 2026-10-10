@@ -69,7 +69,7 @@ nav:
   # - Use Cases:
   #   - Sample Use Case: use-cases/sample-use-case.md
   - Troubleshooting: troubleshooting.md
-  - Download PDF: pdf/document.pdf
+  - Download PDF: /pdf/document.pdf
 
 plugins:
   - search
