@@ -8,11 +8,11 @@ PKIaaS.io natively supports SCEP integration with Microsoft Intune, allowing cer
 To enable Intune integration, log in to [PKIaaS.io](https://www.pkiaas.io/auth/login), and navigate to **Certificate Templates -> Manage Templates**, click on the template you wish to enable Microsoft Intune integration for, then click "Edit Template" and select the "SCEP" tab. Check the "Enable Microsoft Intune/Endpoint Manager Integration" checkbox, then connect automatically or use your own app registration.
 
 ### Connect Automatically (Recommended)
-Click "Connect to Intune". You will be redirected to Microsoft to sign in as a Global Administrator or Privileged Role Administrator for your tenant and approve the CYOPKI Intune Connector. The connector requests two application permissions: **SCEP challenge validation** (Intune) and **Read all applications** (Microsoft Graph, used to locate your tenant's Intune SCEP validation service). After approving, you will be returned to the template, which will show that it is connected. No app registration or client secret is needed.
+Click "Connect to Intune". You will be redirected to Microsoft to sign in as a Global Administrator or Privileged Role Administrator for your tenant and approve the PKIaaS.io Intune Connector. The connector requests two application permissions: **SCEP challenge validation** (Intune) and **Read all applications** (Microsoft Graph, used to locate your tenant's Intune SCEP validation service). After approving, you will be returned to the template, which will show that it is connected. No app registration or client secret is needed.
 
 **Note:** Save any other changes to the template before clicking "Connect to Intune". Microsoft may take a few minutes to activate a new connection. If another template on the same certificate authority is already connected, click "Use tenant" to connect without approving again.
 
-To disconnect, uncheck "Enable Microsoft Intune/Endpoint Manager Integration" and click "Save Template". Deleting the CYOPKI Intune Connector from **Enterprise applications** in Microsoft Entra ID disconnects every template using your tenant.
+To disconnect, uncheck "Enable Microsoft Intune/Endpoint Manager Integration" and click "Save Template". Deleting the PKIaaS.io Intune Connector from **Enterprise applications** in Microsoft Entra ID disconnects every template using your tenant.
 
 ### Use Your Own App Registration
 Click "Use my own app registration instead", then create an app registration by following Microsoft's instructions to [authorize communication between CA and Intune](https://learn.microsoft.com/en-us/intune/fundamentals/certificates/third-party-ca-scep#authorize-communication-between-ca-and-intune){:target="_blank"}. Enter the following information:
