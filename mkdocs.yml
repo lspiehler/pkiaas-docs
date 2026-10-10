@@ -81,6 +81,9 @@ plugins:
       copyright: Copyright © PKIaaS.io 2019-2024
       toc_level: 3
 
+hooks:
+  - hooks/pdf.py
+
 markdown_extensions:
   - pymdownx.highlight:
       anchor_linenums: true
