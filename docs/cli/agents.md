@@ -13,8 +13,8 @@ files on the user's computer. It is built to be run by AI agents as well as peop
   `{"error": {"code", "message", "hint"}}`. Messages for people (progress, notices, update hints) go to standard
   error; don't parse them. Use the exit code and the error `code`, not the message text.
 - **Look commands up rather than guess.** `pkiaas help --json` describes every command: its flags, examples, result
-  fields, side effects, and whether it calls the server, needs a login or needs the user. `pkiaas help --json key
-  create` (or `pkiaas key create --help --json`) describes one command.
+  fields, side effects, and whether it calls the server, needs a login or needs the user, with the exit codes and
+  error codes. `pkiaas help --json key create` (or `pkiaas key create --help --json`) describes one command.
 - **pkiaas never prompts without a terminal.** When something is missing, such as a passphrase, it fails with the
   `usage` code and names the flag to give. Don't pipe answers to prompts. Only `pkiaas login` waits, for the user to
   approve the login.
@@ -32,8 +32,10 @@ Your commands and their output may be logged, so keep secrets out of both.
   another file take `--key-passphrase-env` and `--key-passphrase-file` for the key's passphrase.
 - Ask the user to set the variable or write the file themselves. Don't put a passphrase in a command you run, for
   example `echo secret | pkiaas ...` or `export KEY_PASSPHRASE=secret`.
-- If you have to make a passphrase up, generate it into a file without printing it, and tell the user where it is:
-  `umask 077; openssl rand -base64 32 > server.key.pass`.
+- If you have to make a passphrase up, generate it into a file without printing it, and tell the user where it is,
+  so they can move it to a password manager: `(umask 077; openssl rand -base64 32 > server.key.pass)`, or without
+  OpenSSL `(umask 077; head -c 32 /dev/urandom | base64 > server.key.pass)`. In PowerShell:
+  `[Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(32)) | Set-Content server.key.pass`.
 - Keys are encrypted by default. Only use `--no-passphrase` when the user asks for an unencrypted key, e.g. for a
   service that loads its key at startup without a passphrase.
 - pkiaas never prints keys, passphrases or tokens. Don't print `PKIAAS_TOKEN`, and don't read the CLI's
@@ -71,8 +73,10 @@ pkiaas csr create --key server.key --key-passphrase-env KEY_PASSPHRASE --cn www.
   --san www.example.com --san example.com --out server.csr --json
 ```
 
-The user then has the CSR signed by their PKIaaS CA. For now this is done in the web interface; CLI commands for
-it are coming.
+List the common name among the SANs too: with `--san`, it isn't added for you, and most clients only check SANs.
+
+The user then has the CSR signed by their PKIaaS CA. For now this is done in the web interface (in the PKIaaS
+documentation, "Sign a CSR from the Admin UI"); CLI commands for it are coming.
 
 Combine the key, the signed certificate and the CA chain into a PKCS#12 file for Windows, Java or a load balancer
 (the user has set `PFX_PASSPHRASE` too):

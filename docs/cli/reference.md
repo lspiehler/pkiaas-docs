@@ -50,7 +50,7 @@ use the RFC 4514 form: Git Bash rewrites arguments that start with "/".
 
 Subject alternative names (`--san`, repeatable) are dns:NAME, ip:ADDRESS, email:ADDRESS or uri:URI; without a
 prefix the kind is guessed. If no `--san` is given and the common name is a DNS name, it is added as one,
-because browsers and most clients only check SANs.
+because browsers and most clients only check SANs. With `--san`, list the common name too.
 
 Without `--out` the CSR is printed (inside the JSON result with `--json`).
 
@@ -70,7 +70,7 @@ Flags:
 Examples:
 
 ```sh
-pkiaas csr create --key server.key --cn www.example.com --san example.com --out server.csr
+pkiaas csr create --key server.key --cn www.example.com --san www.example.com --san example.com --out server.csr
 pkiaas csr create --key server.key --key-passphrase-env KEY_PASSPHRASE --subject "CN=www.example.com,O=Example,C=US" --san ip:192.0.2.10 --json
 ```
 
