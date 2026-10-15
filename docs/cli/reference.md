@@ -22,6 +22,132 @@ Manage your PKIaaS certificate authorities and keys. AI agents: start with the [
 
 Exit codes and error codes are listed in the [agent guide](agents.md#exit-codes).
 
+## pkiaas ca
+
+List your certificate authorities and set the active one.
+
+```
+pkiaas ca [flags]
+```
+
+Commands:
+
+- [`pkiaas ca list`](reference.md#pkiaas-ca-list)
+- [`pkiaas ca set`](reference.md#pkiaas-ca-set)
+- [`pkiaas ca show`](reference.md#pkiaas-ca-show)
+
+## pkiaas ca list
+
+List the CAs you have access to.
+
+```
+pkiaas ca list [flags]
+```
+
+List the certificate authorities your account has access to: your own, and those you were invited to, by
+name. The ID is what commands take to name a CA. The active CA, which commands work in unless told otherwise, is
+marked with *.
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+
+Examples:
+
+```sh
+pkiaas ca list
+pkiaas ca list --json
+```
+
+With `--json`, the result is an array of objects with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | string | the CA's ID, which commands take to name the CA |
+| `name` | string or null | the CA's name (its certificate's common name) |
+| `signed` | boolean | false while the CA waits for its signed certificate to be imported |
+| `validTo` | string or null | when the CA's certificate expires (ISO 8601, UTC); null if unsigned |
+| `active` | boolean | whether it is the active CA, which commands work in unless told otherwise |
+
+## pkiaas ca set
+
+Set the active CA.
+
+```
+pkiaas ca set ID [flags]
+```
+
+Set the active CA, which commands work in unless told otherwise, by its ID from `pkiaas ca list`. It is kept
+on this computer, for this server, until `pkiaas logout`; it doesn't change the CA you work in on the website.
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+
+Examples:
+
+```sh
+pkiaas ca set a1B2c3D4e5
+pkiaas ca set a1B2c3D4e5 --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `server` | string | the server |
+| `id` | string or null | the active CA's ID; null if the account has no CAs |
+| `name` | string or null | the active CA's name |
+| `source` | string | why it is active: set (with `pkiaas ca set`, or at login), website (the CA last used on the website), first (the first CA by name), or none |
+
+Side effects:
+
+- keeps the CA as the active one in the CLI's config.json, for this server
+
+## pkiaas ca show
+
+Show the active CA.
+
+```
+pkiaas ca show [flags]
+```
+
+Show the active CA: the CA that commands work in unless told otherwise. It is the one set with `pkiaas ca
+set` (or at login), on this computer for this server. Until one is set, it is the CA you last worked in on the
+website.
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+
+Examples:
+
+```sh
+pkiaas ca show
+pkiaas ca show --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `server` | string | the server |
+| `id` | string or null | the active CA's ID; null if the account has no CAs |
+| `name` | string or null | the active CA's name |
+| `source` | string | why it is active: set (with `pkiaas ca set`, or at login), website (the CA last used on the website), first (the first CA by name), or none |
+
 ## pkiaas csr
 
 Create certificate signing requests on this computer.
@@ -208,6 +334,9 @@ Your browser opens to log in and to allow the CLI. On a computer without a brows
 it shows a code to enter on another device. The token is kept in the system keyring, or where there is none in a
 file only you can read. `PKIAAS_TOKEN`, if set, is used instead of a stored token.
 
+Login shows the active CA, which commands work in unless told otherwise: the one set before with `pkiaas ca set`,
+else the CA you last worked in on the website. Change it with `pkiaas ca set`.
+
 A person has to approve the login in their browser. AI agents: ask the user to run it, see `pkiaas help agents`.
 
 This command calls the PKIaaS server and needs the user to take part.
@@ -236,11 +365,14 @@ With `--json`, the result is an object with these fields:
 | `displayName` | string or null | the account's name |
 | `provider` | string | the identity provider the account signs in with, e.g. google |
 | `storedIn` | string | where the token is kept: the system keyring, or the path of the owner-only file |
+| `activeCaId` | string or null | the active CA's ID, which commands work in unless told otherwise; null if the account has no CAs |
+| `activeCaName` | string or null | the active CA's name |
 
 Side effects:
 
 - stores the token in the system keyring or an owner-only file
 - remembers the server for later commands
+- keeps the active CA: the one set before, else the CA last used on the website
 - emails the account about the new login, if it has an email address
 
 ## pkiaas logout
@@ -283,6 +415,7 @@ Side effects:
 
 - revokes the token on the server (with `--all`, every CLI login of the account)
 - deletes the stored token
+- forgets the active CA for the server
 
 ## pkiaas pkcs12
 

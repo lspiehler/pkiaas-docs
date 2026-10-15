@@ -60,6 +60,17 @@ Logging in needs the user, who approves it in their browser.
 
 The login is kept for 30 days of inactivity, and for at most 90 days. `pkiaas logout` revokes it.
 
+## Certificate authorities
+
+`pkiaas ca list --json` lists the user's CAs: their own and those they were invited to. Each has an `id`, which
+commands take to name a CA, and `signed` (false while the CA waits for its certificate).
+
+One CA is active: commands that work in a CA use it unless told otherwise. `pkiaas ca show --json` says which one
+it is and why. Login makes it the CA the user last worked in on the website; `pkiaas ca set ID --json` changes it.
+The active CA is kept on this computer for that server; setting it doesn't change the CA the user works in on the
+website. Before working in a CA, check that the active one is the CA the user means; when they have more than one
+and haven't said which, ask them rather than choosing.
+
 ## Recipes
 
 Choose a key type with `pkiaas key types --json`. The default, `rsa-2048`, works everywhere. Use `ec-p256` for

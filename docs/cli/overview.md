@@ -8,9 +8,10 @@ description: "Install the pkiaas CLI on Linux, macOS or Windows, log in, and cre
 - create private keys of every type PKIaaS.io supports, including the post-quantum [ML-DSA](../post-quantum-cryptography/ml-dsa.md) and [SLH-DSA](../post-quantum-cryptography/slh-dsa.md) types;
 - create certificate signing requests (CSRs) to have signed by your certificate authority;
 - combine a key, its certificate and the CA chain into a PKCS#12 (.pfx/.p12) file;
-- log in to your PKIaaS.io account.
+- log in to your PKIaaS.io account;
+- list your certificate authorities and choose the one to work in.
 
-Keys, CSRs and PKCS#12 files are made on your computer, and private keys never leave it. Commands for managing your certificate authorities and certificates are coming.
+Keys, CSRs and PKCS#12 files are made on your computer, and private keys never leave it. Commands for signing certificates and managing your certificate authorities are coming.
 
 ## Install
 On Linux and macOS:
@@ -40,12 +41,26 @@ Creating keys, CSRs and PKCS#12 files doesn't need a login. Commands that work w
 pkiaas login
 ```
 
-Your browser opens. Sign in to PKIaaS.io if you aren't already, check the details on the page and click **Allow**. The CLI's login is kept in your system's keyring, or where there is none, in a file only you can read. It lasts 30 days from its last use and 90 days at most. PKIaaS.io emails you about each new login.
+Your browser opens. Sign in to PKIaaS.io if you aren't already, check the details on the page and click **Allow**. The CLI then shows your active certificate authority (see [Choose Your CA](#choose-your-ca)). The CLI's login is kept in your system's keyring, or where there is none, in a file only you can read. It lasts 30 days from its last use and 90 days at most. PKIaaS.io emails you about each new login.
 
 - **No browser on this computer** (over SSH or in a container): run `pkiaas login --device`. It shows an address and a code to enter in a browser on any other device. Only enter a code that comes from a `pkiaas` command you ran yourself.
 - **Check your login:** `pkiaas whoami`.
 - **Log out:** `pkiaas logout`. `pkiaas logout --all` signs out every CLI login of your account, on every computer. Use it if a login may have leaked. You can also see and revoke CLI logins on the website.
 - **CI and scripts:** set `PKIAAS_TOKEN` from your CI system's secret store instead of logging in.
+
+## Choose Your CA
+Commands that work in a certificate authority use the active CA unless you tell them otherwise. When you log in, the active CA is the one you last worked in on the website, and `pkiaas login` shows it:
+
+```text
+Active CA: Example Root CA (a1B2c3D4e5)
+Change it with: pkiaas ca set <ID> (pkiaas ca list shows your CAs)
+```
+
+- **List your CAs:** `pkiaas ca list` shows the CAs you own and those you were invited to, with their IDs. The active one is marked with `*`.
+- **Change the active CA:** `pkiaas ca set <ID>`, with an ID from the list.
+- **Check the active CA:** `pkiaas ca show`.
+
+The active CA is kept on your computer, for each server, until you log out. Changing it doesn't change the CA you work in on the website, and switching CA on the website doesn't change the CLI's.
 
 ## Create a Key, a CSR and a PKCS#12 File
 Create a key. You're asked for a passphrase to encrypt it with:
