@@ -9,7 +9,7 @@ description: "Install the pkiaas CLI on Linux, macOS or Windows, log in, and cre
 - create certificate signing requests (CSRs) to have signed by your certificate authority;
 - combine a key, its certificate and the CA chain into a PKCS#12 (.pfx/.p12) file;
 - log in to your PKIaaS.io account;
-- list your certificate authorities and choose the one to work in.
+- list your certificate authorities, show their details, save their certificates and chains, and choose the one to work in.
 
 Keys, CSRs and PKCS#12 files are made on your computer, and private keys never leave it. Commands for signing certificates and managing your certificate authorities are coming.
 
@@ -58,9 +58,12 @@ Change it with: pkiaas ca set <ID> (pkiaas ca list shows your CAs)
 
 - **List your CAs:** `pkiaas ca list` shows the CAs you own and those you were invited to, with their IDs. The active one is marked with `*`.
 - **Change the active CA:** `pkiaas ca set <ID>`, with an ID from the list.
-- **Check the active CA:** `pkiaas ca show`.
+- **Show a CA's details:** `pkiaas ca show` shows the active CA: its key, its certificate (serial, thumbprint, validity), how many of the certificates it issued are still valid, and the URLs of its public services (certificate, chain, CRL, OCSP, time stamping, the CPS page and Windows enrollment).
+- **Save a CA's certificate:** `pkiaas ca cert --out ca.pem` saves the CA's certificate as PEM. Add `--chain` to save the CA's certificate followed by the certificates that issued it, which is what servers and `pkiaas pkcs12 create --chain` need. A root CA's certificate alone is what clients add to their trust store.
 
 The active CA is kept on your computer, for each server, until you log out. Changing it doesn't change the CA you work in on the website, and switching CA on the website doesn't change the CLI's.
+
+To work in another CA for one command without changing the active one, add `--ca <ID>`, for example `pkiaas ca show --ca a1B2c3D4e5`. In a script or CI job, set `PKIAAS_CA=<ID>` instead. `--ca` comes first, then `PKIAAS_CA`, then the active CA.
 
 ## Create a Key, a CSR and a PKCS#12 File
 Create a key. You're asked for a passphrase to encrypt it with:
@@ -77,7 +80,13 @@ Create a CSR for the key. The common name is also added as a DNS subject alterna
 pkiaas csr create --key server.key --cn www.example.com --san www.example.com --san example.com --out server.csr
 ```
 
-Sign the CSR with your certificate authority, as in [Sign a CSR from the Admin UI](../certificate-issuance-workflows/sign-a-csr-from-the-admin-ui.md), and save the signed certificate in PEM form as `server.pem`. Save your CA's certificate as `ca.pem` too (**Certificate Authorities -> Manage CAs**, then **Download certificate**). The chain must be PEM for now. Then combine them with the key for Windows, Java or a load balancer:
+Sign the CSR with your certificate authority, as in [Sign a CSR from the Admin UI](../certificate-issuance-workflows/sign-a-csr-from-the-admin-ui.md), and save the signed certificate in PEM form as `server.pem`. Save your CA's chain as `ca.pem` too:
+
+```sh
+pkiaas ca cert --out ca.pem --chain
+```
+
+Then combine them with the key for Windows, Java or a load balancer:
 
 ```sh
 pkiaas pkcs12 create --key server.key --cert server.pem --chain ca.pem --out server.pfx

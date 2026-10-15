@@ -19,12 +19,13 @@ Manage your PKIaaS certificate authorities and keys. AI agents: start with the [
 |---|---|
 | `PKIAAS_TOKEN` | a token to use instead of the stored login (e.g. in CI); never print it |
 | `PKIAAS_SERVER` | the server to use when `--server` isn't given, e.g. https://pkiaas.io |
+| `PKIAAS_CA` | the ID of the CA that commands work in when `--ca` isn't given, instead of the active CA |
 
 Exit codes and error codes are listed in the [agent guide](agents.md#exit-codes).
 
 ## pkiaas ca
 
-List your certificate authorities and set the active one.
+List your certificate authorities, show one, get its certificate, set the active one.
 
 ```
 pkiaas ca [flags]
@@ -32,9 +33,63 @@ pkiaas ca [flags]
 
 Commands:
 
+- [`pkiaas ca cert`](reference.md#pkiaas-ca-cert)
 - [`pkiaas ca list`](reference.md#pkiaas-ca-list)
 - [`pkiaas ca set`](reference.md#pkiaas-ca-set)
 - [`pkiaas ca show`](reference.md#pkiaas-ca-show)
+
+## pkiaas ca cert
+
+Save a CA's certificate, or its chain, to a PEM file.
+
+```
+pkiaas ca cert --out FILE [--chain] [--ca ID] [flags]
+```
+
+Save the certificate of a CA, by default the active CA, to a PEM file. With `--chain`, the file holds the CA's
+certificate followed by the certificates that issued it, up to the root; for a root CA that is its certificate
+alone.
+
+The chain is what a server needs beside a certificate the CA issued (e.g. nginx's ssl_certificate after the
+certificate, or Apache's SSLCertificateChainFile), and what `pkiaas pkcs12 create --chain` adds to a PKCS#12
+file. The CA certificate alone, of a root CA, is what clients add to their trust store.
+
+Certificates are public: the file is readable by everyone, like any certificate. An existing file is only
+replaced with `--force`. A CA waiting for its signed certificate fails with ca_not_signed.
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--ca` | string | the CA to work in, by its ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--chain` | bool | write the CA's certificate followed by the certificates that issued it |
+| `--force` | bool | replace the file if it exists |
+| `-o`, `--out` | string | the PEM file to write. Required. |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+
+Examples:
+
+```sh
+pkiaas ca cert --out ca.pem
+pkiaas ca cert --chain --out chain.pem --json
+pkiaas ca cert --ca a1B2c3D4e5 --chain --out chain.pem --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | string | the CA's ID |
+| `name` | string or null | the CA's name |
+| `file` | string | the PEM file written |
+| `chain` | boolean | whether the file holds the chain (`--chain`): the CA's certificate followed by those that issued it |
+| `certificates` | integer | how many certificates the file holds |
+
+Side effects:
+
+- writes the `--out` file (certificates are public, so it is readable by everyone)
 
 ## pkiaas ca list
 
@@ -114,15 +169,20 @@ Side effects:
 
 ## pkiaas ca show
 
-Show the active CA.
+Show a CA's details, by default the active CA's.
 
 ```
-pkiaas ca show [flags]
+pkiaas ca show [--ca ID] [flags]
 ```
 
-Show the active CA: the CA that commands work in unless told otherwise. It is the one set with `pkiaas ca
-set` (or at login), on this computer for this server. Until one is set, it is the CA you last worked in on the
-website.
+Show a CA's details: its key, certificate (serial, thumbprint, validity), how many certificates it has issued
+that are still valid, and the URLs of its public services (certificate, chain, CRL, OCSP, time stamping, CPS page
+and Windows enrollment).
+
+Without `--ca` or `PKIAAS_CA`, it shows the active CA: the CA that commands work in unless told otherwise. It is the
+one set with `pkiaas ca set` (or at login), on this computer for this server. Until one is set, it is the CA you
+last worked in on the website. The result's source says how the CA was chosen. When the account has no CAs, the
+id, the name and the details are null, and source is none.
 
 This command calls the PKIaaS server and needs a login.
 
@@ -130,6 +190,7 @@ Flags:
 
 | Flag | Type | Description |
 |---|---|---|
+| `--ca` | string | the CA to work in, by its ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
 | `--server` | string | the PKIaaS server (default: the last one you logged in to) |
 
 Examples:
@@ -137,6 +198,7 @@ Examples:
 ```sh
 pkiaas ca show
 pkiaas ca show --json
+pkiaas ca show --ca a1B2c3D4e5 --json
 ```
 
 With `--json`, the result is an object with these fields:
@@ -144,9 +206,30 @@ With `--json`, the result is an object with these fields:
 | Field | Type | Description |
 |---|---|---|
 | `server` | string | the server |
-| `id` | string or null | the active CA's ID; null if the account has no CAs |
-| `name` | string or null | the active CA's name |
-| `source` | string | why it is active: set (with `pkiaas ca set`, or at login), website (the CA last used on the website), first (the first CA by name), or none |
+| `id` | string or null | the CA's ID; null if the account has no CAs |
+| `name` | string or null | the CA's name (its certificate's common name) |
+| `source` | string | how the CA was chosen: flag (`--ca`), environment (`PKIAAS_CA`), or as the active CA: set (with `pkiaas ca set`, or at login), website (the CA last used on the website), first (the first CA by name); none if the account has no CAs |
+| `signed` | boolean or null | false while the CA waits for its signed certificate to be imported |
+| `hsm` | boolean or null | whether the CA's private key is on the user's HSM rather than on the platform |
+| `keyType` | string or null | the algorithm of the CA's key, as OpenSSL names it, e.g. rsaEncryption, id-ecPublicKey, ML-DSA-65 |
+| `keySize` | integer or null | the key size in bits (the curve size for EC keys); null where it doesn't apply, e.g. ML-DSA |
+| `signatureAlgorithm` | string or null | the algorithm of the CA certificate's signature, as OpenSSL names it |
+| `serial` | string or null | the CA certificate's serial number (hex); null if unsigned |
+| `thumbprint` | string or null | the CA certificate's SHA-1 fingerprint (hex), as Windows shows it; null if unsigned |
+| `validFrom` | string or null | when the CA's certificate became valid (ISO 8601, UTC); null if unsigned |
+| `validTo` | string or null | when the CA's certificate expires (ISO 8601, UTC); null if unsigned |
+| `activeCertificates` | integer or null | how many certificates the CA issued that have neither expired nor been revoked |
+| `policyOid` | string or null | the certificate policy OID the CA puts in the certificates it issues; null if none |
+| `cep` | boolean or null | whether Windows certificate enrollment (CEP/CES) is on |
+| `urls` | object or null | the CA's public services; null until the CA is signed |
+| `urls.certificate` | string | the CA's certificate (DER), as the certificates it issues name it (AIA caIssuers) |
+| `urls.chain` | string | the CA's certificate and those that issued it (PKCS#7, DER) |
+| `urls.crl` | string | the CRL (CRL distribution point) |
+| `urls.ocsp` | string | the OCSP responder (AIA OCSP) |
+| `urls.timestamp` | string | the RFC 3161 time-stamping service |
+| `urls.cps` | string | the CA's public page: its certification practice statement and downloads |
+| `urls.cep` | string or null | Windows certificate enrollment (CEP/CES) with a user name and password; null when it is off |
+| `urls.cepCertificate` | string or null | Windows certificate enrollment (CEP/CES) with a client certificate; null when it is off |
 
 ## pkiaas csr
 
