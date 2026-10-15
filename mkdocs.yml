@@ -35,6 +35,10 @@ nav:
   - Certificate Issuance Workflows:
     - Overview: certificate-issuance-workflows/overview.md
     - Sign a CSR from the Admin UI: certificate-issuance-workflows/sign-a-csr-from-the-admin-ui.md
+  - Command-Line Tool:
+    - Overview: cli/overview.md
+    - AI Agents: cli/agents.md
+    - Command Reference: cli/reference.md
   - ACME:
     - Overview: acme/overview.md
     - Create an ACME Policy: acme/create-acme-policy.md
