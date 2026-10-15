@@ -19,7 +19,8 @@ files on the user's computer. It is built to be run by AI agents as well as peop
   `usage` code and names the flag to give. Don't pipe answers to prompts. Only `pkiaas login` waits, for the user to
   approve the login.
 - **Files are never overwritten** unless `--force` is given (error `file_exists`). Only add `--force` when the user
-  wants the file replaced.
+  wants the file replaced. If you ran the command before and lost its output, the file it wrote is the result: use
+  it rather than making another key.
 - **Private keys stay on this computer.** Pass key files by path. Don't read, print or copy their contents, and
   don't send them anywhere.
 
@@ -113,7 +114,7 @@ With `--json`, an error is `{"error": {"code", "message", "hint"}}`. The hint is
 |---|---|---|---|
 | `error` | 1 | an error without a more specific code; the message says what failed | read the message: fix the cause if it is clear (e.g. a wrong file path), otherwise tell the user |
 | `usage` | 2 | the command line is wrong, or a needed option (such as a passphrase without a terminal to prompt on) is missing | fix the command line; run the command with `--help` (or `pkiaas help --json <command>`) for its flags |
-| `file_exists` | 5 | an output file exists, and files are never replaced without `--force` | choose another output file, or add `--force` if the user wants the file replaced |
+| `file_exists` | 5 | an output file exists, and files are never replaced without `--force` | if an earlier run of yours wrote the file, it is the result: use it; otherwise choose another output file, or add `--force` if the user wants the file replaced |
 | `wrong_passphrase` | 1 | the key's passphrase is wrong, or the key file is damaged | ask the user for the right passphrase, given the same way (environment variable or file) |
 | `not_logged_in` | 3 | there is no login for the server, and `PKIAAS_TOKEN` isn't set | ask the user to run `pkiaas login` (or `pkiaas login --device` where no browser can open); see `pkiaas help agents` |
 | `invalid_token` | 3 | the server refused the token: the login expired, was revoked, or the account was removed | ask the user to run `pkiaas login` (or `pkiaas login --device` where no browser can open); see `pkiaas help agents` |
