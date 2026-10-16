@@ -22,6 +22,3 @@ It is not recommended to make changes to the default "Key Usage" and "Extended K
 
 ### Intermediate CA
 Finally, the "CSR Only" option is designed for cases where the CA being created will function as an intermediate or subordinate certificate authority rather than a root CA. This option generates a Certificate Signing Request (CSR) that must be signed by another CA. The signing can be performed by an external CA (such as Microsoft or EJBCA) or another PKIaaS.io CA. Once the signed certificate is obtained, it must be imported before the CA can be activated and used.
-
-## Manage CAs in the New App
-The **Manage CAs** page is also available in the new PKIaaS.io app at [/app/cas](https://pkiaas.io/app/cas) and works the same way. Editing, delegating and importing a CA open the classic pages. The [pkiaas command-line tool](../cli/overview.md) shows a CA's details with `pkiaas ca show` and downloads its certificate with `pkiaas ca cert`.
