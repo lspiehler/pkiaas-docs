@@ -71,6 +71,25 @@ The active CA is kept on this computer for that server; setting it doesn't chang
 website. Before working in a CA, check that the active one is the CA the user means; when they have more than one
 and haven't said which, ask them rather than choosing.
 
+To work in another CA without changing the active one, give `--ca ID` to the command, or set `PKIAAS_CA=ID` in
+its environment. `--ca` comes first, then `PKIAAS_CA`, then the active CA; `source` in `pkiaas ca show --json`
+says which chose it (`flag`, `environment`, or `set`, `website`, `first` for the active CA). An ID the account
+doesn't have fails with `not_found`.
+
+`pkiaas ca show --json` also gives the CA's details: `signed`, its key (`keyType`, `keySize`, `hsm`), its
+certificate (`serial`, `thumbprint`, `validFrom`, `validTo`), `activeCertificates`, and `urls` with its public
+services: certificate, chain, CRL, OCSP, time stamping, the CPS page and Windows enrollment (CEP/CES).
+
+`pkiaas ca cert --out FILE --json` saves the CA's certificate as PEM; with `--chain`, the CA's certificate
+followed by those that issued it. The chain is what `pkiaas pkcs12 create --chain` and servers (e.g. nginx after
+the server's certificate) need; a root CA's certificate is what clients add to their trust store. A CA that isn't
+signed yet fails with `ca_not_signed`.
+
+Requests that are safe to repeat (reading, for now) are tried up to 3 times in all when the connection fails or the
+server answers with a 5xx or 429; a notice goes to standard error. Only run a command again yourself after it has
+failed. When the server asks to wait longer than 10 seconds, the command fails at once and its message says how long
+to wait before running it again.
+
 ## Recipes
 
 Choose a key type with `pkiaas key types --json`. The default, `rsa-2048`, works everywhere. Use `ec-p256` for
@@ -94,6 +113,7 @@ Combine the key, the signed certificate and the CA chain into a PKCS#12 file for
 (the user has set `PFX_PASSPHRASE` too):
 
 ```sh
+pkiaas ca cert --chain --out ca.pem --json
 pkiaas pkcs12 create --key server.key --key-passphrase-env KEY_PASSPHRASE --cert server.pem --chain ca.pem \
   --out server.pfx --passphrase-env PFX_PASSPHRASE --json
 ```
@@ -132,6 +152,7 @@ With `--json`, an error is `{"error": {"code", "message", "hint"}}`. The hint is
 | `forbidden` | 3 | the account isn't allowed to do this | ask the user to check their access, or the CA owner to delegate it |
 | `not_found` | 4 | the server has no such object, or the account can't see it | check the name or ID |
 | `conflict` | 5 | the server refused a change that clashes with something that exists | read the message; check what exists before changing it, and ask the user before replacing anything |
+| `ca_not_signed` | 5 | the CA has no certificate yet: it waits for its signed certificate to be imported | ask the user to import the CA's signed certificate on the website (the CA's page), or use another CA from `pkiaas ca list --json` (signed is true) |
 | `cli_outdated` | 1 | the server needs a newer pkiaas | update pkiaas with the install command in the message, then run the command again |
 | `connection_failed` | 1 | the server couldn't be reached | check the server address (`--server` or `PKIAAS_SERVER`) and the network, then try again |
 | `http_<status>` | 1 | the server answered with an unexpected HTTP status, e.g. http_500; the message has the request ID to quote | try again later; if it persists, report the request ID |
