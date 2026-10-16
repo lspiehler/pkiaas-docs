@@ -228,8 +228,8 @@ With `--json`, the result is an object with these fields:
 | `urls.ocsp` | string | the OCSP responder (AIA OCSP) |
 | `urls.timestamp` | string | the RFC 3161 time-stamping service |
 | `urls.cps` | string | the CA's public page: its certification practice statement and downloads |
-| `urls.cep` | string or null | Windows certificate enrollment (CEP/CES) with a user name and password; null when it is off |
-| `urls.cepCertificate` | string or null | Windows certificate enrollment (CEP/CES) with a client certificate; null when it is off |
+| `urls.cep` | string | Windows certificate enrollment (CEP/CES) with a user name and password; works when cep is true |
+| `urls.cepCertificate` | string | Windows certificate enrollment (CEP/CES) with a client certificate; works when cep is true |
 
 ## pkiaas csr
 
