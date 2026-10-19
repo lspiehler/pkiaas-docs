@@ -81,7 +81,7 @@ certificate (`serial`, `thumbprint`, `validFrom`, `validTo`), `activeCertificate
 services: certificate, chain, CRL, OCSP, time stamping, the CPS page and Windows enrollment (CEP/CES).
 
 `pkiaas ca export --out FILE --json` saves the CA's certificate; with `--chain`, the CA's certificate followed by
-those that issued it. The chain is what `pkiaas pkcs12 create --chain` and servers (e.g. nginx after the server's
+those that issued it. The chain is what `pkiaas pkcs12 create --chain-file` and servers (e.g. nginx after the server's
 certificate) need; a root CA's certificate is what clients add to their trust store. A CA that isn't signed yet
 fails with `ca_not_signed`. (`ca cert`, its name in 0.1.0, still works but is deprecated.)
 
@@ -98,6 +98,23 @@ fails with `ca_not_signed`. (`ca cert`, its name in 0.1.0, still works but is de
 
 Prefer `--out FILE --json`: you get the file and a result to check (`content`, `certificates`, `format`). Use
 standard output only to pipe the output straight into another command.
+
+## Standard input and output
+
+The local commands work the same way: `key create`, `csr create` and `pkcs12 create` write to standard output
+without `--out` (then `--json` needs `--out FILE`), and `key create` and `csr create` take `--format pem|der`
+(`pkcs12 create` always writes DER). Their input files, `--key`, `--cert` and `--chain-file`, may be `-` for
+standard input; PEM or DER is recognized from the content. Only one input or passphrase per command can come
+from standard input, and with data on standard input passphrases can't be prompted for, so give them with
+`--*passphrase-env` or `--*passphrase-file FILE`.
+
+Keys and PKCS#12 files are secrets: always write them with `--out FILE` (owner-only), never to standard output,
+since your transcript is kept. Pipe certificates and CSRs instead, e.g.
+`pkiaas cert export SERIAL --chain | pkiaas pkcs12 create --cert - --key server.key ... --out server.pfx`.
+
+In Windows PowerShell 5.1, `>` and `|` re-encode output, which breaks keys, certificates and PKCS#12 files: always
+use `--out FILE` there, and give file names rather than `-`. PowerShell 7.4 and later keep the bytes. A file
+re-encoded this way fails with a message saying so.
 
 ## Certificates
 
@@ -151,8 +168,15 @@ Combine the key, the signed certificate and the CA chain into a PKCS#12 file for
 
 ```sh
 pkiaas ca export --chain --out ca.pem --json
-pkiaas pkcs12 create --key server.key --key-passphrase-env KEY_PASSPHRASE --cert server.pem --chain ca.pem \
+pkiaas pkcs12 create --key server.key --key-passphrase-env KEY_PASSPHRASE --cert server.pem --chain-file ca.pem \
   --out server.pfx --passphrase-env PFX_PASSPHRASE --json
+```
+
+Or, with the certificate's serial, without saving the certificate and chain first:
+
+```sh
+pkiaas cert export SERIAL --chain | pkiaas pkcs12 create --key server.key --key-passphrase-env KEY_PASSPHRASE \
+  --cert - --out server.pfx --passphrase-env PFX_PASSPHRASE --json
 ```
 
 Add `--legacy` only for systems older than Windows 10 1709, Java 12 or OpenSSL 1.1.1.

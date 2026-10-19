@@ -60,7 +60,7 @@ Change it with: pkiaas ca set <ID> (pkiaas ca list shows your CAs)
 - **List your CAs:** `pkiaas ca list` shows the CAs you own and those you were invited to, with their IDs. The active one is marked with `*`.
 - **Change the active CA:** `pkiaas ca set <ID>`, with an ID from the list.
 - **Show a CA's details:** `pkiaas ca show` shows the active CA: its key, its certificate (serial, thumbprint, validity), how many of the certificates it issued are still valid, and the URLs of its public services (certificate, chain, CRL, OCSP, time stamping, the CPS page and Windows enrollment).
-- **Export a CA's certificate:** `pkiaas ca export --out ca.pem` saves the CA's certificate as PEM. Add `--chain` for the CA's certificate followed by the certificates that issued it, which is what servers and `pkiaas pkcs12 create --chain` need. A root CA's certificate alone is what clients add to their trust store. See [Export](#export) for standard output and DER.
+- **Export a CA's certificate:** `pkiaas ca export --out ca.pem` saves the CA's certificate as PEM. Add `--chain` for the CA's certificate followed by the certificates that issued it, which is what servers and `pkiaas pkcs12 create --chain-file` need. A root CA's certificate alone is what clients add to their trust store. See [Export](#export) for standard output and DER.
 
 The active CA is kept on your computer, for each server, until you log out. Changing it doesn't change the CA you work in on the website, and switching CA on the website doesn't change the CLI's.
 
@@ -125,12 +125,26 @@ pkiaas ca export --chain --out ca.pem
 Then combine them with the key for Windows, Java or a load balancer:
 
 ```sh
-pkiaas pkcs12 create --key server.key --cert server.pem --chain ca.pem --out server.pfx
+pkiaas pkcs12 create --key server.key --cert server.pem --chain-file ca.pem --out server.pfx
 ```
 
-The file is protected with AES-256, which Windows 10 1709 and later, macOS, Java 12 and later and OpenSSL 1.1.1 and later read. Add `--legacy` for older systems.
+The file is protected with AES-256, which Windows 10 1709 and later, macOS, Java 12 and later and OpenSSL 1.1.1 and later read. Add `--legacy` for older systems. `--cert` may also hold the whole chain, such as a file from `pkiaas cert export --chain`: the certificate that matches the key is used, and the others are added as its chain. `--chain`, the name of `--chain-file` in the first versions, still works for now.
 
 Passphrases are never given on the command line. Without a terminal to prompt on (in scripts, for example), give them with `--passphrase-env NAME` (an environment variable) or `--passphrase-file PATH` (the first line of a file, or `-` for standard input). Files are never overwritten unless you add `--force`.
+
+### Standard Input and Output
+Like [Export](#export), these commands work as OpenSSL does:
+
+- **Standard output or a file:** without `--out`, or with `--out -`, `key create`, `csr create` and `pkcs12 create` write to standard output. There is no result then, so `--json` needs `--out FILE`. Keys and PKCS#12 files are secrets: prefer `--out` for them, because output on screen can end up in logs and transcripts.
+- **PEM or DER:** `key create` and `csr create` take `--format pem` (the default) or `--format der`, as OpenSSL's `-outform`. A PKCS#12 file is always DER.
+- **Standard input:** `--key`, `--cert` and `--chain-file` can be `-` to read standard input. PEM or DER is recognized from the content, and `--cert` and `--chain-file` also read PKCS#7 (.p7b). Only one input or passphrase per command can come from standard input. Passphrases can't be prompted for then, so give them with `--passphrase-env`, `--key-passphrase-env` or a passphrase file.
+
+```sh
+pkiaas csr create --key server.key --cn www.example.com | openssl req -noout -text
+pkiaas cert export <SERIAL> --chain | pkiaas pkcs12 create --cert - --key server.key --key-passphrase-env KEY_PASSPHRASE --passphrase-env PFX_PASSPHRASE --out server.pfx
+```
+
+**Windows PowerShell 5.1:** `>` and `|` re-encode output as UTF-16, which breaks keys, certificates and PKCS#12 files. Always use `--out FILE` there, and give file names rather than `-`. PowerShell 7.4 and later keep the bytes. A file re-encoded this way fails with a message saying so.
 
 ## Use with AI Agents
 Ask your agent to run `pkiaas help agents` first. It explains how to run `pkiaas` without prompts, how to keep passphrases and tokens out of the agent's transcript, how to get you to approve the login, and what to do about each error. The same guide is on the [AI agent](agents.md) page.

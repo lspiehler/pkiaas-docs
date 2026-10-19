@@ -22,15 +22,15 @@ pkiaas
 │   ├── list                   --ca=STRING --limit=INT --order=STRING --search=STRING --sort=STRING
 │   └── show SERIAL            --ca=STRING --text
 ├── csr
-│   └── create                 --cn=STRING --force --key=STRING --key-passphrase-env=STRING --key-passphrase-file=STRING --out=STRING --san=STRING --subject=STRING
+│   └── create                 --cn=STRING --force --format=STRING --key=STRING --key-passphrase-env=STRING --key-passphrase-file=STRING --out=STRING --san=STRING --subject=STRING
 ├── help
 ├── key
-│   ├── create                 --force --no-passphrase --out=STRING --passphrase-env=STRING --passphrase-file=STRING --type=STRING
+│   ├── create                 --force --format=STRING --no-passphrase --out=STRING --passphrase-env=STRING --passphrase-file=STRING --type=STRING
 │   └── types
 ├── login                      --device
 ├── logout                     --all
 ├── pkcs12
-│   └── create                 --cert=STRING --chain=STRING --force --key=STRING --key-passphrase-env=STRING --key-passphrase-file=STRING --legacy --no-passphrase --out=STRING --passphrase-env=STRING --passphrase-file=STRING
+│   └── create                 --cert=STRING --chain-file=STRING --force --key=STRING --key-passphrase-env=STRING --key-passphrase-file=STRING --legacy --no-passphrase --out=STRING --passphrase-env=STRING --passphrase-file=STRING
 ├── version                    --licenses
 └── whoami
 ```
@@ -77,7 +77,7 @@ pkiaas ca export [--out FILE] [--format pem|der] [--chain] [--ca ID] [flags]
 
 Export the certificate of a CA, by default the active CA. The chain (`--chain`) is the CA's certificate followed
 by the certificates that issued it, up to the root; for a root CA that is its certificate alone. It is what a
-server needs beside a certificate the CA issued, and what `pkiaas pkcs12 create --chain` adds to a PKCS#12 file.
+server needs beside a certificate the CA issued, and what `pkiaas pkcs12 create --chain-file` adds to a PKCS#12 file.
 The certificate of a root CA is what clients add to their trust store.
 
 A CA waiting for its signed certificate fails with ca_not_signed.
@@ -92,6 +92,9 @@ can't be used with `--chain`. Like OpenSSL, it goes to standard output as it is,
 
 With `--chain`, the output holds the certificate followed by the certificates that issued it, up to the root: what
 a server sends (e.g. nginx's ssl_certificate).
+
+In Windows PowerShell 5.1, > and \| re-encode output, so write files with `--out` (PowerShell 7.4 and later
+keep the bytes).
 
 This command calls the PKIaaS server and needs a login.
 
@@ -310,6 +313,9 @@ can't be used with `--chain`. Like OpenSSL, it goes to standard output as it is,
 With `--chain`, the output holds the certificate followed by the certificates that issued it, up to the root: what
 a server sends (e.g. nginx's ssl_certificate).
 
+In Windows PowerShell 5.1, > and \| re-encode output, so write files with `--out` (PowerShell 7.4 and later
+keep the bytes).
+
 This command calls the PKIaaS server and needs a login.
 
 Flags:
@@ -473,7 +479,7 @@ Commands:
 Create a certificate signing request (CSR).
 
 ```
-pkiaas csr create --key FILE (--cn NAME | --subject DN) [flags]
+pkiaas csr create --key FILE (--cn NAME | --subject DN) [--out FILE] [--format pem|der] [flags]
 ```
 
 Create a PKCS#10 certificate signing request signed with your private key.
@@ -486,18 +492,27 @@ Subject alternative names (`--san`, repeatable) are dns:NAME, ip:ADDRESS, email:
 prefix the kind is guessed. If no `--san` is given and the common name is a DNS name, it is added as one,
 because browsers and most clients only check SANs. With `--san`, list the common name too.
 
-Without `--out` the CSR is printed (inside the JSON result with `--json`).
+`--key` is a PEM or DER file, or - for standard input. An encrypted key's passphrase then has to come from
+`--key-passphrase-env` or `--key-passphrase-file`, since it can't be prompted for.
+
+Without `--out` (or with `--out` -), the CSR goes to standard output, as OpenSSL writes it, to read or to pipe to
+another command; there is no result then, so `--json` needs `--out`. `--format` is pem (default) or der, as OpenSSL's
+-outform.
+
+In Windows PowerShell 5.1, > and \| re-encode output, so write files with `--out` (PowerShell 7.4 and later
+keep the bytes).
 
 Flags:
 
 | Flag | Type | Description |
 |---|---|---|
 | `--cn` | string | the subject's common name. Not with `--subject`. |
-| `--force` | bool | replace the file if it exists |
-| `-k`, `--key` | string | the private key file. Required. |
+| `--force` | bool | replace the `--out` file if it exists |
+| `--format` | string | pem or der (as OpenSSL's -outform). Default: `pem`. |
+| `-k`, `--key` | string | the private key file, PEM or DER (- for standard input). Required. |
 | `--key-passphrase-env` | string | read the key passphrase from this environment variable. Not with `--key-passphrase-file`. |
 | `--key-passphrase-file` | string | read the key passphrase from this file's first line (- for standard input). Not with `--key-passphrase-env`. |
-| `-o`, `--out` | string | the file to save the CSR in (default: print it) |
+| `-o`, `--out` | string | the file to write (default: standard output, as with -) |
 | `--san` | string, repeatable | a subject alternative name (repeatable) |
 | `--subject` | string | the subject's distinguished name. Not with `--cn`. |
 
@@ -505,23 +520,23 @@ Examples:
 
 ```sh
 pkiaas csr create --key server.key --cn www.example.com --san www.example.com --san example.com --out server.csr
-pkiaas csr create --key server.key --key-passphrase-env KEY_PASSPHRASE --subject "CN=www.example.com,O=Example,C=US" --san ip:192.0.2.10 --json
+pkiaas csr create --key server.key --key-passphrase-env KEY_PASSPHRASE --subject "CN=www.example.com,O=Example,C=US" --san ip:192.0.2.10 --out server.csr --json
+pkiaas csr create --key server.key --cn www.example.com | openssl req -noout -text
 ```
 
 With `--json`, the result is an object with these fields:
 
 | Field | Type | Description |
 |---|---|---|
-| `path` | string, optional | the CSR file; left out without `--out` |
+| `path` | string | the CSR file (`--out`) |
 | `keyType` | string | the key's type, as in `pkiaas key types` |
 | `subject` | string | the subject's distinguished name, RFC 4514 form |
 | `sans` | string[] | the subject alternative names, each as kind:value (dns:, ip:, email:, uri:) |
 | `publicKeySha256` | string | the SHA-256 of the public key (DER SubjectPublicKeyInfo), in hex |
-| `csr` | string, optional | the CSR in PEM form; only without `--out` |
 
 Side effects:
 
-- writes the `--out` file, if given
+- with `--out`, writes the file; otherwise writes the CSR to standard output and no result
 
 ## pkiaas help
 
@@ -563,21 +578,29 @@ Commands:
 Create a private key.
 
 ```
-pkiaas key create --out FILE [flags]
+pkiaas key create [--out FILE] [--format pem|der] [flags]
 ```
 
-Create a private key and save it as a PKCS#8 PEM file that only you can read.
+Create a private key in PKCS#8 form, and save it in a file that only you can read.
 
 The key is encrypted with a passphrase (AES-256-CBC, PBKDF2-HMAC-SHA256 with 600,000 iterations) unless
 `--no-passphrase` is given. Run `pkiaas key types` to list the key types.
+
+Without `--out` (or with `--out` -), the key goes to standard output, as OpenSSL writes it, to pipe to another
+command; there is no result then, so `--json` needs `--out`. Prefer `--out`: a key on standard output can end up in
+logs and transcripts. `--format` is pem (default) or der, as OpenSSL's -outform.
+
+In Windows PowerShell 5.1, > and \| re-encode output, so write files with `--out` (PowerShell 7.4 and later
+keep the bytes).
 
 Flags:
 
 | Flag | Type | Description |
 |---|---|---|
-| `--force` | bool | replace the file if it exists |
+| `--force` | bool | replace the `--out` file if it exists |
+| `--format` | string | pem or der (as OpenSSL's -outform). Default: `pem`. |
 | `--no-passphrase` | bool | save the key unencrypted |
-| `-o`, `--out` | string | the file to save the key in. Required. |
+| `-o`, `--out` | string | the file to write (default: standard output, as with -) |
 | `--passphrase-env` | string | read the key passphrase from this environment variable. Not with `--passphrase-file`. |
 | `--passphrase-file` | string | read the key passphrase from this file's first line (- for standard input). Not with `--passphrase-env`. |
 | `--type` | string | the key type. Default: `rsa-2048`. |
@@ -588,20 +611,21 @@ Examples:
 pkiaas key create --out server.key
 pkiaas key create --type ml-dsa-65 --out pq.key --passphrase-env KEY_PASSPHRASE --json
 pkiaas key create --type ec-p256 --out ci.key --no-passphrase --json
+pkiaas key create --type ec-p256 --no-passphrase | openssl pkey -noout -text
 ```
 
 With `--json`, the result is an object with these fields:
 
 | Field | Type | Description |
 |---|---|---|
-| `path` | string | the key file |
+| `path` | string | the key file (`--out`) |
 | `type` | string | the key type, as in `pkiaas key types` |
 | `encrypted` | boolean | whether the key is encrypted with a passphrase |
 | `publicKeySha256` | string | the SHA-256 of the public key (DER SubjectPublicKeyInfo), in hex; the CSR and PKCS#12 commands report the same value |
 
 Side effects:
 
-- writes the `--out` file, readable by the owner only
+- with `--out`, writes the file, readable by the owner only; otherwise writes the key to standard output and no result
 
 ## pkiaas key types
 
@@ -742,48 +766,56 @@ Commands:
 Combine a key and its certificate into a PKCS#12 file.
 
 ```
-pkiaas pkcs12 create --key FILE --cert FILE --out FILE [flags]
+pkiaas pkcs12 create --key FILE --cert FILE [--chain-file FILE] [--out FILE] [flags]
 ```
 
 Combine a private key, its certificate and the CA chain into a PKCS#12 (.pfx/.p12) file.
 
-`--cert` and `--chain` may be PEM, DER or PKCS#7 (.p7b) files. `--cert` may hold the whole chain (e.g. a
+`--key` may be PEM or DER; `--cert` and `--chain-file` may be PEM, DER or PKCS#7 (.p7b) files. One of them may be -
+for standard input, e.g. a certificate piped from `pkiaas cert export`; passphrases then have to come from an
+environment variable or a file, since they can't be prompted for. `--cert` may hold the whole chain (e.g. a
 fullchain.pem); the certificate whose public key matches the key is used, and the others are added as the
-chain, followed by any in `--chain`.
+chain, followed by any in `--chain-file`.
 
 The file is protected with AES-256-CBC, PBKDF2-HMAC-SHA256 and an HMAC-SHA256 MAC, which Windows 10 1709 and
 later, macOS, Java 12 and later, and OpenSSL 1.1.1 and later read. `--legacy` uses 3DES and a SHA-1 MAC for older
 systems. `--no-passphrase` writes the key unencrypted, for programs that load PKCS#12 files without a password;
 protect such a file like a plain private key.
 
+Without `--out` (or with `--out` -), the PKCS#12 file (always DER, as OpenSSL writes it) goes to standard output,
+to pipe to another command; there is no result then, so `--json` needs `--out`.
+
+In Windows PowerShell 5.1, > and \| re-encode output, so write files with `--out` (PowerShell 7.4 and later
+keep the bytes).
+
 Flags:
 
 | Flag | Type | Description |
 |---|---|---|
-| `--cert` | string | the certificate file (PEM, DER or PKCS#7; may include the chain). Required. |
-| `--chain` | string | a file with the CA certificates (PEM, DER or PKCS#7) |
-| `--force` | bool | replace the file if it exists |
-| `-k`, `--key` | string | the private key file. Required. |
+| `--cert` | string | the certificate file (PEM, DER or PKCS#7; may include the chain; - for standard input). Required. |
+| `--chain-file` | string | a file with the CA certificates (PEM, DER or PKCS#7; - for standard input). Not with `--chain`. |
+| `--force` | bool | replace the `--out` file if it exists |
+| `-k`, `--key` | string | the private key file, PEM or DER (- for standard input). Required. |
 | `--key-passphrase-env` | string | read the key passphrase from this environment variable. Not with `--key-passphrase-file`. |
 | `--key-passphrase-file` | string | read the key passphrase from this file's first line (- for standard input). Not with `--key-passphrase-env`. |
 | `--legacy` | bool | use 3DES and SHA-1 for older Windows, macOS and Java |
 | `--no-passphrase` | bool | don't encrypt the file |
-| `-o`, `--out` | string | the PKCS#12 file to create. Required. |
+| `-o`, `--out` | string | the file to write (default: standard output, as with -) |
 | `--passphrase-env` | string | read the PKCS#12 password from this environment variable. Not with `--passphrase-file`. |
 | `--passphrase-file` | string | read the PKCS#12 password from this file's first line (- for standard input). Not with `--passphrase-env`. |
 
 Examples:
 
 ```sh
-pkiaas pkcs12 create --key server.key --cert server.pem --chain ca.pem --out server.pfx
-pkiaas pkcs12 create --key server.key --key-passphrase-env KEY_PASSPHRASE --cert server.pem --chain ca.pem --out server.pfx --passphrase-env PFX_PASSPHRASE --json
+pkiaas pkcs12 create --key server.key --cert server.pem --chain-file ca.pem --out server.pfx
+pkiaas pkcs12 create --key server.key --key-passphrase-env KEY_PASSPHRASE --cert server.pem --chain-file ca.pem --out server.pfx --passphrase-env PFX_PASSPHRASE --json
 ```
 
 With `--json`, the result is an object with these fields:
 
 | Field | Type | Description |
 |---|---|---|
-| `path` | string | the PKCS#12 file |
+| `path` | string | the PKCS#12 file (`--out`) |
 | `format` | string | how the file is protected: aes-256, legacy-3des or unencrypted |
 | `subject` | string | the certificate's subject |
 | `certificates` | integer | how many certificates the file holds, the certificate and its chain |
@@ -791,7 +823,7 @@ With `--json`, the result is an object with these fields:
 
 Side effects:
 
-- writes the `--out` file, readable by the owner only
+- with `--out`, writes the file, readable by the owner only; otherwise writes the PKCS#12 file to standard output and no result
 
 ## pkiaas version
 
