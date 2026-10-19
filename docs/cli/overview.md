@@ -1,6 +1,6 @@
 ---
 title: "pkiaas Command-Line Tool"
-description: "Install the pkiaas CLI on Linux, macOS or Windows, log in, and create keys, CSRs and PKCS#12 files on your own computer. Built for AI agents as well as people."
+description: "Install the pkiaas CLI on Linux, macOS or Windows, log in, find and export your certificates, and create keys, CSRs and PKCS#12 files on your own computer. Built for AI agents as well as people."
 ---
 ## Overview
 `pkiaas` is the PKIaaS.io command-line tool. It runs on Linux, macOS and Windows, and is built to be used by AI agents (Claude Code, Codex, Copilot and others) as well as by people. Today it can:
@@ -9,9 +9,10 @@ description: "Install the pkiaas CLI on Linux, macOS or Windows, log in, and cre
 - create certificate signing requests (CSRs) to have signed by your certificate authority;
 - combine a key, its certificate and the CA chain into a PKCS#12 (.pfx/.p12) file;
 - log in to your PKIaaS.io account;
-- list your certificate authorities, show their details, save their certificates and chains, and choose the one to work in.
+- list your certificate authorities, show their details, export their certificates and chains, and choose the one to work in;
+- list the certificates a CA issued, show their details and status, and export them, with their chain or the CSR they were issued from, as PEM or DER.
 
-Keys, CSRs and PKCS#12 files are made on your computer, and private keys never leave it. Commands for signing certificates and managing your certificate authorities are coming.
+Keys, CSRs and PKCS#12 files are made on your computer, and private keys never leave it. Commands for requesting, signing and revoking certificates and for managing your certificate authorities are coming.
 
 ## Install
 On Linux and macOS:
@@ -59,11 +60,44 @@ Change it with: pkiaas ca set <ID> (pkiaas ca list shows your CAs)
 - **List your CAs:** `pkiaas ca list` shows the CAs you own and those you were invited to, with their IDs. The active one is marked with `*`.
 - **Change the active CA:** `pkiaas ca set <ID>`, with an ID from the list.
 - **Show a CA's details:** `pkiaas ca show` shows the active CA: its key, its certificate (serial, thumbprint, validity), how many of the certificates it issued are still valid, and the URLs of its public services (certificate, chain, CRL, OCSP, time stamping, the CPS page and Windows enrollment).
-- **Save a CA's certificate:** `pkiaas ca cert --out ca.pem` saves the CA's certificate as PEM. Add `--chain` to save the CA's certificate followed by the certificates that issued it, which is what servers and `pkiaas pkcs12 create --chain` need. A root CA's certificate alone is what clients add to their trust store.
+- **Export a CA's certificate:** `pkiaas ca export --out ca.pem` saves the CA's certificate as PEM. Add `--chain` for the CA's certificate followed by the certificates that issued it, which is what servers and `pkiaas pkcs12 create --chain-file` need. A root CA's certificate alone is what clients add to their trust store. See [Export](#export) for standard output and DER.
 
 The active CA is kept on your computer, for each server, until you log out. Changing it doesn't change the CA you work in on the website, and switching CA on the website doesn't change the CLI's.
 
 To work in another CA for one command without changing the active one, add `--ca <ID>`, for example `pkiaas ca show --ca a1B2c3D4e5`. In a script or CI job, set `PKIAAS_CA=<ID>` instead. `--ca` comes first, then `PKIAAS_CA`, then the active CA.
+
+## Find Your Certificates
+`pkiaas cert list` lists the certificates your CA issued, newest first, also expired and revoked ones:
+
+```text
+Certificates issued by Example Root CA (a1B2c3D4e5)
+SERIAL                                    NAME             STATUS                   EXPIRES     TEMPLATE
+25ab765c7238b3d28d2bab03271f5fa8f2fccf86  www.example.com  valid                    2027-10-18  Web Server
+0d0e0f1a2b3c4d5e6f708192a3b4c5d6e7f80910  old.example.com  revoked (keyCompromise)  2027-01-05  Web Server
+2 certificates
+```
+
+- **Search** by common name with `--search www.example.com`, in any case.
+- **Sort** with `--sort` (name, revocationReason, template, validFrom, validTo, keyType or keySize) and `--order asc` or `desc`, e.g. `--sort validTo` for the next to expire.
+- **How many:** it lists 50 by default; `--limit` shows up to 1000. When there are more, it says how many and suggests narrowing the list.
+
+The serial names the certificate in its CA. `pkiaas cert show <SERIAL>` shows its details: its status (valid, expired, or revoked with the reason and date), template, validity, key, signature algorithm, thumbprint, and whether the CSR it was issued from is stored. Add `--text` to see every field and extension as `openssl x509 -text` shows them, such as its subject alternative names. Serials can be given with or without colons, in any case.
+
+## Export
+`pkiaas cert export <SERIAL>` exports a certificate, and `pkiaas ca export` the CA's. They work as OpenSSL does:
+
+- **Standard output or a file:** without `--out`, the certificate goes to standard output, so you can read it or pipe it into another command. With `--out FILE`, it's saved to the file, which is never replaced unless you add `--force`.
+- **PEM or DER:** `--format pem` (the default) or `--format der`, as OpenSSL's `-outform`. DER is the binary form (`.cer`) that Windows and Java also take.
+- **The chain:** `--chain` adds the certificates that issued it, up to the root, which is what a server sends. It needs PEM.
+- **The CSR:** `pkiaas cert export <SERIAL> --csr` exports the certificate signing request the certificate was issued from, when it's stored. A CSR sent by SCEP contains the enrollment's challenge password, so keep it as private as the password.
+
+```sh
+pkiaas cert export 25ab765c7238b3d28d2bab03271f5fa8f2fccf86 --chain --out fullchain.pem
+pkiaas cert export 25ab765c7238b3d28d2bab03271f5fa8f2fccf86 --format der --out www.cer
+pkiaas cert export 25ab765c7238b3d28d2bab03271f5fa8f2fccf86 | openssl x509 -noout -subject -enddate
+```
+
+`pkiaas ca cert`, the name of `ca export` in the first version, still works for now.
 
 ## Create a Key, a CSR and a PKCS#12 File
 Create a key. You're asked for a passphrase to encrypt it with:
@@ -80,21 +114,37 @@ Create a CSR for the key. The common name is also added as a DNS subject alterna
 pkiaas csr create --key server.key --cn www.example.com --san www.example.com --san example.com --out server.csr
 ```
 
-Sign the CSR with your certificate authority, as in [Sign a CSR from the Admin UI](../certificate-issuance-workflows/sign-a-csr-from-the-admin-ui.md), and save the signed certificate in PEM form as `server.pem`. Save your CA's chain as `ca.pem` too:
+Sign the CSR with your certificate authority, as in [Sign a CSR from the Admin UI](../certificate-issuance-workflows/sign-a-csr-from-the-admin-ui.md). Then find the signed certificate's serial and export it, with your CA's chain:
 
 ```sh
-pkiaas ca cert --out ca.pem --chain
+pkiaas cert list --search www.example.com
+pkiaas cert export <SERIAL> --out server.pem
+pkiaas ca export --chain --out ca.pem
 ```
 
 Then combine them with the key for Windows, Java or a load balancer:
 
 ```sh
-pkiaas pkcs12 create --key server.key --cert server.pem --chain ca.pem --out server.pfx
+pkiaas pkcs12 create --key server.key --cert server.pem --chain-file ca.pem --out server.pfx
 ```
 
-The file is protected with AES-256, which Windows 10 1709 and later, macOS, Java 12 and later and OpenSSL 1.1.1 and later read. Add `--legacy` for older systems.
+The file is protected with AES-256, which Windows 10 1709 and later, macOS, Java 12 and later and OpenSSL 1.1.1 and later read. Add `--legacy` for older systems. `--cert` may also hold the whole chain, such as a file from `pkiaas cert export --chain`: the certificate that matches the key is used, and the others are added as its chain. `--chain`, the name of `--chain-file` in the first versions, still works for now.
 
 Passphrases are never given on the command line. Without a terminal to prompt on (in scripts, for example), give them with `--passphrase-env NAME` (an environment variable) or `--passphrase-file PATH` (the first line of a file, or `-` for standard input). Files are never overwritten unless you add `--force`.
+
+### Standard Input and Output
+Like [Export](#export), these commands work as OpenSSL does:
+
+- **Standard output or a file:** without `--out`, or with `--out -`, `key create`, `csr create` and `pkcs12 create` write to standard output. There is no result then, so `--json` needs `--out FILE`. Keys and PKCS#12 files are secrets: prefer `--out` for them, because output on screen can end up in logs and transcripts.
+- **PEM or DER:** `key create` and `csr create` take `--format pem` (the default) or `--format der`, as OpenSSL's `-outform`. A PKCS#12 file is always DER.
+- **Standard input:** `--key`, `--cert` and `--chain-file` can be `-` to read standard input. PEM or DER is recognized from the content, and `--cert` and `--chain-file` also read PKCS#7 (.p7b). Only one input or passphrase per command can come from standard input. Passphrases can't be prompted for then, so give them with `--passphrase-env`, `--key-passphrase-env` or a passphrase file.
+
+```sh
+pkiaas csr create --key server.key --cn www.example.com | openssl req -noout -text
+pkiaas cert export <SERIAL> --chain | pkiaas pkcs12 create --cert - --key server.key --key-passphrase-env KEY_PASSPHRASE --passphrase-env PFX_PASSPHRASE --out server.pfx
+```
+
+**Windows PowerShell 5.1:** `>` and `|` re-encode output as UTF-16, which breaks keys, certificates and PKCS#12 files. Always use `--out FILE` there, and give file names rather than `-`. PowerShell 7.4 and later keep the bytes. A file re-encoded this way fails with a message saying so.
 
 ## Use with AI Agents
 Ask your agent to run `pkiaas help agents` first. It explains how to run `pkiaas` without prompts, how to keep passphrases and tokens out of the agent's transcript, how to get you to approve the login, and what to do about each error. The same guide is on the [AI agent](agents.md) page.

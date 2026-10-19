@@ -80,10 +80,64 @@ doesn't have fails with `not_found`.
 certificate (`serial`, `thumbprint`, `validFrom`, `validTo`), `activeCertificates`, and `urls` with its public
 services: certificate, chain, CRL, OCSP, time stamping, the CPS page and Windows enrollment (CEP/CES).
 
-`pkiaas ca cert --out FILE --json` saves the CA's certificate as PEM; with `--chain`, the CA's certificate
-followed by those that issued it. The chain is what `pkiaas pkcs12 create --chain` and servers (e.g. nginx after
-the server's certificate) need; a root CA's certificate is what clients add to their trust store. A CA that isn't
-signed yet fails with `ca_not_signed`.
+`pkiaas ca export --out FILE --json` saves the CA's certificate; with `--chain`, the CA's certificate followed by
+those that issued it. The chain is what `pkiaas pkcs12 create --chain-file` and servers (e.g. nginx after the server's
+certificate) need; a root CA's certificate is what clients add to their trust store. A CA that isn't signed yet
+fails with `ca_not_signed`. (`ca cert`, its name in 0.1.0, still works but is deprecated.)
+
+## Exporting
+
+`ca export` and `cert export` work the same way, as `openssl x509` does:
+
+- Without `--out`, the output goes to standard output, ready to pipe into another command; there is no result
+  then, so `--json` needs `--out FILE`. With `--out FILE --json`, the file is written and the result describes it.
+- `--format pem` (default) or `--format der`, as OpenSSL's `-outform`. PEM is what servers, OpenSSL and
+  `pkcs12 create` read; DER is the binary form (`.cer`, `.der`) Windows and Java also take. DER holds one
+  certificate, so it can't be combined with `--chain`. Redirect or pipe DER: it is binary.
+- `--chain` adds the certificates that issued it, up to the root. `--force` replaces an existing `--out` file.
+
+Prefer `--out FILE --json`: you get the file and a result to check (`content`, `certificates`, `format`). Use
+standard output only to pipe the output straight into another command.
+
+## Standard input and output
+
+The local commands work the same way: `key create`, `csr create` and `pkcs12 create` write to standard output
+without `--out` (then `--json` needs `--out FILE`), and `key create` and `csr create` take `--format pem|der`
+(`pkcs12 create` always writes DER). Their input files, `--key`, `--cert` and `--chain-file`, may be `-` for
+standard input; PEM or DER is recognized from the content. Only one input or passphrase per command can come
+from standard input, and with data on standard input passphrases can't be prompted for, so give them with
+`--*passphrase-env` or `--*passphrase-file FILE`.
+
+Keys and PKCS#12 files are secrets: always write them with `--out FILE` (owner-only), never to standard output,
+since your transcript is kept. Pipe certificates and CSRs instead, e.g.
+`pkiaas cert export SERIAL --chain | pkiaas pkcs12 create --cert - --key server.key ... --out server.pfx`.
+
+In Windows PowerShell 5.1, `>` and `|` re-encode output, which breaks keys, certificates and PKCS#12 files: always
+use `--out FILE` there, and give file names rather than `-`. PowerShell 7.4 and later keep the bytes. A file
+re-encoded this way fails with a message saying so.
+
+## Certificates
+
+`pkiaas cert list --json` lists the certificates the CA issued, newest first: also expired and revoked ones, and
+the CAs it signed. Each has a `serial`, which the other `cert` commands take to name it in its CA, a `status`
+(`valid`, `expired` or `revoked`) and `revocation` (reason and date, or null). It returns the first `--limit`
+(default 50, at most 1000); `total` says how many match, so when it is larger, narrow the list rather than reading
+everything: `--search TEXT` keeps certificates whose common name contains the text, and `--sort FIELD` (name,
+revocationReason, template, validFrom, validTo, keyType or keySize) with `--order asc|desc` brings the ones you
+need first. Like every command that works in a CA, they take `--ca ID`, and their results name the CA in `issuer`
+(`id`, which `--ca` takes, and `name`).
+
+- `pkiaas cert show SERIAL --json` gives a certificate's details; with `--text`, `text` holds every field and
+  extension as `openssl x509 -text` prints them (e.g. its subject alternative names). Serials are hex, with or
+  without colons, in any case. A serial the CA didn't issue fails with `not_found`.
+- `pkiaas cert export SERIAL --out FILE --json` saves the certificate (see "Exporting" above); with `--chain`,
+  followed by the CA's certificate and its issuers, which is what a server sends (e.g. nginx's `ssl_certificate`).
+- `pkiaas cert export SERIAL --csr --out FILE --json` saves the CSR it was issued from, when `hasCsr` is true
+  (otherwise `csr_not_stored`). A CSR sent by SCEP holds the enrollment's challenge password: the file is
+  owner-only; don't print it or put it in your output.
+
+To find the certificate for a name, e.g. before renewing it: `pkiaas cert list --search www.example.com --json`,
+and take the newest one whose `status` is `valid`.
 
 Requests that are safe to repeat (reading, for now) are tried up to 3 times in all when the connection fails or the
 server answers with a 5xx or 429; a notice goes to standard error. Only run a command again yourself after it has
@@ -113,9 +167,16 @@ Combine the key, the signed certificate and the CA chain into a PKCS#12 file for
 (the user has set `PFX_PASSPHRASE` too):
 
 ```sh
-pkiaas ca cert --chain --out ca.pem --json
-pkiaas pkcs12 create --key server.key --key-passphrase-env KEY_PASSPHRASE --cert server.pem --chain ca.pem \
+pkiaas ca export --chain --out ca.pem --json
+pkiaas pkcs12 create --key server.key --key-passphrase-env KEY_PASSPHRASE --cert server.pem --chain-file ca.pem \
   --out server.pfx --passphrase-env PFX_PASSPHRASE --json
+```
+
+Or, with the certificate's serial, without saving the certificate and chain first:
+
+```sh
+pkiaas cert export SERIAL --chain | pkiaas pkcs12 create --key server.key --key-passphrase-env KEY_PASSPHRASE \
+  --cert - --out server.pfx --passphrase-env PFX_PASSPHRASE --json
 ```
 
 Add `--legacy` only for systems older than Windows 10 1709, Java 12 or OpenSSL 1.1.1.
@@ -153,6 +214,7 @@ With `--json`, an error is `{"error": {"code", "message", "hint"}}`. The hint is
 | `not_found` | 4 | the server has no such object, or the account can't see it | check the name or ID |
 | `conflict` | 5 | the server refused a change that clashes with something that exists | read the message; check what exists before changing it, and ask the user before replacing anything |
 | `ca_not_signed` | 5 | the CA has no certificate yet: it waits for its signed certificate to be imported | ask the user to import the CA's signed certificate on the website (the CA's page), or use another CA from `pkiaas ca list --json` (signed is true) |
+| `csr_not_stored` | 4 | no CSR is stored for the certificate (e.g. one issued by ACME) | the certificate itself is still available with `pkiaas cert export SERIAL`; check `hasCsr` in `pkiaas cert show --json` before asking for a CSR |
 | `cli_outdated` | 1 | the server needs a newer pkiaas | update pkiaas with the install command in the message, then run the command again |
 | `connection_failed` | 1 | the server couldn't be reached | check the server address (`--server` or `PKIAAS_SERVER`) and the network, then try again |
 | `http_<status>` | 1 | the server answered with an unexpected HTTP status, e.g. http_500; the message has the request ID to quote | try again later; if it persists, report the request ID |
