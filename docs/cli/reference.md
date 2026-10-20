@@ -20,7 +20,9 @@ pkiaas
 ├── cert
 │   ├── export SERIAL          --ca=STRING --chain --csr --force --format=STRING --out=STRING
 │   ├── list                   --ca=STRING --limit=INT --order=STRING --search=STRING --sort=STRING
-│   └── show SERIAL            --ca=STRING --text
+│   ├── revoke SERIAL          --ca=STRING --reason=STRING --yes
+│   ├── show SERIAL            --ca=STRING --text
+│   └── unrevoke SERIAL        --ca=STRING
 ├── csr
 │   └── create                 --cn=STRING --force --format=STRING --key=STRING --key-passphrase-env=STRING --key-passphrase-file=STRING --out=STRING --san=STRING --subject=STRING
 ├── help
@@ -275,7 +277,7 @@ With `--json`, the result is an object with these fields:
 
 ## pkiaas cert
 
-List the certificates a CA issued, show one, export it, its chain or its CSR.
+List the certificates a CA issued, show one, export it, its chain or its CSR, revoke it.
 
 ```
 pkiaas cert [flags]
@@ -285,7 +287,9 @@ Commands:
 
 - [`pkiaas cert export`](reference.md#pkiaas-cert-export)
 - [`pkiaas cert list`](reference.md#pkiaas-cert-list)
+- [`pkiaas cert revoke`](reference.md#pkiaas-cert-revoke)
 - [`pkiaas cert show`](reference.md#pkiaas-cert-show)
+- [`pkiaas cert unrevoke`](reference.md#pkiaas-cert-unrevoke)
 
 ## pkiaas cert export
 
@@ -406,6 +410,61 @@ With `--json`, the result is an object with these fields:
 | `total` | integer | how many certificates match; more than are listed when it exceeds `--limit` |
 | `certificates` | object[] | the first `--limit` matching certificates, in the `--sort` and `--order` order |
 
+## pkiaas cert revoke
+
+Revoke a certificate.
+
+```
+pkiaas cert revoke SERIAL --reason REASON [--ca ID] [--yes] [flags]
+```
+
+Revoke a certificate that a CA issued, by default the active CA's, by its serial number from `pkiaas cert list`.
+The CA's next CRL and OCSP responses list it as revoked.
+
+`--reason` is one of RFC 5280's reasons: unspecified, keyCompromise, cACompromise, affiliationChanged, superseded,
+cessationOfOperation or certificateHold. certificateHold suspends the certificate: `pkiaas cert unrevoke` undoes
+it, and revoking it again with another reason makes it final, from the time it was put on hold. Every other reason
+is final: it can't be undone or changed (error revocation_final).
+
+It asks for confirmation on a terminal; without one, give `--yes`. Revoking a certificate that is revoked with the
+same reason changes nothing and succeeds, so the command is safe to run again. Revoking needs a subscription,
+the user's or the CA owner's (error subscription_required).
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--ca` | string | the CA to work in, by its ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--reason` | string | why: unspecified, keyCompromise, cACompromise, affiliationChanged, superseded, cessationOfOperation or certificateHold |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+| `--yes` | bool | revoke without asking for confirmation |
+
+Examples:
+
+```sh
+pkiaas cert revoke 25ab765c7238b3d28d2bab03271f5fa8f2fccf86 --reason keyCompromise
+pkiaas cert revoke 25ab765c7238b3d28d2bab03271f5fa8f2fccf86 --reason superseded --yes --json
+pkiaas cert revoke 25ab765c7238b3d28d2bab03271f5fa8f2fccf86 --reason certificateHold --ca a1B2c3D4e5 --yes --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `issuer` | object | the CA that issued the certificate |
+| `issuer.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
+| `issuer.name` | string or null | the CA's name (its certificate's common name) |
+| `serial` | string | the certificate's serial number |
+| `name` | string or null | the certificate's common name |
+| `reason` | string | the reason it is revoked with, as RFC 5280 names it |
+| `revokedAt` | string or null | when it was revoked (ISO 8601, UTC); for a certificate taken off hold for good, when it was put on hold |
+
+Side effects:
+
+- revokes the certificate on the server, and clears the CA's cached CRL and the certificate's OCSP responses; only certificateHold can be undone (cert unrevoke)
+
 ## pkiaas cert show
 
 Show a certificate's details.
@@ -461,6 +520,50 @@ With `--json`, the result is an object with these fields:
 | `revocation.revokedAt` | string or null | when it was revoked (ISO 8601, UTC); null for the few revocations stored without a date |
 | `hasCsr` | boolean | whether the CSR it was issued from is stored, for `pkiaas cert export --csr` |
 | `text` | string or null | with `--text`, the certificate as 'openssl x509 -text' describes it; otherwise null |
+
+## pkiaas cert unrevoke
+
+Take a certificate off hold (certificateHold).
+
+```
+pkiaas cert unrevoke SERIAL [--ca ID] [flags]
+```
+
+Take a certificate that is on hold (revoked with reason certificateHold) off hold, so that the CA's next CRL
+and OCSP responses show it as valid again. Other reasons are final (error revocation_final).
+
+A certificate that isn't revoked stays as it is, and the command succeeds, so it is safe to run again. Unrevoking
+needs a subscription, the user's or the CA owner's (error subscription_required).
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--ca` | string | the CA to work in, by its ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+
+Examples:
+
+```sh
+pkiaas cert unrevoke 25ab765c7238b3d28d2bab03271f5fa8f2fccf86
+pkiaas cert unrevoke 25ab765c7238b3d28d2bab03271f5fa8f2fccf86 --ca a1B2c3D4e5 --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `issuer` | object | the CA that issued the certificate |
+| `issuer.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
+| `issuer.name` | string or null | the CA's name (its certificate's common name) |
+| `serial` | string | the certificate's serial number |
+| `name` | string or null | the certificate's common name |
+
+Side effects:
+
+- deletes the certificate's revocation (certificateHold) on the server, and clears the CA's cached CRL and the certificate's OCSP responses
 
 ## pkiaas csr
 

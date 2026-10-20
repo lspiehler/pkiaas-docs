@@ -139,7 +139,24 @@ need first. Like every command that works in a CA, they take `--ca ID`, and thei
 To find the certificate for a name, e.g. before renewing it: `pkiaas cert list --search www.example.com --json`,
 and take the newest one whose `status` is `valid`.
 
-Requests that are safe to repeat (reading, for now) are tried up to 3 times in all when the connection fails or the
+### Revoking
+
+Revoking stops a certificate from being trusted: the CA's next CRL and OCSP responses list it. Clients that check
+revocation stop accepting it, so **ask the user before revoking**, naming the certificate (name and serial) and the
+reason, and only then run the command with `--yes`. Without `--yes` and without a terminal, it fails with `usage`.
+
+- `pkiaas cert revoke SERIAL --reason REASON --yes --json`. The reasons are RFC 5280's: `unspecified`,
+  `keyCompromise` (its private key leaked or may have), `cACompromise`, `affiliationChanged`, `superseded` (replaced
+  by a new certificate), `cessationOfOperation` (no longer used) and `certificateHold` (suspended for now).
+- Only `certificateHold` can be undone: `pkiaas cert unrevoke SERIAL --json` takes the certificate off hold. A
+  certificate on hold can also be revoked for good with another reason. Every other reason is final; changing or
+  undoing it fails with `revocation_final`.
+- Both are safe to run again: revoking with the same reason, or unrevoking a certificate that isn't revoked,
+  changes nothing and succeeds.
+- Both need a subscription, the user's or the CA owner's; without one they fail with
+  `subscription_required`. Tell the user rather than retrying.
+
+Requests that are safe to repeat (reading, revoking and unrevoking) are tried up to 3 times in all when the connection fails or the
 server answers with a 5xx or 429; a notice goes to standard error. Only run a command again yourself after it has
 failed. When the server asks to wait longer than 10 seconds, the command fails at once and its message says how long
 to wait before running it again.
@@ -215,6 +232,8 @@ With `--json`, an error is `{"error": {"code", "message", "hint"}}`. The hint is
 | `conflict` | 5 | the server refused a change that clashes with something that exists | read the message; check what exists before changing it, and ask the user before replacing anything |
 | `ca_not_signed` | 5 | the CA has no certificate yet: it waits for its signed certificate to be imported | ask the user to import the CA's signed certificate on the website (the CA's page), or use another CA from `pkiaas ca list --json` (signed is true) |
 | `csr_not_stored` | 4 | no CSR is stored for the certificate (e.g. one issued by ACME) | the certificate itself is still available with `pkiaas cert export SERIAL`; check `hasCsr` in `pkiaas cert show --json` before asking for a CSR |
+| `subscription_required` | 3 | the feature needs a subscription, the user's or the CA owner's (revoking and unrevoking certificates) | tell the user; they can subscribe, or link a subscription they already have, on the website's profile page |
+| `revocation_final` | 5 | the certificate is revoked with a reason other than certificateHold, which can't be undone or changed | nothing to do: the certificate stays revoked; `pkiaas cert show SERIAL --json` shows its reason |
 | `cli_outdated` | 1 | the server needs a newer pkiaas | update pkiaas with the install command in the message, then run the command again |
 | `connection_failed` | 1 | the server couldn't be reached | check the server address (`--server` or `PKIAAS_SERVER`) and the network, then try again |
 | `http_<status>` | 1 | the server answered with an unexpected HTTP status, e.g. http_500; the message has the request ID to quote | try again later; if it persists, report the request ID |
