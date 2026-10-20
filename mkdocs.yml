@@ -35,8 +35,11 @@ nav:
   - Certificate Issuance Workflows:
     - Overview: certificate-issuance-workflows/overview.md
     - Sign a CSR from the Admin UI: certificate-issuance-workflows/sign-a-csr-from-the-admin-ui.md
-  - Command-Line Tool:
+  - CLI:
     - Overview: cli/overview.md
+    - Certificate Authorities: cli/certificate-authorities.md
+    - Certificates: cli/certificates.md
+    - Keys, CSRs and PKCS#12: cli/keys-csrs-pkcs12.md
     - AI Agents: cli/agents.md
     - Command Reference: cli/reference.md
   - ACME:
