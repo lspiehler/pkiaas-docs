@@ -1,6 +1,6 @@
 ---
 title: "Certificates in the pkiaas CLI"
-description: "Find the certificates your CA issued with the pkiaas CLI, show their details, export them with their chain or CSR as PEM or DER."
+description: "Find the certificates your CA issued with the pkiaas CLI, show their details, export them with their chain or CSR as PEM or DER, and revoke them or put them on hold."
 ---
 ## Find Your Certificates
 `pkiaas cert list` lists the certificates your CA issued, newest first, also expired and revoked ones:
@@ -34,3 +34,25 @@ pkiaas cert export 25ab765c7238b3d28d2bab03271f5fa8f2fccf86 | openssl x509 -noou
 ```
 
 `pkiaas ca cert`, the name of `ca export` in the first version, still works for now.
+
+## Revoke a Certificate
+Revoke a certificate by its serial, with a reason:
+
+```sh
+pkiaas cert revoke 25ab765c7238b3d28d2bab03271f5fa8f2fccf86 --reason keyCompromise
+```
+
+The CA's next CRL and OCSP responses list the certificate as revoked, and clients that check revocation stop accepting it. The reasons are RFC 5280's: `unspecified`, `keyCompromise` (its private key leaked or may have), `cACompromise`, `affiliationChanged`, `superseded` (replaced by a new certificate), `cessationOfOperation` (no longer used) and `certificateHold`. `pkiaas cert show <SERIAL>` shows a certificate's reason and date.
+
+- **Confirmation:** on a terminal, `cert revoke` names the certificate and the reason and asks you to confirm. In scripts and for AI agents, where there is no terminal, add `--yes` once you're sure; without it the command fails and changes nothing.
+- **Final reasons:** every reason other than `certificateHold` is final. The revocation can't be undone, and its reason can't be changed (error `revocation_final`).
+- **Certificate hold:** `certificateHold` suspends a certificate for now. Take it off hold with `pkiaas cert unrevoke <SERIAL>`, and the certificate is valid again. Or make the revocation final by revoking it again with another reason. The revocation date stays the time it was put on hold.
+- **Safe to repeat:** revoking a certificate again with the same reason, or unrevoking one that isn't revoked, changes nothing and succeeds.
+- **Subscription:** revoking and unrevoking need a subscription, yours or the CA owner's. Without one, they fail with `subscription_required`.
+
+```sh
+pkiaas cert revoke 25ab765c7238b3d28d2bab03271f5fa8f2fccf86 --reason certificateHold --yes
+pkiaas cert unrevoke 25ab765c7238b3d28d2bab03271f5fa8f2fccf86
+```
+
+To revoke from the website instead, see [Revoke Certificates](../certificate-management/revoke-certificates.md).

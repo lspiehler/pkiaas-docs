@@ -1,6 +1,6 @@
 ---
 title: "pkiaas CLI"
-description: "Install the pkiaas CLI on Linux, macOS or Windows, log in, find and export your certificates, and create keys, CSRs and PKCS#12 files on your own computer. Built for AI agents as well as people."
+description: "Install the pkiaas CLI on Linux, macOS or Windows, log in, find, export and revoke your certificates, and create keys, CSRs and PKCS#12 files on your own computer. Built for AI agents as well as people."
 ---
 ## Overview
 `pkiaas` is the PKIaaS.io command-line tool (CLI). It runs on Linux, macOS and Windows, and is built to be used by AI agents (Claude Code, Codex, Copilot and others) as well as by people. Today it can:
@@ -10,9 +10,10 @@ description: "Install the pkiaas CLI on Linux, macOS or Windows, log in, find an
 - combine a key, its certificate and the CA chain into a [PKCS#12](keys-csrs-pkcs12.md) (.pfx/.p12) file;
 - log in to your PKIaaS.io account;
 - list your [certificate authorities](certificate-authorities.md), show their details, export their certificates and chains, and choose the one to work in;
-- list the [certificates](certificates.md) a CA issued, show their details and status, and export them, with their chain or the CSR they were issued from, as PEM or DER.
+- list the [certificates](certificates.md) a CA issued, show their details and status, and export them, with their chain or the CSR they were issued from, as PEM or DER;
+- [revoke certificates](certificates.md#revoke-a-certificate), put them on hold and take them off hold again.
 
-Keys, CSRs and PKCS#12 files are made on your computer, and private keys never leave it. Commands for requesting, signing and revoking certificates and for managing your certificate authorities are coming.
+Keys, CSRs and PKCS#12 files are made on your computer, and private keys never leave it. Commands for requesting and signing certificates and for managing your certificate authorities are coming.
 
 ## Install
 On Linux and macOS:
