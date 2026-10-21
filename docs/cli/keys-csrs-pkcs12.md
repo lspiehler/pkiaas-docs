@@ -20,7 +20,7 @@ Create a CSR for the key. The common name is also added as a DNS subject alterna
 pkiaas csr create --key server.key --cn www.example.com --san www.example.com --san example.com --out server.csr
 ```
 
-Sign the CSR with your certificate authority, as in [Sign a CSR from the Admin UI](../certificate-issuance-workflows/sign-a-csr-from-the-admin-ui.md). Then find the signed certificate's serial and export it, with your CA's chain:
+Request the certificate from your certificate authority with [`pkiaas request create`](requests.md), and approve the request on the Pending Requests page. Then find the signed certificate's serial and export it, with your CA's chain:
 
 ```sh
 pkiaas cert list --search www.example.com

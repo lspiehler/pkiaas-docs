@@ -33,6 +33,10 @@ pkiaas
 ├── logout                     --all
 ├── pkcs12
 │   └── create                 --cert=STRING --chain-file=STRING --force --key=STRING --key-passphrase-env=STRING --key-passphrase-file=STRING --legacy --no-passphrase --out=STRING --passphrase-env=STRING --passphrase-file=STRING
+├── request
+│   └── create                 --ca=STRING --csr=STRING --idempotency-key=STRING --template=STRING
+├── template
+│   └── list                   --ca=STRING --limit=INT
 ├── version                    --licenses
 └── whoami
 ```
@@ -927,6 +931,132 @@ With `--json`, the result is an object with these fields:
 Side effects:
 
 - with `--out`, writes the file, readable by the owner only; otherwise writes the PKCS#12 file to standard output and no result
+
+## pkiaas request
+
+Request certificates from a CA.
+
+```
+pkiaas request [flags]
+```
+
+Commands:
+
+- [`pkiaas request create`](reference.md#pkiaas-request-create)
+
+## pkiaas request create
+
+Request a certificate with a CSR; it waits for approval.
+
+```
+pkiaas request create --csr FILE --template ID [--ca ID] [--idempotency-key KEY] [flags]
+```
+
+Send a CSR to a CA, by default the active CA, as the website's "Request a Certificate" does. The request waits
+for a member of the CA to approve it on the website's Pending Requests page; approving it issues the certificate.
+No email is sent.
+
+`--csr` is a PEM or DER file (e.g. from `pkiaas csr create`), or - for standard input. Only the CSR is sent, never
+anything else in the file. The server checks its signature (error invalid_csr). `--template` is the ID of one of
+the CA's enabled templates, from `pkiaas template list` (error template_not_found); it says what the certificate
+will hold.
+
+Each run is a new request, unless it has the `--idempotency-key` of an earlier run (any text, e.g. a UUID) and the
+same CSR, template and CA: within 24 hours that gives the earlier result instead of a second request. Without
+`--idempotency-key`, the CLI makes a key and reports it (idempotencyKey), and uses it when it retries by itself.
+A key used for a different request is refused (error idempotency_key_reused).
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--ca` | string | the CA to work in, by its ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--csr` | string | the CSR file, PEM or DER (- for standard input) |
+| `--idempotency-key` | string | repeat an earlier run with this key instead of making a second request (default: a new random key) |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+| `--template` | string | the ID of one of the CA's enabled templates (pkiaas template list) |
+
+Examples:
+
+```sh
+pkiaas request create --csr www.csr --template f5IK8ghmT0
+pkiaas request create --csr - --template f5IK8ghmT0 --json < www.csr
+pkiaas request create --csr www.csr --template f5IK8ghmT0 --ca a1B2c3D4e5 --idempotency-key 8e03978e-40d5-43e8-bc93-6894a57f9324 --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `ca` | object | the CA the request went to |
+| `ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
+| `ca.name` | string or null | the CA's name (its certificate's common name) |
+| `id` | string | the request's ID |
+| `status` | string | pendingApproval: it waits for a member of the CA to approve it on the website's Pending Requests page |
+| `name` | string or null | the CSR's common name (or its first subject attribute), which the website shows as the request's name |
+| `template` | string or null | the template's name |
+| `templateId` | string or null | the template's ID (`--template`) |
+| `requestedAt` | string or null | when it was requested (ISO 8601, UTC) |
+| `idempotencyKey` | string | the Idempotency-Key it was sent with: the same command with `--idempotency-key` and this key, within 24 hours, gives this result again instead of a second request |
+
+Side effects:
+
+- creates a certificate request on the server, which waits for approval; with the `--idempotency-key` of an earlier run (within 24 hours), nothing new
+
+## pkiaas template
+
+List a CA's certificate templates.
+
+```
+pkiaas template [flags]
+```
+
+Commands:
+
+- [`pkiaas template list`](reference.md#pkiaas-template-list)
+
+## pkiaas template list
+
+List a CA's templates, by name.
+
+```
+pkiaas template list [--ca ID] [--limit N] [flags]
+```
+
+List the certificate templates of a CA, by default the active CA's, by name, enabled or not. A template says
+what the certificates it issues hold; `pkiaas request create --template` takes its ID, and only enabled templates
+take requests. Templates are made and changed on the website.
+
+It lists the first `--limit` templates (default 50, at most 1000); total says how many there are.
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--ca` | string | the CA to work in, by its ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--limit` | int | how many templates to list (1-1000). Default: `50`. |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+
+Examples:
+
+```sh
+pkiaas template list
+pkiaas template list --ca a1B2c3D4e5 --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `ca` | object | the CA the templates belong to |
+| `ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
+| `ca.name` | string or null | the CA's name (its certificate's common name) |
+| `total` | integer | how many templates the CA has; more than are listed when it exceeds `--limit` |
+| `templates` | object[] | the first `--limit` templates, by name |
 
 ## pkiaas version
 
