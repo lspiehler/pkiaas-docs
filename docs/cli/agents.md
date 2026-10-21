@@ -156,10 +156,31 @@ reason, and only then run the command with `--yes`. Without `--yes` and without 
 - Both need a subscription, the user's or the CA owner's; without one they fail with
   `subscription_required`. Tell the user rather than retrying.
 
-Requests that are safe to repeat (reading, revoking and unrevoking) are tried up to 3 times in all when the connection fails or the
-server answers with a 5xx or 429; a notice goes to standard error. Only run a command again yourself after it has
+Requests that are safe to repeat (reading, revoking, unrevoking, and requesting a certificate with its Idempotency-Key) are tried up to 3
+times in all when the connection fails or the server answers with a 5xx or 429; a notice goes to standard error. Only run a command again yourself after it has
 failed. When the server asks to wait longer than 10 seconds, the command fails at once and its message says how long
 to wait before running it again.
+
+## Requesting certificates
+
+`pkiaas request create --csr FILE --template ID --json` sends a CSR (PEM or DER, `-` for standard input) to the CA.
+The request waits for a member of the CA to approve it on the website's Pending Requests page, which issues the
+certificate; the CLI can't approve it yet. Tell the user the request's `id` and that it waits for their approval.
+No email is sent.
+
+- `--template` is the `id` of a template from `pkiaas template list --json` whose `enabled` is true. A template says
+  what the certificate holds (validity, key usages and so on); if more than one fits, ask the user which to use. A
+  wrong or disabled one fails with `template_not_found`.
+- The server checks the CSR's signature; an unreadable or altered CSR fails with `invalid_csr`. Only the CSR is
+  sent, never anything else in the file.
+
+**Keep the idempotency key.** Each run is a new request. To make a create safe to repeat, make a key for it (e.g.
+a UUID), pass it with `--idempotency-key KEY`, and keep it with your notes. If you can't tell whether the command
+worked (it timed out, or a later session picks up the work), run it again with the same CSR, template, CA and key:
+within 24 hours that returns the first result rather than a second request. Without the flag, the CLI makes a key
+and reports it as `idempotencyKey`. A key used for a different request fails with `idempotency_key_reused`, and
+one whose first request hasn't finished with `idempotency_key_in_use` (wait, then retry with the same key). After 24
+hours the key is forgotten and the command makes a new request.
 
 ## Recipes
 
@@ -177,8 +198,15 @@ pkiaas csr create --key server.key --key-passphrase-env KEY_PASSPHRASE --cn www.
 
 List the common name among the SANs too: with `--san`, it isn't added for you, and most clients only check SANs.
 
-The user then has the CSR signed by their PKIaaS CA. For now this is done in the web interface (in the PKIaaS
-documentation, "Sign a CSR from the Admin UI"); CLI commands for it are coming.
+Then request the certificate from the user's CA, with a key you keep (see "Requesting certificates"):
+
+```sh
+pkiaas template list --json
+pkiaas request create --csr server.csr --template TEMPLATE_ID --idempotency-key KEY --json
+```
+
+The user approves the request on the website's Pending Requests page; then `pkiaas cert list --search
+www.example.com --json` shows the certificate and its serial.
 
 Combine the key, the signed certificate and the CA chain into a PKCS#12 file for Windows, Java or a load balancer
 (the user has set `PFX_PASSPHRASE` too):
@@ -234,6 +262,10 @@ With `--json`, an error is `{"error": {"code", "message", "hint"}}`. The hint is
 | `csr_not_stored` | 4 | no CSR is stored for the certificate (e.g. one issued by ACME) | the certificate itself is still available with `pkiaas cert export SERIAL`; check `hasCsr` in `pkiaas cert show --json` before asking for a CSR |
 | `subscription_required` | 3 | the feature needs a subscription, the user's or the CA owner's (revoking and unrevoking certificates) | tell the user; they can subscribe, or link a subscription they already have, on the website's profile page |
 | `revocation_final` | 5 | the certificate is revoked with a reason other than certificateHold, which can't be undone or changed | nothing to do: the certificate stays revoked; `pkiaas cert show SERIAL --json` shows its reason |
+| `invalid_csr` | 1 | the server can't read the CSR, or its signature doesn't match its key | check that the file is the CSR (PEM or DER) and wasn't changed after it was signed; make a new one with `pkiaas csr create` |
+| `template_not_found` | 4 | the CA has no enabled template with this ID | run `pkiaas template list --json` (with the same `--ca`) and use the id of a template whose enabled is true |
+| `idempotency_key_reused` | 5 | the `--idempotency-key` was used for a different request in the last 24 hours | make a new key for a new request; reuse a key only to repeat exactly the same command |
+| `idempotency_key_in_use` | 5 | the first request with this `--idempotency-key` hasn't finished yet | wait a minute and run the same command with the same key again; if it lasts, check on the website whether the request exists before making a new one |
 | `cli_outdated` | 1 | the server needs a newer pkiaas | update pkiaas with the install command in the message, then run the command again |
 | `connection_failed` | 1 | the server couldn't be reached | check the server address (`--server` or `PKIAAS_SERVER`) and the network, then try again |
 | `http_<status>` | 1 | the server answered with an unexpected HTTP status, e.g. http_500; the message has the request ID to quote | try again later; if it persists, report the request ID |
