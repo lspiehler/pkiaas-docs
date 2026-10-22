@@ -62,19 +62,25 @@ The login is kept for 30 days of inactivity, and for at most 90 days. `pkiaas lo
 
 ## Certificate authorities
 
-`pkiaas ca list --json` lists the user's CAs: their own and those they were invited to. Each has an `id`, which
-commands take to name a CA, and `signed` (false while the CA waits for its certificate).
+`pkiaas ca list --json` lists the user's CAs: their own and those they were invited to. Each has an `id` and a
+`name`, and `signed` (false while the CA waits for its certificate).
+
+Commands take a CA by its name, in any case (e.g. `--ca "Example Issuing CA"`), or by its `id`. Use names with
+people: say the CA's name to the user, and accept the name they give. Use IDs in scripts and in commands you keep:
+an ID never changes, while a CA can be renamed and two CAs can share a name. A name that more than one of the
+user's CAs has fails with `ca_ambiguous`, whose message lists their IDs: ask the user which one they mean.
 
 One CA is active: commands that work in a CA use it unless told otherwise. `pkiaas ca show --json` says which one
-it is and why. Login makes it the CA the user last worked in on the website; `pkiaas ca set ID --json` changes it.
-The active CA is kept on this computer for that server; setting it doesn't change the CA the user works in on the
-website. Before working in a CA, check that the active one is the CA the user means; when they have more than one
-and haven't said which, ask them rather than choosing.
+it is and why. Login makes it the CA the user last worked in on the website; `pkiaas ca set NAME --json` (or
+`ID`) changes it, and keeps the ID, so renaming the CA doesn't change it. The active CA is kept on this computer
+for that server; setting it doesn't change the CA the user works in on the website. Before working in a CA, check
+that the active one is the CA the user means; when they have more than one and haven't said which, ask them
+rather than choosing.
 
-To work in another CA without changing the active one, give `--ca ID` to the command, or set `PKIAAS_CA=ID` in
-its environment. `--ca` comes first, then `PKIAAS_CA`, then the active CA; `source` in `pkiaas ca show --json`
-says which chose it (`flag`, `environment`, or `set`, `website`, `first` for the active CA). An ID the account
-doesn't have fails with `not_found`.
+To work in another CA without changing the active one, give `--ca NAME` (or `ID`) to the command, or set
+`PKIAAS_CA` to its name or ID in its environment. `--ca` comes first, then `PKIAAS_CA`, then the active CA;
+`source` in `pkiaas ca show --json` says which chose it (`flag`, `environment`, or `set`, `website`, `first` for
+the active CA). A name or ID the account doesn't have fails with `not_found`.
 
 `pkiaas ca show --json` also gives the CA's details: `signed`, its key (`keyType`, `keySize`, `hsm`), its
 certificate (`serial`, `thumbprint`, `validFrom`, `validTo`), `activeCertificates`, and `urls` with its public
@@ -124,8 +130,8 @@ the CAs it signed. Each has a `serial`, which the other `cert` commands take to 
 (default 50, at most 1000); `total` says how many match, so when it is larger, narrow the list rather than reading
 everything: `--search TEXT` keeps certificates whose common name contains the text, and `--sort FIELD` (name,
 revocationReason, template, validFrom, validTo, keyType or keySize) with `--order asc|desc` brings the ones you
-need first. Like every command that works in a CA, they take `--ca ID`, and their results name the CA in `issuer`
-(`id`, which `--ca` takes, and `name`).
+need first. Like every command that works in a CA, they take `--ca NAME` (or `ID`), and their results name the CA
+in `issuer` (`id` and `name`).
 
 - `pkiaas cert show SERIAL --json` gives a certificate's details; with `--text`, `text` holds every field and
   extension as `openssl x509 -text` prints them (e.g. its subject alternative names). Serials are hex, with or
@@ -163,14 +169,16 @@ to wait before running it again.
 
 ## Requesting certificates
 
-`pkiaas request create --csr FILE --template ID --json` sends a CSR (PEM or DER, `-` for standard input) to the CA.
-The request waits for a member of the CA to approve it on the website's Pending Requests page, which issues the
-certificate; the CLI can't approve it yet. Tell the user the request's `id` and that it waits for their approval.
-No email is sent.
+`pkiaas request create --csr FILE --template NAME --json` sends a CSR (PEM or DER, `-` for standard input) to the CA.
+The request waits for a member of the CA to approve it, which issues the certificate. No email is sent. Add
+`--approve` to approve it in the same command when the user wants the certificate issued now: the result is then
+`issued`, with the certificate's `serial`, and `--out FILE` (or `--out -`) writes the certificate too. Otherwise tell the user the request's `id` and that it waits for
+approval.
 
-- `--template` is the `id` of a template from `pkiaas template list --json` whose `enabled` is true. A template says
-  what the certificate holds (validity, key usages and so on); if more than one fits, ask the user which to use. A
-  wrong or disabled one fails with `template_not_found`.
+- `--template` is the name of a template from `pkiaas template list --json` whose `enabled` is true, in any case
+  (e.g. `--template "Web Server"`), or its `id`. A template says what the certificate holds (validity, key usages
+  and so on); if more than one fits, ask the user which to use. A wrong or disabled one fails with
+  `template_not_found`; a name that two enabled templates share fails with `template_ambiguous`: use the `id`.
 - The server checks the CSR's signature; an unreadable or altered CSR fails with `invalid_csr`. Only the CSR is
   sent, never anything else in the file.
 
@@ -180,7 +188,35 @@ worked (it timed out, or a later session picks up the work), run it again with t
 within 24 hours that returns the first result rather than a second request. Without the flag, the CLI makes a key
 and reports it as `idempotencyKey`. A key used for a different request fails with `idempotency_key_reused`, and
 one whose first request hasn't finished with `idempotency_key_in_use` (wait, then retry with the same key). After 24
-hours the key is forgotten and the command makes a new request.
+hours the key is forgotten and the command makes a new request. With `--approve`, the same command and key
+approves the same request, which is safe: an issued request stays as it is. If the approval fails, the request
+stays (waiting for approval) and the error says its `id`.
+
+### Pending requests
+
+`pkiaas request list --json` lists the CA's requests that wait for something, as the website's Pending Requests
+page does; `pkiaas request show ID --json` shows one with what its CSR asks for (`subject`, `subjectAltNames`,
+`keyType`). `status` says what each waits for:
+
+- `pendingApproval`: a member of the CA approves or declines it. With `hasCsr` true, `pkiaas request approve ID`
+  issues it; one without a CSR needs an approved voucher, which only the website sends.
+- `pendingEmailVerification`: the requester has yet to confirm their email address.
+- `preApproved`: it is issued when the requester picks it up with its voucher or SCEP challenge.
+- `processing`: it is being signed, which takes seconds. One processing for more than 10 minutes
+  (`processingSince`) is stuck: it can be declined, and the requester makes a new request.
+
+Approving and declining are the user's decisions: approve or decline only the requests the user asked you to, and
+check each with `pkiaas request show` first. Approving issues a certificate for whatever the request's template
+allows; declining is final.
+
+- `pkiaas request approve ID --json` ends once the certificate is issued and gives its `serial`; with `--out FILE`
+  (and `--chain`) it writes the certificate too. It is safe to run
+  again: an issued request stays as it is. It fails with `request_not_approvable` (no CSR, email not confirmed,
+  pre-approved), `request_declined`, `request_processing` (wait a few seconds and check it with `request show`), or
+  `signing_failed` when the CA couldn't sign (e.g. its IoT HSM didn't answer): tell the user, whose CA log on the
+  website says why. Approvals are never retried by themselves.
+- `pkiaas request decline ID --yes --json` declines it for good. Declining a declined request succeeds; an issued
+  one fails with `request_issued` (revoke its certificate instead, if the user wants that).
 
 ## Recipes
 
@@ -202,11 +238,21 @@ Then request the certificate from the user's CA, with a key you keep (see "Reque
 
 ```sh
 pkiaas template list --json
-pkiaas request create --csr server.csr --template TEMPLATE_ID --idempotency-key KEY --json
+pkiaas request create --csr server.csr --template "Web Server" --idempotency-key KEY --json
 ```
 
-The user approves the request on the website's Pending Requests page; then `pkiaas cert list --search
-www.example.com --json` shows the certificate and its serial.
+If the user wants it issued now, add `--approve` and `--out`: the command issues the certificate and writes it,
+so no serial has to be copied between commands:
+
+```sh
+pkiaas request create --csr server.csr --template "Web Server" --approve --chain --out server.pem \
+  --idempotency-key KEY --json
+```
+
+`--chain` adds the CA's certificates (what a server sends); `--out -` writes the certificate to standard output
+instead, for piping, with no result. Without `--approve`, the user approves it (`pkiaas request approve ID --out
+server.pem`, or the website's Pending Requests page); `pkiaas request show ID --json` gives the certificate's
+`serial` for `pkiaas cert export` later.
 
 Combine the key, the signed certificate and the CA chain into a PKCS#12 file for Windows, Java or a load balancer
 (the user has set `PFX_PASSPHRASE` too):
@@ -263,9 +309,16 @@ With `--json`, an error is `{"error": {"code", "message", "hint"}}`. The hint is
 | `subscription_required` | 3 | the feature needs a subscription, the user's or the CA owner's (revoking and unrevoking certificates) | tell the user; they can subscribe, or link a subscription they already have, on the website's profile page |
 | `revocation_final` | 5 | the certificate is revoked with a reason other than certificateHold, which can't be undone or changed | nothing to do: the certificate stays revoked; `pkiaas cert show SERIAL --json` shows its reason |
 | `invalid_csr` | 1 | the server can't read the CSR, or its signature doesn't match its key | check that the file is the CSR (PEM or DER) and wasn't changed after it was signed; make a new one with `pkiaas csr create` |
-| `template_not_found` | 4 | the CA has no enabled template with this ID | run `pkiaas template list --json` (with the same `--ca`) and use the id of a template whose enabled is true |
+| `template_not_found` | 4 | the CA has no enabled template with this name or ID | run `pkiaas template list --json` (with the same `--ca`) and use the name or id of a template whose enabled is true |
+| `template_ambiguous` | 2 | more than one enabled template of the CA has this name | give `--template` the id of the one to use; if it isn't clear which, `pkiaas template list --json` shows them, and ask the user |
+| `ca_ambiguous` | 2 | more than one of the account's CAs has this name (`--ca`, `PKIAAS_CA` or `pkiaas ca set`) | give the id of the one to use instead; if it isn't clear which, `pkiaas ca list --json` shows them, and ask the user |
 | `idempotency_key_reused` | 5 | the `--idempotency-key` was used for a different request in the last 24 hours | make a new key for a new request; reuse a key only to repeat exactly the same command |
 | `idempotency_key_in_use` | 5 | the first request with this `--idempotency-key` hasn't finished yet | wait a minute and run the same command with the same key again; if it lasts, check on the website whether the request exists before making a new one |
+| `request_not_approvable` | 5 | the request can't be approved: it has no CSR, waits for the requester to confirm their email address, or is pre-approved | read the message; `pkiaas request show ID --json` shows its status and hasCsr. A request without a CSR needs an approved voucher, which the user sends on the website's Pending Requests page |
+| `request_declined` | 5 | the request was declined, which is final | nothing to approve: make a new request with `pkiaas request create` if the certificate is still needed |
+| `request_issued` | 5 | the request is issued, so it can't be declined | `pkiaas request show ID --json` gives the certificate's serial; revoke it with `pkiaas cert revoke SERIAL` if it mustn't be used |
+| `request_processing` | 5 | the request is being signed right now | wait a few seconds, then check it with `pkiaas request show ID --json`; one processing for more than 10 minutes (processingSince) is stuck: decline it and make a new request |
+| `signing_failed` | 1 | the CA couldn't sign the request, e.g. its IoT HSM didn't answer or the template doesn't fit the CSR; the CA's log says why | tell the user, who can read the CA's log on the website; the request waits for approval again (or stays processing if the certificate was signed), so approve it again once the cause is fixed |
 | `cli_outdated` | 1 | the server needs a newer pkiaas | update pkiaas with the install command in the message, then run the command again |
 | `connection_failed` | 1 | the server couldn't be reached | check the server address (`--server` or `PKIAAS_SERVER`) and the network, then try again |
 | `http_<status>` | 1 | the server answered with an unexpected HTTP status, e.g. http_500; the message has the request ID to quote | try again later; if it persists, report the request ID |
