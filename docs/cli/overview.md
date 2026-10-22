@@ -1,16 +1,17 @@
 ---
 title: "pkiaas CLI"
-description: "Install the pkiaas CLI on Linux, macOS or Windows, log in, find, export and revoke your certificates, request new ones, and create keys, CSRs and PKCS#12 files on your own computer. Built for AI agents as well as people."
+description: "Install the pkiaas CLI on Linux, macOS or Windows, log in, find, export and revoke your certificates, request new ones and approve them, and create keys, CSRs and PKCS#12 files on your own computer. Built for AI agents as well as people."
 ---
 ## Overview
 `pkiaas` is the PKIaaS.io command-line tool (CLI). It runs on Linux, macOS and Windows, and is built to be used by AI agents (Claude Code, Codex, Copilot and others) as well as by people. Today it covers:
 
 - **[Certificate Authorities](certificate-authorities.md):** list your CAs, show their details, export their certificates and chains, and choose the one to work in.
 - **[Certificates](certificates.md):** list the certificates a CA issued, show their details and status, export them with their chain or CSR as PEM or DER, and revoke them or put them on hold.
-- **[Request Certificates](requests.md):** list a CA's templates and request a certificate with a CSR, safely repeatable with an idempotency key. The request waits for approval on the website's Pending Requests page.
+- **[Request Certificates](requests.md):** list a CA's templates and request a certificate with a CSR, safely repeatable with an idempotency key, and have it issued and saved in the same command.
+- **[Approve Requests](pending-requests.md):** list a CA's pending requests, check what each asks for, and approve or decline them.
 - **[Keys, CSRs and PKCS#12](keys-csrs-pkcs12.md):** create private keys of every type PKIaaS.io supports, including the post-quantum [ML-DSA](../post-quantum-cryptography/ml-dsa.md) and [SLH-DSA](../post-quantum-cryptography/slh-dsa.md) types, certificate signing requests (CSRs), and PKCS#12 (.pfx/.p12) files that combine a key, its certificate and the CA chain.
 
-Keys, CSRs and PKCS#12 files are made on your computer, and private keys never leave it. Commands for approving requests and for managing your certificate authorities are coming.
+Keys, CSRs and PKCS#12 files are made on your computer, and private keys never leave it. Commands for managing your certificate authorities are coming.
 
 ## Install
 On Linux and macOS:

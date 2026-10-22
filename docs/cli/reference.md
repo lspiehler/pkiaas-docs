@@ -15,7 +15,7 @@ pkiaas
 ├── ca
 │   ├── export                 --ca=STRING --chain --force --format=STRING --out=STRING
 │   ├── list
-│   ├── set ID
+│   ├── set NAME|ID
 │   └── show                   --ca=STRING
 ├── cert
 │   ├── export SERIAL          --ca=STRING --chain --csr --force --format=STRING --out=STRING
@@ -34,7 +34,11 @@ pkiaas
 ├── pkcs12
 │   └── create                 --cert=STRING --chain-file=STRING --force --key=STRING --key-passphrase-env=STRING --key-passphrase-file=STRING --legacy --no-passphrase --out=STRING --passphrase-env=STRING --passphrase-file=STRING
 ├── request
-│   └── create                 --ca=STRING --csr=STRING --idempotency-key=STRING --template=STRING
+│   ├── approve ID             --ca=STRING --chain --force --format=STRING --out=STRING
+│   ├── create                 --approve --ca=STRING --chain --csr=STRING --force --format=STRING --idempotency-key=STRING --out=STRING --template=STRING
+│   ├── decline ID             --ca=STRING --yes
+│   ├── list                   --ca=STRING --limit=INT --order=STRING --search=STRING --sort=STRING
+│   └── show ID                --ca=STRING
 ├── template
 │   └── list                   --ca=STRING --limit=INT
 ├── version                    --licenses
@@ -54,7 +58,7 @@ pkiaas
 |---|---|
 | `PKIAAS_TOKEN` | a token to use instead of the stored login (e.g. in CI); never print it |
 | `PKIAAS_SERVER` | the server to use when `--server` isn't given, e.g. https://pkiaas.io |
-| `PKIAAS_CA` | the ID of the CA that commands work in when `--ca` isn't given, instead of the active CA |
+| `PKIAAS_CA` | the name (any case) or ID of the CA that commands work in when `--ca` isn't given, instead of the active CA; scripts should give the ID |
 
 Exit codes and error codes are listed in the [agent guide](agents.md#exit-codes).
 
@@ -78,7 +82,7 @@ Commands:
 Export a CA's certificate, or its chain, as PEM or DER.
 
 ```
-pkiaas ca export [--out FILE] [--format pem|der] [--chain] [--ca ID] [flags]
+pkiaas ca export [--out FILE] [--format pem|der] [--chain] [--ca NAME|ID] [flags]
 ```
 
 Export the certificate of a CA, by default the active CA. The chain (`--chain`) is the CA's certificate followed
@@ -108,7 +112,7 @@ Flags:
 
 | Flag | Type | Description |
 |---|---|---|
-| `--ca` | string | the CA to work in, by its ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
 | `--chain` | bool | export the CA's certificate followed by the certificates that issued it |
 | `--force` | bool | replace the `--out` file if it exists |
 | `--format` | string | pem or der (as OpenSSL's -outform). Default: `pem`. |
@@ -148,8 +152,8 @@ pkiaas ca list [flags]
 ```
 
 List the certificate authorities your account has access to: your own, and those you were invited to, by
-name. The ID is what commands take to name a CA. The active CA, which commands work in unless told otherwise, is
-marked with *.
+name. Commands take a CA's name, in any case, or its ID; scripts should keep the ID, which never changes and no
+other CA has. The active CA, which commands work in unless told otherwise, is marked with *.
 
 This command calls the PKIaaS server and needs a login.
 
@@ -170,7 +174,7 @@ With `--json`, the result is an array of objects with these fields:
 
 | Field | Type | Description |
 |---|---|---|
-| `id` | string | the CA's ID, which commands take to name the CA |
+| `id` | string | the CA's ID, which commands take to name the CA, like its name; scripts should keep the ID |
 | `name` | string or null | the CA's name (its certificate's common name) |
 | `signed` | boolean | false while the CA waits for its signed certificate to be imported |
 | `validTo` | string or null | when the CA's certificate expires (ISO 8601, UTC); null if unsigned |
@@ -181,11 +185,13 @@ With `--json`, the result is an array of objects with these fields:
 Set the active CA.
 
 ```
-pkiaas ca set ID [flags]
+pkiaas ca set NAME|ID [flags]
 ```
 
-Set the active CA, which commands work in unless told otherwise, by its ID from `pkiaas ca list`. It is kept
-on this computer, for this server, until `pkiaas logout`; it doesn't change the CA you work in on the website.
+Set the active CA, which commands work in unless told otherwise, by its name (in any case) or ID from
+`pkiaas ca list`. A name that more than one of your CAs has is refused (error ca_ambiguous): give the ID then. The
+ID is kept, so renaming the CA doesn't change it. It is kept on this computer, for this server, until `pkiaas
+logout`; it doesn't change the CA you work in on the website.
 
 This command calls the PKIaaS server and needs a login.
 
@@ -198,7 +204,7 @@ Flags:
 Examples:
 
 ```sh
-pkiaas ca set a1B2c3D4e5
+pkiaas ca set "Example Issuing CA"
 pkiaas ca set a1B2c3D4e5 --json
 ```
 
@@ -220,7 +226,7 @@ Side effects:
 Show a CA's details, by default the active CA's.
 
 ```
-pkiaas ca show [--ca ID] [flags]
+pkiaas ca show [--ca NAME|ID] [flags]
 ```
 
 Show a CA's details: its key, certificate (serial, thumbprint, validity), how many certificates it has issued
@@ -238,7 +244,7 @@ Flags:
 
 | Flag | Type | Description |
 |---|---|---|
-| `--ca` | string | the CA to work in, by its ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
 | `--server` | string | the PKIaaS server (default: the last one you logged in to) |
 
 Examples:
@@ -246,6 +252,7 @@ Examples:
 ```sh
 pkiaas ca show
 pkiaas ca show --json
+pkiaas ca show --ca "Example Issuing CA"
 pkiaas ca show --ca a1B2c3D4e5 --json
 ```
 
@@ -300,7 +307,7 @@ Commands:
 Export a certificate, with its chain, or the CSR it was issued from, as PEM or DER.
 
 ```
-pkiaas cert export SERIAL [--chain | --csr] [--format pem|der] [--out FILE] [--ca ID] [flags]
+pkiaas cert export SERIAL [--chain | --csr] [--format pem|der] [--out FILE] [--ca NAME|ID] [flags]
 ```
 
 Export a certificate that a CA issued, by default the active CA, by its serial number from `pkiaas cert list`.
@@ -330,7 +337,7 @@ Flags:
 
 | Flag | Type | Description |
 |---|---|---|
-| `--ca` | string | the CA to work in, by its ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
 | `--chain` | bool | export the certificate followed by the CA's certificate and those that issued the CA |
 | `--csr` | bool | export the CSR the certificate was issued from instead |
 | `--force` | bool | replace the `--out` file if it exists |
@@ -371,7 +378,7 @@ Side effects:
 List the certificates a CA issued, the newest first.
 
 ```
-pkiaas cert list [--ca ID] [--search TEXT] [--sort FIELD [--order asc|desc]] [--limit N] [flags]
+pkiaas cert list [--ca NAME|ID] [--search TEXT] [--sort FIELD [--order asc|desc]] [--limit N] [flags]
 ```
 
 List the certificates a CA issued, by default the active CA's: every certificate it signed, also expired and
@@ -388,7 +395,7 @@ Flags:
 
 | Flag | Type | Description |
 |---|---|---|
-| `--ca` | string | the CA to work in, by its ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
 | `--limit` | int | how many certificates to list (1-1000). Default: `50`. |
 | `--order` | string | asc or desc (default: asc with `--sort`) |
 | `--search` | string | only certificates whose common name contains this text |
@@ -419,7 +426,7 @@ With `--json`, the result is an object with these fields:
 Revoke a certificate.
 
 ```
-pkiaas cert revoke SERIAL --reason REASON [--ca ID] [--yes] [flags]
+pkiaas cert revoke SERIAL --reason REASON [--ca NAME|ID] [--yes] [flags]
 ```
 
 Revoke a certificate that a CA issued, by default the active CA's, by its serial number from `pkiaas cert list`.
@@ -440,7 +447,7 @@ Flags:
 
 | Flag | Type | Description |
 |---|---|---|
-| `--ca` | string | the CA to work in, by its ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
 | `--reason` | string | why: unspecified, keyCompromise, cACompromise, affiliationChanged, superseded, cessationOfOperation or certificateHold |
 | `--server` | string | the PKIaaS server (default: the last one you logged in to) |
 | `--yes` | bool | revoke without asking for confirmation |
@@ -474,7 +481,7 @@ Side effects:
 Show a certificate's details.
 
 ```
-pkiaas cert show SERIAL [--ca ID] [--text] [flags]
+pkiaas cert show SERIAL [--ca NAME|ID] [--text] [flags]
 ```
 
 Show a certificate that a CA issued, by default the active CA, by its serial number from `pkiaas cert list`:
@@ -490,7 +497,7 @@ Flags:
 
 | Flag | Type | Description |
 |---|---|---|
-| `--ca` | string | the CA to work in, by its ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
 | `--server` | string | the PKIaaS server (default: the last one you logged in to) |
 | `--text` | bool | add the certificate as 'openssl x509 -text' describes it |
 
@@ -530,7 +537,7 @@ With `--json`, the result is an object with these fields:
 Take a certificate off hold (certificateHold).
 
 ```
-pkiaas cert unrevoke SERIAL [--ca ID] [flags]
+pkiaas cert unrevoke SERIAL [--ca NAME|ID] [flags]
 ```
 
 Take a certificate that is on hold (revoked with reason certificateHold) off hold, so that the CA's next CRL
@@ -545,7 +552,7 @@ Flags:
 
 | Flag | Type | Description |
 |---|---|---|
-| `--ca` | string | the CA to work in, by its ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
 | `--server` | string | the PKIaaS server (default: the last one you logged in to) |
 
 Examples:
@@ -934,7 +941,7 @@ Side effects:
 
 ## pkiaas request
 
-Request certificates from a CA.
+Request certificates from a CA, list the pending requests, approve or decline them.
 
 ```
 pkiaas request [flags]
@@ -942,29 +949,40 @@ pkiaas request [flags]
 
 Commands:
 
+- [`pkiaas request approve`](reference.md#pkiaas-request-approve)
 - [`pkiaas request create`](reference.md#pkiaas-request-create)
+- [`pkiaas request decline`](reference.md#pkiaas-request-decline)
+- [`pkiaas request list`](reference.md#pkiaas-request-list)
+- [`pkiaas request show`](reference.md#pkiaas-request-show)
 
-## pkiaas request create
+## pkiaas request approve
 
-Request a certificate with a CSR; it waits for approval.
+Approve a request: the CA signs its CSR and issues the certificate.
 
 ```
-pkiaas request create --csr FILE --template ID [--ca ID] [--idempotency-key KEY] [flags]
+pkiaas request approve ID [--ca NAME|ID] [--out FILE|- [--chain] [--format pem|der] [--force]] [flags]
 ```
 
-Send a CSR to a CA, by default the active CA, as the website's "Request a Certificate" does. The request waits
-for a member of the CA to approve it on the website's Pending Requests page; approving it issues the certificate.
-No email is sent.
+Approve a request to a CA, by default the active CA, by its ID from `pkiaas request list`: the CA signs its CSR
+as the request's template says, as the website's Sign button does without changes, and the command ends once the
+certificate is issued (on a CA whose key is on an IoT HSM, that can take a few seconds). The result's serial is
+the certificate's: `pkiaas cert export SERIAL` outputs it. Check the request first with `pkiaas request show`.
 
-`--csr` is a PEM or DER file (e.g. from `pkiaas csr create`), or - for standard input. Only the CSR is sent, never
-anything else in the file. The server checks its signature (error invalid_csr). `--template` is the ID of one of
-the CA's enabled templates, from `pkiaas template list` (error template_not_found); it says what the certificate
-will hold.
+Only a request that waits for approval (pendingApproval) and has a CSR can be approved; otherwise the error is
+request_not_approvable (no CSR, pending email confirmation, pre-approved), request_declined, or
+request_processing while it is being signed. If the CA can't sign it (e.g. its IoT HSM doesn't answer), the error
+is signing_failed: the request waits for approval again, and the CA's log on the website says why.
 
-Each run is a new request, unless it has the `--idempotency-key` of an earlier run (any text, e.g. a UUID) and the
-same CSR, template and CA: within 24 hours that gives the earlier result instead of a second request. Without
-`--idempotency-key`, the CLI makes a key and reports it (idempotencyKey), and uses it when it retries by itself.
-A key used for a different request is refused (error idempotency_key_reused).
+Approving a request that is issued already changes nothing and succeeds, so the command is safe to run again,
+e.g. after a lost connection.
+
+With `--out` FILE, it also writes the issued certificate to the file (PEM, or DER with `--format` der; with
+`--chain`, followed by the certificates that issued it, up to the root), which is only replaced with `--force`; the
+result names it (file). With `--out` -, standard output holds only the certificate, for piping, and there is no
+result (so no `--json`). The file is checked before anything is approved.
+
+In Windows PowerShell 5.1, > and \| re-encode output, so write files with `--out` (PowerShell 7.4 and later
+keep the bytes).
 
 This command calls the PKIaaS server and needs a login.
 
@@ -972,17 +990,104 @@ Flags:
 
 | Flag | Type | Description |
 |---|---|---|
-| `--ca` | string | the CA to work in, by its ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
-| `--csr` | string | the CSR file, PEM or DER (- for standard input) |
-| `--idempotency-key` | string | repeat an earlier run with this key instead of making a second request (default: a new random key) |
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--chain` | bool | with `--out`: add the CA's certificate and those that issued the CA, up to the root |
+| `--force` | bool | with `--out`: replace the file if it exists |
+| `--format` | string | with `--out`: pem or der (as OpenSSL's -outform). Default: `pem`. |
+| `-o`, `--out` | string | also write the issued certificate to this file; - for standard output, instead of the result |
 | `--server` | string | the PKIaaS server (default: the last one you logged in to) |
-| `--template` | string | the ID of one of the CA's enabled templates (pkiaas template list) |
 
 Examples:
 
 ```sh
-pkiaas request create --csr www.csr --template f5IK8ghmT0
-pkiaas request create --csr - --template f5IK8ghmT0 --json < www.csr
+pkiaas request approve k3J9xQ2mP7vR1sT8wY4zA6bC0dE5fG
+pkiaas request approve k3J9xQ2mP7vR1sT8wY4zA6bC0dE5fG --out - > www.pem
+pkiaas request approve k3J9xQ2mP7vR1sT8wY4zA6bC0dE5fG --chain --out fullchain.pem --json
+pkiaas request approve k3J9xQ2mP7vR1sT8wY4zA6bC0dE5fG --ca a1B2c3D4e5 --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `ca` | object | the CA the request went to, which issued the certificate |
+| `ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
+| `ca.name` | string or null | the CA's name (its certificate's common name) |
+| `id` | string | the request's ID |
+| `status` | string | issued |
+| `name` | string or null | the request's name (the CSR's common name) |
+| `template` | string or null | the template's name |
+| `templateId` | string or null | the template's ID |
+| `serial` | string or null | the certificate's serial number: `pkiaas cert export SERIAL` outputs it |
+| `file` | string or null | the `--out` file the certificate was written to (with `--chain`, followed by its chain); null without `--out` |
+
+Side effects:
+
+- the CA signs the request's CSR and issues the certificate on the server; for a request issued already, nothing
+- with `--out` FILE, writes the certificate to the file; with `--out` -, writes it to standard output and prints no result
+
+## pkiaas request create
+
+Request a certificate with a CSR; it waits for approval, or is issued with --approve.
+
+```
+pkiaas request create --csr FILE --template NAME|ID [--approve [--out FILE|- [--chain] [--format pem|der] [--force]]] [--ca NAME|ID] [--idempotency-key KEY] [flags]
+```
+
+Send a CSR to a CA, by default the active CA, as the website's "Request a Certificate" does. The request waits
+for a member of the CA to approve it (`pkiaas request approve`, or the website's Pending Requests page);
+approving it issues the certificate. No email is sent.
+
+With `--approve`, the command approves the request too, as `pkiaas request approve` does, and ends once the
+certificate is issued: serial is the certificate's. If approving fails, the request stays, waiting for approval:
+the error says its ID. To get the certificate in the same command, add `--out` (see below).
+
+`--csr` is a PEM or DER file (e.g. from `pkiaas csr create`), or - for standard input. Only the CSR is sent, never
+anything else in the file. The server checks its signature (error invalid_csr). `--template` is the name of one of
+the CA's enabled templates, in any case, as the website and `pkiaas template list` show it, or its ID (error
+template_not_found); it says what the certificate will hold. A name that more than one enabled template has is
+refused (error template_ambiguous): give the ID then.
+
+Each run is a new request, unless it has the `--idempotency-key` of an earlier run (any text, e.g. a UUID) and the
+same CSR, template and CA: within 24 hours that gives the earlier result instead of a second request. Without
+`--idempotency-key`, the CLI makes a key and reports it (idempotencyKey), and uses it when it retries by itself.
+A key used for a different request is refused (error idempotency_key_reused). With `--approve`, running the
+same command again with the reported key approves the same request, which is safe: an issued request stays as
+it is.
+
+With `--approve`, `--out` FILE also writes the issued certificate to the file (PEM, or DER with `--format` der; with
+`--chain`, followed by the certificates that issued it, up to the root), which is only replaced with `--force`; the
+result names it (file). With `--out` -, standard output holds only the certificate, for piping, and there is no
+result (so no `--json`). The file is checked before anything is approved.
+
+In Windows PowerShell 5.1, > and \| re-encode output, so write files with `--out` (PowerShell 7.4 and later
+keep the bytes).
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--approve` | bool | approve the request too, so the CA issues the certificate |
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--chain` | bool | with `--out`: add the CA's certificate and those that issued the CA, up to the root |
+| `--csr` | string | the CSR file, PEM or DER (- for standard input) |
+| `--force` | bool | with `--out`: replace the file if it exists |
+| `--format` | string | with `--out`: pem or der (as OpenSSL's -outform). Default: `pem`. |
+| `--idempotency-key` | string | repeat an earlier run with this key instead of making a second request (default: a new random key) |
+| `-o`, `--out` | string | also write the issued certificate to this file; - for standard output, instead of the result |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+| `--template` | string | the name or ID of one of the CA's enabled templates (pkiaas template list) |
+
+Examples:
+
+```sh
+pkiaas request create --csr www.csr --template "Web Server"
+pkiaas request create --csr www.csr --template "Web Server" --approve --json
+pkiaas request create --csr www.csr --template "Web Server" --approve --out - > www.pem
+pkiaas request create --csr www.csr --template "Web Server" --approve --chain --out fullchain.pem --json
+pkiaas request create --csr - --template "Web Server" --json < www.csr
 pkiaas request create --csr www.csr --template f5IK8ghmT0 --ca a1B2c3D4e5 --idempotency-key 8e03978e-40d5-43e8-bc93-6894a57f9324 --json
 ```
 
@@ -994,16 +1099,183 @@ With `--json`, the result is an object with these fields:
 | `ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
 | `ca.name` | string or null | the CA's name (its certificate's common name) |
 | `id` | string | the request's ID |
-| `status` | string | pendingApproval: it waits for a member of the CA to approve it on the website's Pending Requests page |
+| `status` | string | pendingApproval: it waits for a member of the CA to approve it (pkiaas request approve, or the website's Pending Requests page); with `--approve`, issued |
 | `name` | string or null | the CSR's common name (or its first subject attribute), which the website shows as the request's name |
 | `template` | string or null | the template's name |
 | `templateId` | string or null | the template's ID (`--template`) |
 | `requestedAt` | string or null | when it was requested (ISO 8601, UTC) |
+| `serial` | string or null | with `--approve`, the issued certificate's serial number (pkiaas cert export SERIAL); otherwise null |
+| `file` | string or null | with `--approve` `--out` FILE, the file the certificate was written to (with `--chain`, followed by its chain); otherwise null |
 | `idempotencyKey` | string | the Idempotency-Key it was sent with: the same command with `--idempotency-key` and this key, within 24 hours, gives this result again instead of a second request |
 
 Side effects:
 
 - creates a certificate request on the server, which waits for approval; with the `--idempotency-key` of an earlier run (within 24 hours), nothing new
+- with `--approve`, the CA signs the CSR and issues the certificate
+- with `--approve` `--out` FILE, writes the certificate to the file; with `--out` -, writes it to standard output and prints no result
+
+## pkiaas request decline
+
+Decline a request for good.
+
+```
+pkiaas request decline ID [--ca NAME|ID] [--yes] [flags]
+```
+
+Decline a request to a CA, by default the active CA, by its ID from `pkiaas request list`: it will never be
+issued, and its voucher, email confirmation link and SCEP challenge stop working. This can't be undone; the
+requester can make a new request.
+
+It asks for confirmation on a terminal; without one, give `--yes`. Declining a request that is declined already
+changes nothing and succeeds, so the command is safe to run again. An issued request can't be declined (error
+request_issued): revoke its certificate with `pkiaas cert revoke` instead. A request being signed can't be
+declined (error request_processing) until it has been processing for 10 minutes, when it counts as stuck.
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+| `--yes` | bool | decline without asking for confirmation |
+
+Examples:
+
+```sh
+pkiaas request decline k3J9xQ2mP7vR1sT8wY4zA6bC0dE5fG
+pkiaas request decline k3J9xQ2mP7vR1sT8wY4zA6bC0dE5fG --yes --json
+pkiaas request decline k3J9xQ2mP7vR1sT8wY4zA6bC0dE5fG --ca a1B2c3D4e5 --yes --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `ca` | object | the CA the request went to |
+| `ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
+| `ca.name` | string or null | the CA's name (its certificate's common name) |
+| `id` | string | the request's ID |
+| `status` | string | declined |
+| `name` | string or null | the request's name (the CSR's common name) |
+
+Side effects:
+
+- declines the request on the server for good, and deletes its voucher, email confirmation and SCEP challenge; can't be undone
+
+## pkiaas request list
+
+List the requests that wait for something, the newest first.
+
+```
+pkiaas request list [--ca NAME|ID] [--search TEXT] [--sort FIELD [--order asc|desc]] [--limit N] [flags]
+```
+
+List a CA's pending requests, by default the active CA's, as the website's Pending Requests page does: the
+requests that wait for approval, for the requester's email confirmation or for the requester to pick up a
+pre-approved certificate, and those being signed. Issued and declined requests aren't listed (`pkiaas request
+show ID` shows any request), nor are requests from ACME.
+
+pendingApproval: it waits for a member of the CA to approve it (approve it if hasCsr is true; one without a
+CSR needs an approved voucher, which only the website sends). pendingEmailVerification: it waits for the requester
+to confirm their email address. preApproved: it is issued when the requester picks it up with its voucher or SCEP
+challenge. processing: it is being signed; signing takes seconds, so one processing for more than 10 minutes
+(processingSince) is stuck. issued: the certificate is signed (serial). declined: it will never be issued.
+
+It lists the first `--limit` requests (default 50, at most 1000); total says how many match. `--search` keeps the
+requests whose name contains the text, in any case. `--sort` takes requestedAt, name or template, in `--order` asc
+(the default with `--sort`) or desc. Without `--sort`: requestedAt, desc.
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--limit` | int | how many requests to list (1-1000). Default: `50`. |
+| `--order` | string | asc or desc (default: asc with `--sort`) |
+| `--search` | string | only requests whose name contains this text |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+| `--sort` | string | what to sort by: requestedAt, name, template (default: requestedAt, desc) |
+
+Examples:
+
+```sh
+pkiaas request list
+pkiaas request list --json
+pkiaas request list --search example.com --sort name --json
+pkiaas request list --ca a1B2c3D4e5 --limit 200 --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `ca` | object | the CA the requests went to |
+| `ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
+| `ca.name` | string or null | the CA's name (its certificate's common name) |
+| `total` | integer | how many requests match; more than are listed when it exceeds `--limit` |
+| `requests` | object[] | the first `--limit` matching requests, in the `--sort` and `--order` order |
+
+## pkiaas request show
+
+Show a request's details: its status and what its CSR asks for.
+
+```
+pkiaas request show ID [--ca NAME|ID] [flags]
+```
+
+Show a request to a CA, by default the active CA, by its ID from `pkiaas request list` or `pkiaas request
+create`: its status, template and source, and what its CSR asks for (subject, subject alternative names, key),
+so it can be checked before it is approved. The template, not the CSR, decides what the certificate holds.
+Once it is issued, serial is the certificate's serial number. Requests from ACME aren't shown.
+
+pendingApproval: it waits for a member of the CA to approve it (approve it if hasCsr is true; one without a
+CSR needs an approved voucher, which only the website sends). pendingEmailVerification: it waits for the requester
+to confirm their email address. preApproved: it is issued when the requester picks it up with its voucher or SCEP
+challenge. processing: it is being signed; signing takes seconds, so one processing for more than 10 minutes
+(processingSince) is stuck. issued: the certificate is signed (serial). declined: it will never be issued.
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+
+Examples:
+
+```sh
+pkiaas request show k3J9xQ2mP7vR1sT8wY4zA6bC0dE5fG
+pkiaas request show k3J9xQ2mP7vR1sT8wY4zA6bC0dE5fG --ca a1B2c3D4e5 --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `ca` | object | the CA the request went to |
+| `ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
+| `ca.name` | string or null | the CA's name (its certificate's common name) |
+| `id` | string | the request's ID |
+| `status` | string | pendingApproval, pendingEmailVerification, preApproved, processing, issued or declined (see the command's help) |
+| `name` | string or null | the CSR's common name (or its first subject attribute), which the website shows as the request's name |
+| `template` | string or null | the template's name; the template, not the CSR, decides what the certificate holds |
+| `templateId` | string or null | the template's ID |
+| `source` | string or null | where it came from: scep, web, system, createCa, ces or api (this CLI and the new pages); null if unknown |
+| `requestedAt` | string or null | when it was requested (ISO 8601, UTC) |
+| `expiresAt` | string or null | when the pre-approval (voucher, email confirmation or SCEP challenge) expires (ISO 8601, UTC); null if it never does |
+| `processingSince` | string or null | while it is processing, when signing started (ISO 8601, UTC); otherwise null |
+| `serial` | string or null | once it is issued, the certificate's serial number (pkiaas cert export SERIAL); otherwise null |
+| `hasCsr` | boolean | it has a CSR, so `pkiaas request approve` can issue it |
+| `subject` | string or null | the CSR's subject as OpenSSL prints it, e.g. C=US, O=Example, CN=www.example.com; null without a CSR |
+| `subjectAltNames` | string[] | the CSR's subject alternative names as OpenSSL writes them, e.g. DNS:www.example.com; empty without a CSR |
+| `keyType` | string or null | the algorithm of the CSR's key, as OpenSSL names it, e.g. rsaEncryption, id-ecPublicKey |
+| `keySize` | integer or null | the key size in bits (the curve size for EC keys) |
 
 ## pkiaas template
 
@@ -1022,12 +1294,12 @@ Commands:
 List a CA's templates, by name.
 
 ```
-pkiaas template list [--ca ID] [--limit N] [flags]
+pkiaas template list [--ca NAME|ID] [--limit N] [flags]
 ```
 
 List the certificate templates of a CA, by default the active CA's, by name, enabled or not. A template says
-what the certificates it issues hold; `pkiaas request create --template` takes its ID, and only enabled templates
-take requests. Templates are made and changed on the website.
+what the certificates it issues hold; `pkiaas request create --template` takes its name or ID, and only enabled
+templates take requests. Templates are made and changed on the website.
 
 It lists the first `--limit` templates (default 50, at most 1000); total says how many there are.
 
@@ -1037,7 +1309,7 @@ Flags:
 
 | Flag | Type | Description |
 |---|---|---|
-| `--ca` | string | the CA to work in, by its ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
 | `--limit` | int | how many templates to list (1-1000). Default: `50`. |
 | `--server` | string | the PKIaaS server (default: the last one you logged in to) |
 
