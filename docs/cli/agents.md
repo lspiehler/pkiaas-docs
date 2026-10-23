@@ -212,9 +212,18 @@ allows; declining is final.
 - `pkiaas request approve ID --json` ends once the certificate is issued and gives its `serial`; with `--out FILE`
   (and `--chain`) it writes the certificate too. It is safe to run
   again: an issued request stays as it is. It fails with `request_not_approvable` (no CSR, email not confirmed,
-  pre-approved), `request_declined`, `request_processing` (wait a few seconds and check it with `request show`), or
+  pre-approved, or changes to a request that isn't `readyToBeSigned`), `request_declined`, `request_processing` (wait a few seconds and check it with `request show`), or
   `signing_failed` when the CA couldn't sign (e.g. its IoT HSM didn't answer): tell the user, whose CA log on the
   website says why. Approvals are never retried by themselves.
+- **Changing what is issued.** By default the certificate holds what the CSR asks for, as the template allows.
+  When the user asks for something else, `request approve` (and `request create --approve`) take `--subject DN`
+  (in place of the CSR's subject; the template's subject attributes still win), `--san NAME` (repeatable; all of
+  the certificate's SANs, in place of the CSR's) and `--not-after TIME` with an optional `--not-before TIME`
+  (RFC 3339, e.g. `2027-01-31T00:00:00Z`; from now without `--not-before`), as the website's override boxes do.
+  Only a request whose `statusDetail` is `readyToBeSigned` can be changed (otherwise `request_not_approvable`).
+  Without a subscription, while `validityLimitDays` is set in `request show`, the validity can't be changed
+  (`subscription_required`); values OpenSSL won't take fail with `invalid_overrides`, and nothing is signed. An
+  issued request is never signed again: running the command again with other changes succeeds but applies none.
 - `pkiaas request decline ID --yes --json` declines it for good. Declining a declined request succeeds; an issued
   one fails with `request_issued` (revoke its certificate instead, if the user wants that).
 
@@ -306,7 +315,7 @@ With `--json`, an error is `{"error": {"code", "message", "hint"}}`. The hint is
 | `conflict` | 5 | the server refused a change that clashes with something that exists | read the message; check what exists before changing it, and ask the user before replacing anything |
 | `ca_not_signed` | 5 | the CA has no certificate yet: it waits for its signed certificate to be imported | ask the user to import the CA's signed certificate on the website (the CA's page), or use another CA from `pkiaas ca list --json` (signed is true) |
 | `csr_not_stored` | 4 | no CSR is stored for the certificate (e.g. one issued by ACME) | the certificate itself is still available with `pkiaas cert export SERIAL`; check `hasCsr` in `pkiaas cert show --json` before asking for a CSR |
-| `subscription_required` | 3 | the feature needs a subscription, the user's or the CA owner's (revoking and unrevoking certificates) | tell the user; they can subscribe, or link a subscription they already have, on the website's profile page |
+| `subscription_required` | 3 | the feature needs a subscription, the user's or the CA owner's (revoking and unrevoking certificates; changing the validity when approving a request) | tell the user; they can subscribe, or link a subscription they already have, on the website's profile page |
 | `revocation_final` | 5 | the certificate is revoked with a reason other than certificateHold, which can't be undone or changed | nothing to do: the certificate stays revoked; `pkiaas cert show SERIAL --json` shows its reason |
 | `invalid_csr` | 1 | the server can't read the CSR, or its signature doesn't match its key | check that the file is the CSR (PEM or DER) and wasn't changed after it was signed; make a new one with `pkiaas csr create` |
 | `template_not_found` | 4 | the CA has no enabled template with this name or ID | run `pkiaas template list --json` (with the same `--ca`) and use the name or id of a template whose enabled is true |
@@ -314,7 +323,8 @@ With `--json`, an error is `{"error": {"code", "message", "hint"}}`. The hint is
 | `ca_ambiguous` | 2 | more than one of the account's CAs has this name (`--ca`, `PKIAAS_CA` or `pkiaas ca set`) | give the id of the one to use instead; if it isn't clear which, `pkiaas ca list --json` shows them, and ask the user |
 | `idempotency_key_reused` | 5 | the `--idempotency-key` was used for a different request in the last 24 hours | make a new key for a new request; reuse a key only to repeat exactly the same command |
 | `idempotency_key_in_use` | 5 | the first request with this `--idempotency-key` hasn't finished yet | wait a minute and run the same command with the same key again; if it lasts, check on the website whether the request exists before making a new one |
-| `request_not_approvable` | 5 | the request can't be approved: it has no CSR, waits for the requester to confirm their email address, or is pre-approved | read the message; `pkiaas request show ID --json` shows its status and hasCsr. A request without a CSR needs an approved voucher, which the user sends on the website's Pending Requests page |
+| `request_not_approvable` | 5 | the request can't be approved: it has no CSR, waits for the requester to confirm their email address, or is pre-approved; or it can't be approved with changes (`--subject`, `--san`, `--not-before`, `--not-after`), since it isn't readyToBeSigned | read the message; `pkiaas request show ID --json` shows its status and hasCsr. A request without a CSR needs an approved voucher, which the user sends on the website's Pending Requests page |
+| `invalid_overrides` | 1 | OpenSSL won't take the `--subject` or `--san` an approval gives, e.g. a common name longer than 64 characters; nothing was signed | fix the value the message names and approve again; the request still waits for approval |
 | `request_declined` | 5 | the request was declined, which is final | nothing to approve: make a new request with `pkiaas request create` if the certificate is still needed |
 | `request_issued` | 5 | the request is issued, so it can't be declined | `pkiaas request show ID --json` gives the certificate's serial; revoke it with `pkiaas cert revoke SERIAL` if it mustn't be used |
 | `request_processing` | 5 | the request is being signed right now | wait a few seconds, then check it with `pkiaas request show ID --json`; one processing for more than 10 minutes (processingSince) is stuck: decline it and make a new request |

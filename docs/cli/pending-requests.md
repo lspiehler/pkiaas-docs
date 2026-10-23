@@ -56,7 +56,27 @@ Approved the request Xq7Ld2Rk9TfP3wVb8NcJ5mHs1GyZ4a for www.example.com: issued 
 pkiaas request approve Xq7Ld2Rk9TfP3wVb8NcJ5mHs1GyZ4a --chain --out fullchain.pem
 ```
 
-To change the subject, subject alternative names or validity before signing, approve the request on the website's [Pending Requests](../certificate-management/pending-requests.md) page.
+## Change the Certificate When Approving
+By default the certificate holds what the CSR asks for, as the template allows. To change that, give `request approve` the new values, as **Override requested attributes** and **Override validity time** do on the website's [Pending Requests](../certificate-management/pending-requests.md) page:
+
+- **`--subject DN`:** the subject in place of the CSR's, in RFC 4514 form (`"CN=www.example.com,O=Example,C=US"`) or OpenSSL's (`"/C=US/O=Example/CN=www.example.com"`), as [`pkiaas csr create`](keys-csrs-pkcs12.md) takes it. The template's subject attributes still win.
+- **`--san NAME`:** a subject alternative name in place of the CSR's. Repeat it for each name, and list them all: the CSR's names are replaced, not added to. Write `dns:NAME`, `ip:ADDRESS`, `email:ADDRESS` or `uri:URI`, or a bare name whose kind is guessed.
+- **`--not-after TIME`:** when the certificate expires, in place of the template's validity, in RFC 3339 form such as `2027-01-31T00:00:00Z`. It's valid from now, or from `--not-before TIME`.
+
+```sh
+pkiaas request approve Xq7Ld2Rk9TfP3wVb8NcJ5mHs1GyZ4a --san www.example.com --san example.com --not-after 2027-01-31T00:00:00Z
+```
+
+```text
+Approved the request Xq7Ld2Rk9TfP3wVb8NcJ5mHs1GyZ4a for www.example.com with the given subject alternative names and validity: issued the certificate with serial 25ab765c7238b3d28d2bab03271f5fa8f2fccf86 (pkiaas cert export 25ab765c7238b3d28d2bab03271f5fa8f2fccf86)
+```
+
+- **Which requests:** changes need a request that waits for approval with its CSR, ready to be signed (`statusDetail` is `readyToBeSigned` in `pkiaas request show --json`); others fail with `request_not_approvable`.
+- **Values OpenSSL won't take**, such as a common name longer than 64 characters, fail with `invalid_overrides`. Nothing is signed, and the request still waits for approval, so fix the value and approve it again.
+- **Validity needs a subscription** while the CA has a validity limit (`validityLimitDays` in `pkiaas request show --json`); without one, `--not-before` and `--not-after` fail with `subscription_required`.
+- **Repeating:** approving a request that is issued already never signs it again, so changes given then aren't applied, and the command says so.
+
+`pkiaas request create --approve` takes the same flags, to request and issue a certificate with changes in one command (see [Get the Certificate Now](requests.md#get-the-certificate-now)).
 
 ## Decline
 `pkiaas request decline <ID>` declines a request for good: it will never be issued, and its voucher, email confirmation link and SCEP challenge stop working. It asks you to confirm; in scripts, add `--yes`.
