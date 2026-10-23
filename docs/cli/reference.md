@@ -34,8 +34,8 @@ pkiaas
 ├── pkcs12
 │   └── create                 --cert=STRING --chain-file=STRING --force --key=STRING --key-passphrase-env=STRING --key-passphrase-file=STRING --legacy --no-passphrase --out=STRING --passphrase-env=STRING --passphrase-file=STRING
 ├── request
-│   ├── approve ID             --ca=STRING --chain --force --format=STRING --out=STRING
-│   ├── create                 --approve --ca=STRING --chain --csr=STRING --force --format=STRING --idempotency-key=STRING --out=STRING --template=STRING
+│   ├── approve ID             --ca=STRING --chain --force --format=STRING --not-after=STRING --not-before=STRING --out=STRING --san=STRING --subject=STRING
+│   ├── create                 --approve --ca=STRING --chain --csr=STRING --force --format=STRING --idempotency-key=STRING --not-after=STRING --not-before=STRING --out=STRING --san=STRING --subject=STRING --template=STRING
 │   ├── decline ID             --ca=STRING --yes
 │   ├── list                   --ca=STRING --limit=INT --order=STRING --search=STRING --sort=STRING
 │   └── show ID                --ca=STRING
@@ -960,7 +960,7 @@ Commands:
 Approve a request: the CA signs its CSR and issues the certificate.
 
 ```
-pkiaas request approve ID [--ca NAME|ID] [--out FILE|- [--chain] [--format pem|der] [--force]] [flags]
+pkiaas request approve ID [--subject DN] [--san NAME]... [--not-before TIME] [--not-after TIME] [--ca NAME|ID] [--out FILE|- [--chain] [--format pem|der] [--force]] [flags]
 ```
 
 Approve a request to a CA, by default the active CA, by its ID from `pkiaas request list`: the CA signs its CSR
@@ -968,13 +968,27 @@ as the request's template says, as the website's Sign button does without change
 certificate is issued (on a CA whose key is on an IoT HSM, that can take a few seconds). The result's serial is
 the certificate's: `pkiaas cert export SERIAL` outputs it. Check the request first with `pkiaas request show`.
 
+By default the certificate holds what the CSR asks for, as the template allows. `--subject`, `--san`, `--not-before`
+and `--not-after` change that, as the website's "Override requested attributes" and "Override validity time" do,
+for a request that is readyToBeSigned (statusDetail in `pkiaas request show`):
+  `--subject` DN     the subject in place of the CSR's, in RFC 4514 form ("CN=www.example.com,O=Example,C=US") or
+                   OpenSSL's ("/C=US/O=Example/CN=www.example.com"), as `pkiaas csr create` takes it; the
+                   template's subject attributes still win
+  `--san` NAME       the subject alternative names in place of the CSR's (repeatable; list them all): dns:NAME,
+                   ip:ADDRESS, email:ADDRESS or uri:URI, or a bare name whose kind is guessed
+  `--not-after` TIME when the certificate expires, in place of the template's validity (RFC 3339, e.g.
+                   2027-01-31T00:00:00Z); it is valid from now, or from `--not-before` TIME
+Without a subscription, while the CA has a validity limit (validityLimitDays), the validity can't be changed
+(subscription_required). Values OpenSSL won't take are refused (invalid_overrides), and nothing is signed.
+
 Only a request that waits for approval (pendingApproval) and has a CSR can be approved; otherwise the error is
-request_not_approvable (no CSR, pending email confirmation, pre-approved), request_declined, or
-request_processing while it is being signed. If the CA can't sign it (e.g. its IoT HSM doesn't answer), the error
-is signing_failed: the request waits for approval again, and the CA's log on the website says why.
+request_not_approvable (no CSR, pending email confirmation, pre-approved, or changes to a request that isn't
+readyToBeSigned), request_declined, or request_processing while it is being signed. If the CA can't sign it (e.g.
+its IoT HSM doesn't answer), the error is signing_failed: the request waits for approval again, and the CA's log
+on the website says why.
 
 Approving a request that is issued already changes nothing and succeeds, so the command is safe to run again,
-e.g. after a lost connection.
+e.g. after a lost connection; the certificate is never signed again, so changes given then aren't applied.
 
 With `--out` FILE, it also writes the issued certificate to the file (PEM, or DER with `--format` der; with
 `--chain`, followed by the certificates that issued it, up to the root), which is only replaced with `--force`; the
@@ -994,8 +1008,12 @@ Flags:
 | `--chain` | bool | with `--out`: add the CA's certificate and those that issued the CA, up to the root |
 | `--force` | bool | with `--out`: replace the file if it exists |
 | `--format` | string | with `--out`: pem or der (as OpenSSL's -outform). Default: `pem`. |
+| `--not-after` | string | the certificate expires at this time (RFC 3339) in place of the template's validity |
+| `--not-before` | string | the certificate is valid from this time (RFC 3339) in place of now; needs `--not-after` |
 | `-o`, `--out` | string | also write the issued certificate to this file; - for standard output, instead of the result |
+| `--san` | string, repeatable | issue the certificate with this subject alternative name in place of the CSR's (repeatable) |
 | `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+| `--subject` | string | issue the certificate with this subject (distinguished name) in place of the CSR's |
 
 Examples:
 
@@ -1003,6 +1021,8 @@ Examples:
 pkiaas request approve k3J9xQ2mP7vR1sT8wY4zA6bC0dE5fG
 pkiaas request approve k3J9xQ2mP7vR1sT8wY4zA6bC0dE5fG --out - > www.pem
 pkiaas request approve k3J9xQ2mP7vR1sT8wY4zA6bC0dE5fG --chain --out fullchain.pem --json
+pkiaas request approve k3J9xQ2mP7vR1sT8wY4zA6bC0dE5fG --san www.example.com --san example.com --not-after 2027-01-31T00:00:00Z --json
+pkiaas request approve k3J9xQ2mP7vR1sT8wY4zA6bC0dE5fG --subject "CN=www.example.com,O=Example,C=US" --json
 pkiaas request approve k3J9xQ2mP7vR1sT8wY4zA6bC0dE5fG --ca a1B2c3D4e5 --json
 ```
 
@@ -1023,7 +1043,7 @@ With `--json`, the result is an object with these fields:
 
 Side effects:
 
-- the CA signs the request's CSR and issues the certificate on the server; for a request issued already, nothing
+- the CA signs the request's CSR and issues the certificate on the server, with the `--subject`, `--san` and validity changes if given; for a request issued already, nothing
 - with `--out` FILE, writes the certificate to the file; with `--out` -, writes it to standard output and prints no result
 
 ## pkiaas request create
@@ -1031,7 +1051,7 @@ Side effects:
 Request a certificate with a CSR; it waits for approval, or is issued with --approve.
 
 ```
-pkiaas request create --csr FILE --template NAME|ID [--approve [--out FILE|- [--chain] [--format pem|der] [--force]]] [--ca NAME|ID] [--idempotency-key KEY] [flags]
+pkiaas request create --csr FILE --template NAME|ID [--approve [--subject DN] [--san NAME]... [--not-before TIME] [--not-after TIME] [--out FILE|- [--chain] [--format pem|der] [--force]]] [--ca NAME|ID] [--idempotency-key KEY] [flags]
 ```
 
 Send a CSR to a CA, by default the active CA, as the website's "Request a Certificate" does. The request waits
@@ -1040,7 +1060,9 @@ approving it issues the certificate. No email is sent.
 
 With `--approve`, the command approves the request too, as `pkiaas request approve` does, and ends once the
 certificate is issued: serial is the certificate's. If approving fails, the request stays, waiting for approval:
-the error says its ID. To get the certificate in the same command, add `--out` (see below).
+the error says its ID. To get the certificate in the same command, add `--out` (see below). `--subject`, `--san`,
+`--not-before` and `--not-after` change what it is issued with, as for `pkiaas request approve` (see its help); they
+need `--approve`.
 
 `--csr` is a PEM or DER file (e.g. from `pkiaas csr create`), or - for standard input. Only the CSR is sent, never
 anything else in the file. The server checks its signature (error invalid_csr). `--template` is the name of one of
@@ -1076,8 +1098,12 @@ Flags:
 | `--force` | bool | with `--out`: replace the file if it exists |
 | `--format` | string | with `--out`: pem or der (as OpenSSL's -outform). Default: `pem`. |
 | `--idempotency-key` | string | repeat an earlier run with this key instead of making a second request (default: a new random key) |
+| `--not-after` | string | the certificate expires at this time (RFC 3339) in place of the template's validity |
+| `--not-before` | string | the certificate is valid from this time (RFC 3339) in place of now; needs `--not-after` |
 | `-o`, `--out` | string | also write the issued certificate to this file; - for standard output, instead of the result |
+| `--san` | string, repeatable | issue the certificate with this subject alternative name in place of the CSR's (repeatable) |
 | `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+| `--subject` | string | issue the certificate with this subject (distinguished name) in place of the CSR's |
 | `--template` | string | the name or ID of one of the CA's enabled templates (pkiaas template list) |
 
 Examples:
@@ -1087,6 +1113,7 @@ pkiaas request create --csr www.csr --template "Web Server"
 pkiaas request create --csr www.csr --template "Web Server" --approve --json
 pkiaas request create --csr www.csr --template "Web Server" --approve --out - > www.pem
 pkiaas request create --csr www.csr --template "Web Server" --approve --chain --out fullchain.pem --json
+pkiaas request create --csr www.csr --template "Web Server" --approve --not-after 2027-01-31T00:00:00Z --json
 pkiaas request create --csr - --template "Web Server" --json < www.csr
 pkiaas request create --csr www.csr --template f5IK8ghmT0 --ca a1B2c3D4e5 --idempotency-key 8e03978e-40d5-43e8-bc93-6894a57f9324 --json
 ```
@@ -1111,7 +1138,7 @@ With `--json`, the result is an object with these fields:
 Side effects:
 
 - creates a certificate request on the server, which waits for approval; with the `--idempotency-key` of an earlier run (within 24 hours), nothing new
-- with `--approve`, the CA signs the CSR and issues the certificate
+- with `--approve`, the CA signs the CSR and issues the certificate, with the `--subject`, `--san` and validity changes if given
 - with `--approve` `--out` FILE, writes the certificate to the file; with `--out` -, writes it to standard output and prints no result
 
 ## pkiaas request decline

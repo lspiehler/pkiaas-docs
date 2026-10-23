@@ -52,7 +52,7 @@ Saved the certificate with its chain (2 certificates) to fullchain.pem
 - **Standard output:** `--out -` writes only the certificate to standard output, for piping into another command.
 - **If approving fails:** the request stays, waiting for approval, and the error gives its ID. Fix the cause and approve it with `pkiaas request approve <ID>` (see [Approve Requests](pending-requests.md#approve)).
 
-The certificate is issued as the template says, as **Sign** on the website does without changes.
+The certificate is issued as the template says, as **Sign** on the website does without changes. To change its subject, subject alternative names or validity, add `--subject`, `--san`, `--not-before` or `--not-after`, as for [`request approve`](pending-requests.md#change-the-certificate-when-approving).
 
 ## Repeat a Request Safely
 Each run of `request create` makes a new request. To make it safe to run again, for example when a script or an AI agent can't tell whether it worked because the connection dropped, give it an idempotency key: any text, such as a UUID, that you keep with the request.
