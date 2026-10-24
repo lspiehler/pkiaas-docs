@@ -19,7 +19,7 @@ pkiaas
 │   └── show                   --ca=STRING
 ├── cert
 │   ├── export SERIAL          --ca=STRING --chain --csr --force --format=STRING --out=STRING
-│   ├── list                   --ca=STRING --limit=INT --order=STRING --search=STRING --sort=STRING
+│   ├── list                   --ca=STRING --expires-within=INT --key-type=STRING --limit=INT --match=STRING --order=STRING --reason=STRING --search=STRING --sort=STRING --status=STRING --template=STRING
 │   ├── revoke SERIAL          --ca=STRING --reason=STRING --yes
 │   ├── show SERIAL            --ca=STRING --text
 │   └── unrevoke SERIAL        --ca=STRING
@@ -378,16 +378,33 @@ Side effects:
 List the certificates a CA issued, the newest first.
 
 ```
-pkiaas cert list [--ca NAME|ID] [--search TEXT] [--sort FIELD [--order asc|desc]] [--limit N] [flags]
+pkiaas cert list [--ca NAME|ID] [--search TEXT] [--match FIELD:VALUE]... [--status S] [--expires-within DAYS] [--template NAME|ID] [--key-type T] [--reason R] [--sort FIELD [--order asc|desc]] [--limit N] [flags]
 ```
 
 List the certificates a CA issued, by default the active CA's: every certificate it signed, also expired and
 revoked ones and the CAs it signed, the newest first. The serial is what commands take to name a certificate.
 
 It lists the first `--limit` certificates (default 50, at most 1000); total says how many match, so when it is
-more, narrow the list with `--search` or sort it to bring the ones you need first. `--search` keeps the certificates
-whose common name contains the text, in any case. `--sort` takes name, revocationReason, template, validFrom,
-validTo, keyType or keySize, in `--order` asc (the default with `--sort`) or desc. Without `--sort`: validFrom, desc.
+more, narrow the list with the filters or sort it to bring the ones you need first. `--sort` takes name,
+revocationReason, template, validFrom, validTo, keyType or keySize, in `--order` asc (the default with `--sort`) or
+desc. Without `--sort`: validFrom, desc.
+
+The filters are checked on the server, and a certificate is listed when all that are given hold:
+  `--search` TEXT            the text is in the common name, a subject value or a SAN value, in any case; when it
+                           is hex (at least 8 digits; colons and spaces between the bytes are ignored), also in
+                           the serial or the SHA-1 thumbprint
+  `--match` FIELD:VALUE      one subject attribute or SAN type has this whole value, in any case; * matches any
+                           text (dns:*.example.com also matches the wildcard name *.example.com itself). FIELD is
+                           a subject attribute by its OpenSSL short or long name (CN, C, ST, L, O, OU, postalCode,
+                           street, emailAddress, serialNumber, businessCategory, jurisdictionC, jurisdictionST,
+                           jurisdictionL; e.g. organizationName) or a SAN type (DNS, IP, URI, email, RID,
+                           dirName, otherName). Repeat it for more, up to 10; all have to match
+  `--status` S,...           valid, expired or revoked
+  `--expires-within` DAYS    expires within this many days (1-3650) and hasn't expired yet; revoked ones too, so
+                           add `--status` valid for the certificates to renew
+  `--template` NAME\|ID       issued with this template (its name or ID from `pkiaas template list`, enabled or not)
+  `--key-type` TYPE,...      the key's keyType as the list shows it, e.g. rsaEncryption, id-ecPublicKey, ML-DSA-65
+  `--reason` R,...           revoked with one of these reasons, e.g. keyCompromise, superseded, certificateHold
 
 This command calls the PKIaaS server and needs a login.
 
@@ -396,18 +413,28 @@ Flags:
 | Flag | Type | Description |
 |---|---|---|
 | `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--expires-within` | int | only certificates that expire within this many days and haven't expired. Default: `0`. |
+| `--key-type` | string, repeatable | only certificates with one of these key types, e.g. rsaEncryption, id-ecPublicKey |
 | `--limit` | int | how many certificates to list (1-1000). Default: `50`. |
+| `--match` | string, repeatable | only certificates whose subject attribute or SAN FIELD has this VALUE, * for any text (repeatable) |
 | `--order` | string | asc or desc (default: asc with `--sort`) |
-| `--search` | string | only certificates whose common name contains this text |
+| `--reason` | string, repeatable | only certificates revoked with one of these reasons, e.g. keyCompromise |
+| `--search` | string | only certificates with this text in the common name, a subject or SAN value, or (hex) the serial or thumbprint |
 | `--server` | string | the PKIaaS server (default: the last one you logged in to) |
 | `--sort` | string | what to sort by: name, revocationReason, template, validFrom, validTo, keyType, keySize (default: validFrom, desc) |
+| `--status` | string, repeatable | only certificates with one of these statuses: valid, expired, revoked |
+| `--template` | string | only certificates issued with this template, by name or ID |
 
 Examples:
 
 ```sh
 pkiaas cert list
 pkiaas cert list --search example.com --json
-pkiaas cert list --sort validTo --limit 20 --json
+pkiaas cert list --match dns:*.example.com --match o:Contoso --json
+pkiaas cert list --status valid --expires-within 30 --sort validTo --json
+pkiaas cert list --search 25:ab:76:5c:72:38:b3:d2 --json
+pkiaas cert list --status revoked --reason keyCompromise,cACompromise --json
+pkiaas cert list --template "Web Server" --key-type rsaEncryption --limit 200 --json
 pkiaas cert list --sort name --order desc --ca a1B2c3D4e5 --json
 ```
 
