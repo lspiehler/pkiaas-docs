@@ -36,6 +36,8 @@ If your workflow involves receiving certificate requests from users, the "Public
 ### Submit CSR
 The "Submit CSR" option provides an input field to paste the contents of a certificate signing request. To review and approve these requests, navigate to **X509 Certificates -> Pending Requests**. After the request is approved, the submitted CSR will be signed and the certificate will appear in the **X509 Certificates -> Issued Certificates** page.
 
+The same form opens from the "Request a Certificate" button at the top of the **X509 Certificates -> Pending Requests** and **X509 Certificates -> Issued Certificates** pages. Choose the template from the "Certificate Template" list, paste the CSR and click "Submit."
+
 ### Create Pre-Approved Request
 The "Create Pre-Approved Request" feature enables a PKI administrator to pre-configure all the settings typically chosen during the approval process for a pending certificate request. The administrator can either redeem the certificate immediately or send an email to the user, inviting them to claim it. In the certificate claim workflow, the user can set a password to protect the PKCS#12 file, and a 2048-bit RSA private key will be generated in the browser. Alternatively, a CSR can be submitted; however, the subject attributes and SANs specified in it will be overridden by the pre-approved attributes in the signed certificate.
 
