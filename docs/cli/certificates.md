@@ -1,6 +1,6 @@
 ---
 title: "Certificates in the pkiaas CLI"
-description: "Find the certificates your CA issued with the pkiaas CLI, show their details, export them with their chain or CSR as PEM or DER, and revoke them or put them on hold."
+description: "Find the certificates your CA issued with the pkiaas CLI by name, subject, SAN, serial, status or expiry, show their details, export them with their chain or CSR as PEM or DER, and revoke them or put them on hold."
 ---
 ## Find Your Certificates
 `pkiaas cert list` lists the certificates your CA issued, newest first, also expired and revoked ones:
@@ -13,9 +13,25 @@ SERIAL                                    NAME             STATUS               
 2 certificates
 ```
 
-- **Search** by common name with `--search www.example.com`, in any case.
+- **Search** with `--search TEXT`. It finds the text, in any case, in the common name, in any subject value (organization, organizational unit, email address and so on) or in any subject alternative name. A serial or thumbprint in hex finds that certificate too, with or without colons or spaces between the bytes (at least 8 digits).
+- **Filter** to narrow the list. A certificate is listed when every filter you give holds:
+    - `--match FIELD:VALUE`: one subject attribute or SAN type has exactly this value, in any case. `*` matches any text. FIELD is a subject attribute by its OpenSSL name (`CN`, `O`, `OU`, `C`, `ST`, `L`, `emailAddress`, `serialNumber`…, or long names such as `organizationName`) or a SAN type (`DNS`, `IP`, `URI`, `email`, `RID`, `dirName`, `otherName`). Repeat it for more, up to 10.
+    - `--status valid,expired,revoked`: one or more statuses.
+    - `--expires-within DAYS`: expires within this many days and hasn't expired yet. Revoked certificates are included, so add `--status valid` to find the certificates to renew.
+    - `--template NAME|ID`: issued with this template, enabled or not.
+    - `--key-type TYPE,...`: the key algorithm as the list's `keyType` shows it, e.g. `rsaEncryption`, `id-ecPublicKey`, `ML-DSA-65`.
+    - `--reason R,...`: revoked with one of these reasons, e.g. `keyCompromise`, `superseded`, `certificateHold`.
 - **Sort** with `--sort` (name, revocationReason, template, validFrom, validTo, keyType or keySize) and `--order asc` or `desc`, e.g. `--sort validTo` for the next to expire.
 - **How many:** it lists 50 by default; `--limit` shows up to 1000. When there are more, it says how many and suggests narrowing the list.
+
+```sh
+pkiaas cert list --match 'dns:*.example.com' --match o:Contoso
+pkiaas cert list --status valid --expires-within 30 --sort validTo
+pkiaas cert list --search 25:ab:76:5c:72:38:b3:d2
+pkiaas cert list --status revoked --reason keyCompromise --json
+```
+
+`--match 'dns:*.example.com'` finds names under example.com and the wildcard name `*.example.com` itself; quote it so the shell doesn't expand the `*`.
 
 The serial names the certificate in its CA. `pkiaas cert show <SERIAL>` shows its details: its status (valid, expired, or revoked with the reason and date), template, validity, key, signature algorithm, thumbprint, and whether the CSR it was issued from is stored. Add `--text` to see every field and extension as `openssl x509 -text` shows them, such as its subject alternative names. Serials can be given with or without colons, in any case.
 
