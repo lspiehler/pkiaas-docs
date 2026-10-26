@@ -227,6 +227,22 @@ allows; declining is final.
 - `pkiaas request decline ID --yes --json` declines it for good. Declining a declined request succeeds; an issued
   one fails with `request_issued` (revoke its certificate instead, if the user wants that).
 
+## Troubleshooting with the logs
+
+When something failed on the platform rather than in the CLI, e.g. a device's SCEP enrollment, a CEP/CES or ACME
+request, or `signing_failed`, the CA's log says why. `pkiaas log list --json` lists the log lines of all the
+user's CAs, the newest first: each has its `ca` (`id` and `name`), `level`, `time` (UTC), the client's `ip` and
+the `message`. It doesn't use the active CA or `PKIAAS_CA`; `--ca NAME` (or `ID`, repeatable) keeps the lines of
+those CAs. `--level warning` keeps warnings and the more severe lines (error, critical, alert, emergency). To find
+why a request failed, e.g.:
+
+```sh
+pkiaas log list --ca "Example Issuing CA" --level warning --limit 200 --json
+```
+
+and look for the lines near the time it failed, from the client's IP address. Lines are kept for a while (by
+default 30 days).
+
 ## Recipes
 
 Choose a key type with `pkiaas key types --json`. The default, `rsa-2048`, works everywhere. Use `ec-p256` for

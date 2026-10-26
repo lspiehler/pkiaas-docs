@@ -29,6 +29,8 @@ pkiaas
 ├── key
 │   ├── create                 --force --format=STRING --no-passphrase --out=STRING --passphrase-env=STRING --passphrase-file=STRING --type=STRING
 │   └── types
+├── log
+│   └── list                   --ca=STRING --level=STRING --limit=INT --order=STRING --sort=STRING
 ├── login                      --device
 ├── logout                     --all
 ├── pkcs12
@@ -792,6 +794,74 @@ With `--json`, the result is an array of objects with these fields:
 | `name` | string | the name to give to `--type` |
 | `description` | string | what the key type is |
 | `default` | boolean | whether it is the default type |
+
+## pkiaas log
+
+List what the platform logged for your CAs, for troubleshooting.
+
+```
+pkiaas log [flags]
+```
+
+Commands:
+
+- [`pkiaas log list`](reference.md#pkiaas-log-list)
+
+## pkiaas log list
+
+List the log lines of your CAs, the newest first.
+
+```
+pkiaas log list [--ca NAME|ID]... [--level LEVEL] [--sort time|ca [--order asc|desc]] [--limit N] [flags]
+```
+
+List what the platform logged for your CAs, as the website's Logs page does: SCEP, CEP/CES and ACME requests,
+certificate approvals, revocations and the errors they met, the newest first. Use it to find out why something
+failed, e.g. a device's enrollment or a signing. It changes nothing.
+
+By default it lists the lines of all the CAs your account has, its own and those it was invited to: unlike the
+commands that work in one CA, it doesn't use the active CA or `PKIAAS_CA`. `--ca` NAME\|ID (any case for a name)
+keeps the lines of that CA; repeat it for more, up to 20. Lines are deleted after a while (by default 30 days).
+
+`--level` LEVEL keeps the lines of this level and the more severe ones: emergency, alert, critical, error,
+warning, notice, info or debug (the least severe), e.g. `--level` warning for warnings and errors.
+
+It lists the first `--limit` lines (default 50, at most 1000); total says how many match, so when it is more,
+narrow the list with `--ca` or `--level`. `--sort` takes time or ca (the CA's name, the newest first within a CA), in
+`--order` asc (the default with `--sort` ca) or desc (the default with `--sort` time). Without `--sort`: time, desc.
+
+Each line has its CA (id and name), level, time (UTC), the IP address of the client whose request it logs
+(empty for the platform's own work) and the message.
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--ca` | string, repeatable | only the lines of this CA, by its name (any case) or ID from `pkiaas ca list`; repeatable, up to 20 (default: all your CAs, not the active CA) |
+| `--level` | string | only lines of this level or more severe: emergency, alert, critical, error, warning, notice, info, debug |
+| `--limit` | int | how many lines to list (1-1000). Default: `50`. |
+| `--order` | string | asc or desc (default: desc with `--sort` time, asc with `--sort` ca) |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+| `--sort` | string | what to sort by: time, ca (default: time, desc) |
+
+Examples:
+
+```sh
+pkiaas log list
+pkiaas log list --ca "Example Root CA" --level warning
+pkiaas log list --ca a1B2c3D4e5 --ca f6G7h8I9j0 --level error --json
+pkiaas log list --sort ca --json
+pkiaas log list --json --limit 200
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `total` | integer | how many lines match; more than are listed when it exceeds `--limit` |
+| `logs` | object[] | the first `--limit` matching lines, in the `--sort` and `--order` order |
 
 ## pkiaas login
 
