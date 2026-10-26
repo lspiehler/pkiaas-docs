@@ -13,7 +13,8 @@ Every command with its arguments and flags, apart from the global flags below an
 ```text
 pkiaas
 ├── ca
-│   ├── export                 --ca=STRING --chain --force --format=STRING --out=STRING
+│   ├── create                 --csr-only --days=INT --extended-key-usage=STRING --idempotency-key=STRING --key-type=STRING --key-usage=STRING --name=STRING --path-length=INT --set --signature-algorithm=STRING --subject=STRING --yes
+│   ├── export                 --ca=STRING --chain --csr --force --format=STRING --out=STRING
 │   ├── list
 │   ├── set NAME|ID
 │   └── show                   --ca=STRING
@@ -66,7 +67,7 @@ Exit codes and error codes are listed in the [agent guide](agents.md#exit-codes)
 
 ## pkiaas ca
 
-List your certificate authorities, show one, export its certificate, set the active one.
+Create certificate authorities, list them, show one, export its certificate or CSR, set the active one.
 
 ```
 pkiaas ca [flags]
@@ -74,17 +75,129 @@ pkiaas ca [flags]
 
 Commands:
 
+- [`pkiaas ca create`](reference.md#pkiaas-ca-create)
 - [`pkiaas ca export`](reference.md#pkiaas-ca-export)
 - [`pkiaas ca list`](reference.md#pkiaas-ca-list)
 - [`pkiaas ca set`](reference.md#pkiaas-ca-set)
 - [`pkiaas ca show`](reference.md#pkiaas-ca-show)
 
-## pkiaas ca export
+## pkiaas ca create
 
-Export a CA's certificate, or its chain, as PEM or DER.
+Create a CA, self-signed or (with --csr-only) waiting for another CA to sign it.
 
 ```
-pkiaas ca export [--out FILE] [--format pem|der] [--chain] [--ca NAME|ID] [flags]
+pkiaas ca create --name NAME [--subject DN] [--key-type TYPE] [--signature-algorithm sha256|sha384|sha512] [--days N] [--path-length N] [--key-usage USAGE]... [--extended-key-usage USAGE]... [--csr-only] [--set] [--idempotency-key KEY] [--yes] [flags]
+```
+
+Create a certificate authority owned by you, as the website's "Create a Managed CA" form does. The platform
+makes the CA's key, which never leaves it, and self-signs the CA's certificate, so the new CA is a root CA. It
+also makes the CA's OCSP responder certificate and gives it a copy of the "Web Server" template, so it can issue
+certificates at once. It takes a few seconds (SLH-DSA keys up to about 5). The result is the new CA, as `pkiaas
+ca show` describes it; commands take its id (or name) with `--ca`. It doesn't become the active CA unless `--set` is
+given, which sets it as `pkiaas ca set` does.
+
+`--name` is the CA's name: its certificate's common name, at most 64 characters. `--subject` gives the certificate's
+other subject fields in RFC 4514 form ("O=Example,OU=IT,C=US") or OpenSSL's ("/C=US/O=Example/OU=IT"): only C,
+ST, L, O and OU, each at most once. `--key-type` is the CA's key type: the flag lists those a CA can have, which
+`pkiaas key types` describes. `--signature-algorithm` is ignored for ML-DSA and SLH-DSA keys, which have their own.
+sha1 is for testing only: SHA-1 is broken for collisions, and OpenSSL 3 (at its default security level) and
+Windows reject SHA-1 certificate chains. The command prints a warning on standard error and asks for confirmation
+on the terminal; without one, it needs `--yes`. Give `--yes` only when the person asked for SHA-1.
+`--days` is how long the certificate is valid (1 to 36500). `--path-length` limits how many CAs may follow this one in
+a chain (0 to 4; 0: it can only issue end-entity certificates); without it there is no limit.
+
+`--key-usage` and `--extended-key-usage` (repeatable, or comma-separated) add to the certificate's key usages, which
+always include digitalSignature, keyCertSign and cRLSign. A CA usually has no extended key usages: those it has
+limit every certificate it issues, and Windows and some other clients enforce that.
+
+With `--csr-only`, the CA isn't signed: it waits for another CA to sign its CSR, which `pkiaas ca export --csr`
+exports, and for the signed certificate to be imported on the website. Until then it can't issue certificates.
+
+Each run is a new CA, unless it has the `--idempotency-key` of an earlier run (any text, e.g. a UUID) and the same
+flags: within 24 hours that gives the earlier result instead of a second CA. Without `--idempotency-key`, the CLI
+makes a key and reports it (idempotencyKey), and uses it when it retries by itself. A key used for different flags
+is refused (error idempotency_key_reused).
+
+You can create at most 20 CAs an hour; beyond that the server refuses with http_429 and says when to try again.
+If a step fails on the server, nothing is kept and the command fails with ca_creation_failed, naming the step.
+Deleting a CA isn't in pkiaas yet: delete it on the website (Edit CA, then Delete).
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--csr-only` | bool | leave the CA unsigned, for another CA to sign its CSR (`pkiaas ca export --csr`) |
+| `--days` | int | how many days the CA's certificate is valid (1-36500). Default: `3650`. |
+| `--extended-key-usage` | string, repeatable | an extended key usage (repeatable): serverAuth, clientAuth, codeSigning, emailProtection, timeStamping, OCSPSigning, msCodeInd, msCodeCom, msCTLSign, msEFS, ipsecIKE, ipsecEndSystem, ipsecTunnel, ipsecUser |
+| `--idempotency-key` | string | repeat an earlier run with this key instead of creating a second CA (default: a new random key) |
+| `--key-type` | string | the CA's key, made on the platform: rsa-2048, rsa-4096, ec-p256, ec-p384, ec-p521, ml-dsa-44, ml-dsa-65, ml-dsa-87, slh-dsa-sha2-128s, slh-dsa-sha2-128f, slh-dsa-sha2-192s, slh-dsa-sha2-192f, slh-dsa-sha2-256s, slh-dsa-sha2-256f, slh-dsa-shake-128s, slh-dsa-shake-128f, slh-dsa-shake-192s, slh-dsa-shake-192f, slh-dsa-shake-256s, slh-dsa-shake-256f. Default: `rsa-2048`. |
+| `--key-usage` | string, repeatable | a key usage to add (repeatable): digitalSignature, keyCertSign, cRLSign, keyEncipherment, nonRepudiation, dataEncipherment, keyAgreement, encipherOnly, decipherOnly |
+| `--name` | string | the CA's name: its certificate's common name (at most 64 characters) |
+| `--path-length` | int | how many CAs may follow this one in a chain, 0-4 (default: no limit) |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+| `--set` | bool | also make the new CA the active CA, as `pkiaas ca set` does |
+| `--signature-algorithm` | string | the hash the CA signs with: sha1, sha256, sha384 or sha512 (ignored for ML-DSA and SLH-DSA; sha1 for testing only). Default: `sha256`. |
+| `--subject` | string | the certificate's other subject fields, C, ST, L, O and OU, e.g. "O=Example,OU=IT,C=US" |
+| `--yes` | bool | create a SHA-1 CA without asking for confirmation |
+
+Examples:
+
+```sh
+pkiaas ca create --name "Example Root CA" --subject "O=Example,C=US"
+pkiaas ca create --name "Example Root CA" --key-type ec-p384 --signature-algorithm sha384 --days 7300 --set --json
+pkiaas ca create --name "Example Issuing CA" --subject "O=Example,OU=IT,C=US" --path-length 0 --csr-only --json
+pkiaas ca create --name "Test CA $RUN" --key-type ec-p256 --days 7 --idempotency-key "$KEY" --json
+pkiaas ca create --name "SHA-1 test CA" --signature-algorithm sha1 --days 7 --yes
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `server` | string | the server |
+| `id` | string or null | the CA's ID; null if the account has no CAs |
+| `name` | string or null | the CA's name (its certificate's common name) |
+| `source` | string | how the CA was chosen: flag (`--ca`), environment (`PKIAAS_CA`), or as the active CA: set (with `pkiaas ca set`, or at login), website (the CA last used on the website), first (the first CA by name); none if the account has no CAs. For `pkiaas ca create`: created, or set with `--set` |
+| `signed` | boolean or null | false while the CA waits for its signed certificate to be imported |
+| `hsm` | boolean or null | whether the CA's private key is on the user's HSM rather than on the platform |
+| `keyType` | string or null | the algorithm of the CA's key, as OpenSSL names it, e.g. rsaEncryption, id-ecPublicKey, ML-DSA-65 |
+| `keySize` | integer or null | the key size in bits (the curve size for EC keys); null where it doesn't apply, e.g. ML-DSA |
+| `signatureAlgorithm` | string or null | the algorithm of the CA certificate's signature, as OpenSSL names it |
+| `serial` | string or null | the CA certificate's serial number (hex); null if unsigned |
+| `thumbprint` | string or null | the CA certificate's SHA-1 fingerprint (hex), as Windows shows it; null if unsigned |
+| `validFrom` | string or null | when the CA's certificate became valid (ISO 8601, UTC); null if unsigned |
+| `validTo` | string or null | when the CA's certificate expires (ISO 8601, UTC); null if unsigned |
+| `activeCertificates` | integer or null | how many certificates the CA issued that have neither expired nor been revoked |
+| `policyOid` | string or null | the certificate policy OID the CA puts in the certificates it issues; null if none |
+| `cep` | boolean or null | whether Windows certificate enrollment (CEP/CES) is on |
+| `urls` | object or null | the CA's public services; null until the CA is signed |
+| `urls.certificate` | string | the CA's certificate (DER), as the certificates it issues name it (AIA caIssuers) |
+| `urls.chain` | string | the CA's certificate and those that issued it (PKCS#7, DER) |
+| `urls.crl` | string | the CRL (CRL distribution point) |
+| `urls.ocsp` | string | the OCSP responder (AIA OCSP) |
+| `urls.timestamp` | string | the RFC 3161 time-stamping service |
+| `urls.cps` | string | the CA's public page: its certification practice statement and downloads |
+| `urls.cep` | string | Windows certificate enrollment (CEP/CES) with a user name and password; works when cep is true |
+| `urls.cepCertificate` | string | Windows certificate enrollment (CEP/CES) with a client certificate; works when cep is true |
+| `idempotencyKey` | string | the Idempotency-Key it was sent with: the same command with `--idempotency-key` and this key, within 24 hours, gives this result again instead of a second CA |
+
+Side effects:
+
+- creates a CA owned by the user's account on the server; with the `--idempotency-key` of an earlier run (within 24 hours), nothing new
+- the platform makes the CA's private key and keeps it; it never leaves the platform
+- the platform also makes the CA's OCSP responder certificate and copies the "Web Server" template to the CA
+- counts toward the limit of 20 CAs per user an hour
+- with `--signature-algorithm` sha1 (RSA and EC keys), prints a warning on standard error and asks for confirmation on the terminal (`--yes` skips the question)
+- with `--set`, keeps the new CA as the active one in the CLI's config.json, for this server
+
+## pkiaas ca export
+
+Export a CA's certificate, its chain, or the CSR of an unsigned CA, as PEM or DER.
+
+```
+pkiaas ca export [--chain | --csr] [--format pem|der] [--out FILE] [--ca NAME|ID] [flags]
 ```
 
 Export the certificate of a CA, by default the active CA. The chain (`--chain`) is the CA's certificate followed
@@ -92,7 +205,10 @@ by the certificates that issued it, up to the root; for a root CA that is its ce
 server needs beside a certificate the CA issued, and what `pkiaas pkcs12 create --chain-file` adds to a PKCS#12 file.
 The certificate of a root CA is what clients add to their trust store.
 
-A CA waiting for its signed certificate fails with ca_not_signed.
+A CA waiting for its signed certificate fails with ca_not_signed. With `--csr`, it exports such a CA's
+certificate signing request instead (e.g. of a CA made with `pkiaas ca create --csr-only`), for another CA to
+sign; the signed certificate is then imported on the website. A signed CA has no CSR to export (error
+conflict). An `--out` file with a CSR is readable by its owner only, as for `pkiaas cert export --csr`.
 
 Without `--out` (or with `--out` -), the output goes to standard output, as OpenSSL writes it, to read or to pipe to
 another command; there is no result then, so `--json` needs `--out`. With `--out` FILE, it is written to the file,
@@ -116,6 +232,7 @@ Flags:
 |---|---|---|
 | `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
 | `--chain` | bool | export the CA's certificate followed by the certificates that issued it |
+| `--csr` | bool | export the CSR of a CA that waits for its signed certificate instead |
 | `--force` | bool | replace the `--out` file if it exists |
 | `--format` | string | pem or der (as OpenSSL's -outform). Default: `pem`. |
 | `-o`, `--out` | string | the file to write (default: standard output, as with -) |
@@ -128,6 +245,7 @@ pkiaas ca export
 pkiaas ca export --out ca.pem
 pkiaas ca export --chain --out chain.pem --json
 pkiaas ca export --ca a1B2c3D4e5 --format der --out root.cer
+pkiaas ca export --csr --ca a1B2c3D4e5 --out ca.csr --json
 ```
 
 With `--json`, the result is an object with these fields:
@@ -138,12 +256,12 @@ With `--json`, the result is an object with these fields:
 | `name` | string or null | the CA's name |
 | `file` | string | the file written (`--out`) |
 | `format` | string | pem or der (`--format`) |
-| `content` | string | what the file holds: certificate, or chain (`--chain`: the CA's certificate followed by those that issued it) |
-| `certificates` | integer | how many certificates the file holds |
+| `content` | string | what the file holds: certificate, chain (`--chain`: the CA's certificate followed by those that issued it) or csr (`--csr`) |
+| `certificates` | integer | how many certificates the file holds; 0 for a CSR |
 
 Side effects:
 
-- with `--out`, writes the file (certificates are public, so it is readable by everyone); otherwise writes the certificate to standard output and no result
+- with `--out`, writes the file (readable by everyone for certificates, which are public; by its owner only for a CSR); otherwise writes to standard output and prints no result
 
 ## pkiaas ca list
 
@@ -265,7 +383,7 @@ With `--json`, the result is an object with these fields:
 | `server` | string | the server |
 | `id` | string or null | the CA's ID; null if the account has no CAs |
 | `name` | string or null | the CA's name (its certificate's common name) |
-| `source` | string | how the CA was chosen: flag (`--ca`), environment (`PKIAAS_CA`), or as the active CA: set (with `pkiaas ca set`, or at login), website (the CA last used on the website), first (the first CA by name); none if the account has no CAs |
+| `source` | string | how the CA was chosen: flag (`--ca`), environment (`PKIAAS_CA`), or as the active CA: set (with `pkiaas ca set`, or at login), website (the CA last used on the website), first (the first CA by name); none if the account has no CAs. For `pkiaas ca create`: created, or set with `--set` |
 | `signed` | boolean or null | false while the CA waits for its signed certificate to be imported |
 | `hsm` | boolean or null | whether the CA's private key is on the user's HSM rather than on the platform |
 | `keyType` | string or null | the algorithm of the CA's key, as OpenSSL names it, e.g. rsaEncryption, id-ecPublicKey, ML-DSA-65 |

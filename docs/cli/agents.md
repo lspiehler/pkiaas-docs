@@ -91,6 +91,18 @@ those that issued it. The chain is what `pkiaas pkcs12 create --chain-file` and 
 certificate) need; a root CA's certificate is what clients add to their trust store. A CA that isn't signed yet
 fails with `ca_not_signed`. (`ca cert`, its name in 0.1.0, still works but is deprecated.)
 
+`pkiaas ca create --name NAME --json` creates a CA owned by the user: the platform makes and keeps its key, self-signs
+its certificate, and gives it an OCSP certificate and a "Web Server" template, so it can issue certificates at once.
+The result is the new CA as `ca show` describes it, with its `id`. Create a CA only when the user asks for one, or
+for a test the user wants; it doesn't become the active CA unless you add `--set`. `--subject`, `--key-type`,
+`--days`, `--path-length` and the key usages set what its certificate holds (see `pkiaas help --json ca create`).
+With `--csr-only`, the CA waits for another CA to sign it: `pkiaas ca export --csr --ca ID --out ca.csr --json`
+exports its CSR, and the user imports the signed certificate on the website. A user can create 20 CAs an hour;
+beyond that it fails with `http_429` and says how long to wait. When a step fails on the server, it fails with
+`ca_creation_failed` and nothing is kept. `--signature-algorithm sha1` makes a CA for testing only (OpenSSL 3 and
+Windows reject SHA-1 chains) and needs confirmation: pass `--yes` only when the person asked for SHA-1. As with requests, pass `--idempotency-key KEY` and keep the key (see
+"Requesting certificates").
+
 ## Exporting
 
 `ca export` and `cert export` work the same way, as `openssl x509` does:
@@ -162,8 +174,8 @@ reason, and only then run the command with `--yes`. Without `--yes` and without 
 - Both need a subscription, the user's or the CA owner's; without one they fail with
   `subscription_required`. Tell the user rather than retrying.
 
-Requests that are safe to repeat (reading, revoking, unrevoking, and requesting a certificate with its Idempotency-Key) are tried up to 3
-times in all when the connection fails or the server answers with a 5xx or 429; a notice goes to standard error. Only run a command again yourself after it has
+Requests that are safe to repeat (reading, revoking, unrevoking, and requesting a certificate or creating a CA with its
+Idempotency-Key) are tried up to 3 times in all when the connection fails or the server answers with a 5xx or 429; a notice goes to standard error. Only run a command again yourself after it has
 failed. When the server asks to wait longer than 10 seconds, the command fails at once and its message says how long
 to wait before running it again.
 
@@ -297,6 +309,19 @@ pkiaas cert export SERIAL --chain | pkiaas pkcs12 create --key server.key --key-
 
 Add `--legacy` only for systems older than Windows 10 1709, Java 12 or OpenSSL 1.1.1.
 
+Create a disposable test CA, e.g. to try out commands without touching the user's CAs (with the user's
+agreement: it counts toward their 20 CAs an hour). Make a key for the run (e.g. a UUID) and keep it with your
+notes, so that running the command again returns the same CA instead of a second one:
+
+```sh
+pkiaas ca create --name "Test CA $RUN" --key-type ec-p256 --days 7 --idempotency-key "$KEY" --json
+```
+
+Keep the result's `id` and give it to every command with `--ca ID` (e.g. `pkiaas template list --ca ID --json`,
+`pkiaas request create --ca ID ...`), rather than making the test CA the active one. Deleting a CA comes in a
+later version of pkiaas: for now, ask the user to delete it on the website (Edit CA, then Delete) when the tests
+are done, and tell them its name and `id`.
+
 ## Versions
 
 `pkiaas version --json` shows the installed version. When the server has a newer one, pkiaas prints an update
@@ -345,6 +370,7 @@ With `--json`, an error is `{"error": {"code", "message", "hint"}}`. The hint is
 | `request_issued` | 5 | the request is issued, so it can't be declined | `pkiaas request show ID --json` gives the certificate's serial; revoke it with `pkiaas cert revoke SERIAL` if it mustn't be used |
 | `request_processing` | 5 | the request is being signed right now | wait a few seconds, then check it with `pkiaas request show ID --json`; one processing for more than 10 minutes (processingSince) is stuck: decline it and make a new request |
 | `signing_failed` | 1 | the CA couldn't sign the request, e.g. its IoT HSM didn't answer or the template doesn't fit the CSR; the CA's log says why | tell the user, who can read the CA's log on the website; the request waits for approval again (or stays processing if the certificate was signed), so approve it again once the cause is fixed |
+| `ca_creation_failed` | 1 | creating the CA failed on the server at the step the message names; nothing was kept, unless the message says the half-made CA couldn't be removed | run the same command again once (with the same `--idempotency-key`); if it fails again, tell the user and quote the request ID from the message. Each try counts toward the limit of 20 CAs an hour |
 | `cli_outdated` | 1 | the server needs a newer pkiaas | update pkiaas with the install command in the message, then run the command again |
 | `connection_failed` | 1 | the server couldn't be reached | check the server address (`--server` or `PKIAAS_SERVER`) and the network, then try again |
 | `http_<status>` | 1 | the server answered with an unexpected HTTP status, e.g. http_500; the message has the request ID to quote | try again later; if it persists, report the request ID |

@@ -1,6 +1,6 @@
 ---
 title: "Certificate Authorities in the pkiaas CLI"
-description: "List your certificate authorities with the pkiaas CLI, show their details, export their certificates and chains, and choose the CA to work in."
+description: "Create certificate authorities with the pkiaas CLI, list them, show their details, export their certificates, chains and CSRs, and choose the CA to work in."
 ---
 ## Choose Your CA
 Commands that work in a certificate authority use the active CA unless you tell them otherwise. When you log in, the active CA is the one you last worked in on the website, and `pkiaas login` shows it:
@@ -20,3 +20,12 @@ The active CA is kept on your computer, for each server, until you log out. Chan
 To work in another CA for one command without changing the active one, add `--ca` with its name or ID, for example `pkiaas ca show --ca "Example Issuing CA"`. In a script or CI job, set `PKIAAS_CA` instead. `--ca` comes first, then `PKIAAS_CA`, then the active CA.
 
 Names work in any case. Two of your CAs can have the same name: a name that more than one of them has fails with `ca_ambiguous`, and the error lists their IDs, so give the ID instead. In scripts and CI jobs, use the ID: it never changes, while a CA can be renamed. `pkiaas ca set` keeps the ID too, so renaming the active CA doesn't change it.
+
+## Create a CA
+`pkiaas ca create --name "Example Root CA"` creates a certificate authority owned by you, as the website's [Create a Managed CA](../certificate-authorities/create.md) form does. PKIaaS.io makes the CA's key, which never leaves the platform, and self-signs its certificate. The new CA also gets its OCSP certificate and a copy of the "Web Server" template, so it can issue certificates at once. The command shows the new CA as `pkiaas ca show` does; it doesn't become the active CA unless you add `--set`.
+
+- **What its certificate holds:** `--subject "O=Example,OU=IT,C=US"` adds the other subject fields (C, ST, L, O and OU), `--key-type` chooses the key (e.g. `ec-p384` or the post-quantum `ml-dsa-65`), `--days` sets how long it is valid (3650 by default), and `--path-length 0` lets it issue only end-entity certificates. `--key-usage` and `--extended-key-usage` add usages; a CA usually needs none.
+- **A CA another CA signs:** with `--csr-only`, the CA waits for its signed certificate. Export its CSR with `pkiaas ca export --csr --out ca.csr`, have the other CA sign it, then import the signed certificate on the website.
+- **Safe to repeat:** give `--idempotency-key` with any text, e.g. a UUID. Running the same command again with the same key within 24 hours returns the CA it created instead of a second one.
+
+You can create 20 CAs an hour. SHA-1 (`--signature-algorithm sha1`) is for testing only and asks for confirmation. To delete a CA, use the website: see [Delete Certificate Authorities](../certificate-authorities/delete.md).
