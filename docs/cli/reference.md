@@ -14,10 +14,12 @@ Every command with its arguments and flags, apart from the global flags below an
 pkiaas
 ├── ca
 │   ├── create                 --csr-only --days=INT --extended-key-usage=STRING --idempotency-key=STRING --key-type=STRING --key-usage=STRING --name=STRING --path-length=INT --set --signature-algorithm=STRING --subject=STRING --yes
-│   ├── export                 --ca=STRING --chain --csr --force --format=STRING --out=STRING
+│   ├── delete NAME|ID         --dry-run --yes
+│   ├── export                 --ca=STRING --chain --cps --csr --force --format=STRING --out=STRING
 │   ├── list
 │   ├── set NAME|ID
-│   └── show                   --ca=STRING
+│   ├── show                   --ca=STRING
+│   └── update                 --ca=STRING --cep=STRING --cep-password-env=STRING --cep-password-file=STRING --cep-username=STRING --cps-file=STRING --dry-run --policy-oid=STRING --service-key-type=STRING --service-signature-algorithm=STRING
 ├── cert
 │   ├── export SERIAL          --ca=STRING --chain --csr --force --format=STRING --out=STRING
 │   ├── list                   --ca=STRING --expires-within=INT --key-type=STRING --limit=INT --match=STRING --order=STRING --reason=STRING --search=STRING --sort=STRING --status=STRING --template=STRING
@@ -67,7 +69,7 @@ Exit codes and error codes are listed in the [agent guide](agents.md#exit-codes)
 
 ## pkiaas ca
 
-Create certificate authorities, list them, show one, export its certificate or CSR, set the active one.
+Create certificate authorities, list them, show one, change its settings, export its certificate, CSR or CPS, set the active one, delete one.
 
 ```
 pkiaas ca [flags]
@@ -76,10 +78,12 @@ pkiaas ca [flags]
 Commands:
 
 - [`pkiaas ca create`](reference.md#pkiaas-ca-create)
+- [`pkiaas ca delete`](reference.md#pkiaas-ca-delete)
 - [`pkiaas ca export`](reference.md#pkiaas-ca-export)
 - [`pkiaas ca list`](reference.md#pkiaas-ca-list)
 - [`pkiaas ca set`](reference.md#pkiaas-ca-set)
 - [`pkiaas ca show`](reference.md#pkiaas-ca-show)
+- [`pkiaas ca update`](reference.md#pkiaas-ca-update)
 
 ## pkiaas ca create
 
@@ -120,7 +124,7 @@ is refused (error idempotency_key_reused).
 
 You can create at most 20 CAs an hour; beyond that the server refuses with http_429 and says when to try again.
 If a step fails on the server, nothing is kept and the command fails with ca_creation_failed, naming the step.
-Deleting a CA isn't in pkiaas yet: delete it on the website (Edit CA, then Delete).
+`pkiaas ca delete` deletes a CA you no longer need.
 
 This command calls the PKIaaS server and needs a login.
 
@@ -181,6 +185,17 @@ With `--json`, the result is an object with these fields:
 | `urls.cps` | string | the CA's public page: its certification practice statement and downloads |
 | `urls.cep` | string | Windows certificate enrollment (CEP/CES) with a user name and password; works when cep is true |
 | `urls.cepCertificate` | string | Windows certificate enrollment (CEP/CES) with a client certificate; works when cep is true |
+| `settings` | object or null | the CA's settings, which `pkiaas ca update` changes (the website's Edit CA page); null if the account has no CAs |
+| `settings.policyOid` | string or null | the certificate policy OID the CA puts in certificates from templates with policies, next to the address of its CPS page; null if none is set |
+| `settings.cps` | object | the certification practice statement on the CA's public page (urls.cps) |
+| `settings.cps.format` | string | markdown, or html for a CPS written in the website's old editor (shown as it is until someone converts it to Markdown) |
+| `settings.cps.text` | string | the CPS as stored; `pkiaas ca export --cps` writes it to a file |
+| `settings.cep` | object | Windows certificate enrollment (CEP/CES) with a user name and password |
+| `settings.cep.enabled` | boolean | whether Windows certificate enrollment (CEP/CES) is on |
+| `settings.cep.credentialsSet` | boolean | whether a CEP user name and password are stored (they are never shown) |
+| `settings.serviceCertificates` | object | the key the OCSP responder and time-stamping certificates get when they are next made: when they expire (yearly) or are revoked |
+| `settings.serviceCertificates.keyType` | string or null | the key type, as `pkiaas key types` names it; null if the stored one is none of them (e.g. the retired dilithium) |
+| `settings.serviceCertificates.signatureAlgorithm` | string or null | the hash they are signed with: sha1, sha256, sha384 or sha512; null for ML-DSA and SLH-DSA keys, which have their own |
 | `idempotencyKey` | string | the Idempotency-Key it was sent with: the same command with `--idempotency-key` and this key, within 24 hours, gives this result again instead of a second CA |
 
 Side effects:
@@ -192,12 +207,87 @@ Side effects:
 - with `--signature-algorithm` sha1 (RSA and EC keys), prints a warning on standard error and asks for confirmation on the terminal (`--yes` skips the question)
 - with `--set`, keeps the new CA as the active one in the CLI's config.json, for this server
 
-## pkiaas ca export
+## pkiaas ca delete
 
-Export a CA's certificate, its chain, or the CSR of an unsigned CA, as PEM or DER.
+Delete a CA, with its certificates, requests and templates.
 
 ```
-pkiaas ca export [--chain | --csr] [--format pem|der] [--out FILE] [--ca NAME|ID] [flags]
+pkiaas ca delete NAME|ID [--dry-run] [--yes] [flags]
+```
+
+Delete a certificate authority, by its name (in any case) or ID from `pkiaas ca list`. The CA has to be named:
+it is never the active CA or `PKIAAS_CA` by default. A name that more than one of your CAs has is refused (error
+ca_ambiguous): give the ID then. Only the CA's owner can delete it (error forbidden for a CA shared with you).
+
+Deleting a CA deletes every certificate it issued, its pending requests, templates, ACME policies and log lines.
+OCSP, the CRL, SCEP, ACME and CEP stop answering for it, so clients can no longer check its certificates, and its
+public pages are removed. Its ACME accounts stop working, and the other users it is shared with lose it. For a
+CA whose key is on the user's HSM, the HSM keeps the key. It can't be undone.
+
+The command first asks the server what the delete takes with it (a dry run, which changes nothing) and prints
+that. `--dry-run` stops there; with `--json`, the result is the dry run: ca and impact. Otherwise, on a terminal, it
+asks for the CA's name to be typed: only the exact name deletes the CA, anything else stops and deletes nothing.
+Without a terminal, give `--yes`, which deletes without asking; without it, the command stops with a usage error.
+
+The delete is sent with the version of the CA the dry run saw: if someone changed the CA in between, nothing is
+deleted and it fails with ca_changed: run the command again to see the impact now. Running it again after it
+succeeded fails with not_found, as for a CA that never existed; if a retry of the same delete finds the CA gone,
+the result says it is deleted. If the CA was the active CA on this computer, that setting is cleared: commands then
+use the CA you last used on the website, else the first by name, as `pkiaas ca show` says.
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--dry-run` | bool | show what the delete would take with it, and delete nothing |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+| `--yes` | bool | delete without asking for the CA's name; only after the person saw what the delete takes with it and agreed |
+
+Examples:
+
+```sh
+pkiaas ca delete "Test CA 1234" --dry-run
+pkiaas ca delete "Test CA 1234" --dry-run --json
+pkiaas ca delete "Test CA 1234"
+pkiaas ca delete "Test CA 1234" --yes --json
+pkiaas ca delete a1B2c3D4e5 --yes
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | string, optional | the deleted CA's ID (not with `--dry-run`) |
+| `name` | string, optional | the deleted CA's name (not with `--dry-run`) |
+| `deleted` | boolean, optional | true: the CA is deleted, also when an earlier try of the same delete did it (not with `--dry-run`) |
+| `ca` | object, optional | `--dry-run` only: the CA the delete would remove |
+| `ca.id` | string | the CA's ID |
+| `ca.name` | string | the CA's name |
+| `impact` | object, optional | `--dry-run` only: what deleting the CA takes with it |
+| `impact.activeCertificates` | integer | issued certificates that are still valid and not revoked: OCSP and the CRL stop answering for them |
+| `impact.certificates` | integer | the certificates the CA issued (not its own OCSP, SCEP and timestamp certificates), all deleted |
+| `impact.pendingRequests` | integer | requests that wait for approval or signing, all deleted |
+| `impact.templates` | integer | the CA's templates, all deleted |
+| `impact.acmeAccounts` | integer | ACME accounts of the CA's ACME policies, which stop working |
+| `impact.delegates` | integer | other users the CA is shared with, who lose it too |
+| `impact.hsm` | boolean | the CA's key is on the user's HSM, which keeps it; PKIaaS.io deletes only its copy of the CA's certificate |
+| `impact.reversible` | boolean | always false: a deleted CA can never be restored |
+
+Side effects:
+
+- deletes the CA on the server, with every certificate it issued, its pending requests, templates, ACME policies and log lines; nothing with `--dry-run`
+- OCSP, the CRL, SCEP, ACME and CEP stop answering for the CA, its public pages are removed, its ACME accounts stop working, and the users it is shared with lose it
+- it can't be undone; an HSM keeps the key of a CA whose key is on it
+- clears the active CA in the CLI's config.json if it was this CA
+
+## pkiaas ca export
+
+Export a CA's certificate, its chain, the CSR of an unsigned CA, or its CPS.
+
+```
+pkiaas ca export [--chain | --csr | --cps] [--format pem|der] [--out FILE] [--ca NAME|ID] [flags]
 ```
 
 Export the certificate of a CA, by default the active CA. The chain (`--chain`) is the CA's certificate followed
@@ -209,6 +299,10 @@ A CA waiting for its signed certificate fails with ca_not_signed. With `--csr`, 
 certificate signing request instead (e.g. of a CA made with `pkiaas ca create --csr-only`), for another CA to
 sign; the signed certificate is then imported on the website. A signed CA has no CSR to export (error
 conflict). An `--out` file with a CSR is readable by its owner only, as for `pkiaas cert export --csr`.
+
+With `--cps`, it exports the CA's certification practice statement, the text of its public page, as stored:
+Markdown, or HTML for a CPS written in the website's old editor (the result's format says which). Edit it and
+send it back with `pkiaas ca update --cps-file`. `--format` doesn't apply to it.
 
 Without `--out` (or with `--out` -), the output goes to standard output, as OpenSSL writes it, to read or to pipe to
 another command; there is no result then, so `--json` needs `--out`. With `--out` FILE, it is written to the file,
@@ -232,6 +326,7 @@ Flags:
 |---|---|---|
 | `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
 | `--chain` | bool | export the CA's certificate followed by the certificates that issued it |
+| `--cps` | bool | export the CA's CPS (Markdown, or HTML for an old one) instead, to edit it for `pkiaas ca update --cps-file` |
 | `--csr` | bool | export the CSR of a CA that waits for its signed certificate instead |
 | `--force` | bool | replace the `--out` file if it exists |
 | `--format` | string | pem or der (as OpenSSL's -outform). Default: `pem`. |
@@ -246,6 +341,8 @@ pkiaas ca export --out ca.pem
 pkiaas ca export --chain --out chain.pem --json
 pkiaas ca export --ca a1B2c3D4e5 --format der --out root.cer
 pkiaas ca export --csr --ca a1B2c3D4e5 --out ca.csr --json
+pkiaas ca export --cps > cps.md
+pkiaas ca export --cps --ca a1B2c3D4e5 --out cps.md --json
 ```
 
 With `--json`, the result is an object with these fields:
@@ -255,13 +352,13 @@ With `--json`, the result is an object with these fields:
 | `id` | string | the CA's ID |
 | `name` | string or null | the CA's name |
 | `file` | string | the file written (`--out`) |
-| `format` | string | pem or der (`--format`) |
-| `content` | string | what the file holds: certificate, chain (`--chain`: the CA's certificate followed by those that issued it) or csr (`--csr`) |
+| `format` | string | pem or der (`--format`); for `--cps`, markdown or html, as the CPS is stored |
+| `content` | string | what the file holds: certificate, chain (`--chain`: the CA's certificate followed by those that issued it), csr (`--csr`) or cps (`--cps`) |
 | `certificates` | integer | how many certificates the file holds; 0 for a CSR |
 
 Side effects:
 
-- with `--out`, writes the file (readable by everyone for certificates, which are public; by its owner only for a CSR); otherwise writes to standard output and prints no result
+- with `--out`, writes the file (readable by everyone for certificates and the CPS, which are public; by its owner only for a CSR); otherwise writes to standard output and prints no result
 
 ## pkiaas ca list
 
@@ -405,6 +502,139 @@ With `--json`, the result is an object with these fields:
 | `urls.cps` | string | the CA's public page: its certification practice statement and downloads |
 | `urls.cep` | string | Windows certificate enrollment (CEP/CES) with a user name and password; works when cep is true |
 | `urls.cepCertificate` | string | Windows certificate enrollment (CEP/CES) with a client certificate; works when cep is true |
+| `settings` | object or null | the CA's settings, which `pkiaas ca update` changes (the website's Edit CA page); null if the account has no CAs |
+| `settings.policyOid` | string or null | the certificate policy OID the CA puts in certificates from templates with policies, next to the address of its CPS page; null if none is set |
+| `settings.cps` | object | the certification practice statement on the CA's public page (urls.cps) |
+| `settings.cps.format` | string | markdown, or html for a CPS written in the website's old editor (shown as it is until someone converts it to Markdown) |
+| `settings.cps.text` | string | the CPS as stored; `pkiaas ca export --cps` writes it to a file |
+| `settings.cep` | object | Windows certificate enrollment (CEP/CES) with a user name and password |
+| `settings.cep.enabled` | boolean | whether Windows certificate enrollment (CEP/CES) is on |
+| `settings.cep.credentialsSet` | boolean | whether a CEP user name and password are stored (they are never shown) |
+| `settings.serviceCertificates` | object | the key the OCSP responder and time-stamping certificates get when they are next made: when they expire (yearly) or are revoked |
+| `settings.serviceCertificates.keyType` | string or null | the key type, as `pkiaas key types` names it; null if the stored one is none of them (e.g. the retired dilithium) |
+| `settings.serviceCertificates.signatureAlgorithm` | string or null | the hash they are signed with: sha1, sha256, sha384 or sha512; null for ML-DSA and SLH-DSA keys, which have their own |
+
+## pkiaas ca update
+
+Change a CA's settings: its CPS, policy identifier, Windows enrollment (CEP) and service certificate key.
+
+```
+pkiaas ca update [--ca NAME|ID] [--cps-file FILE] [--policy-oid OID] [--cep on|off] [--cep-username NAME --cep-password-env NAME | --cep-password-file FILE] [--service-key-type TYPE] [--service-signature-algorithm sha256|sha384|sha512|sha1] [--dry-run] [flags]
+```
+
+Change the settings of a CA, by default the active CA, as the website's Edit CA page does. Only the settings
+whose flags are given change; the others stay as they are. The CA's name, key and certificate can't be changed.
+Changing settings needs the modify privilege in the CA (error forbidden without it).
+
+`--cps-file` is the CA's new certification practice statement (CPS), the text of its public page, in Markdown (- for
+standard input). To edit the CPS, export it (`pkiaas ca export --cps > cps.md`), change the file, and send it
+back (`pkiaas ca update --cps-file cps.md`). An HTML CPS written in the website's old editor is replaced by the
+Markdown you send; convert it on the website to keep its formatting.
+
+`--policy-oid` is the certificate policy OID (dotted, at most 50 characters) the CA puts in the certificates of
+templates with policies, next to the address of its CPS page. `--policy-oid` none removes it: certificates then get
+neither the policy nor the CPS address.
+
+`--cep` on\|off turns Windows certificate enrollment (CEP/CES) on or off. It needs a user name and password, which
+Windows clients enroll with: `--cep-username` with the password from `--cep-password-env` NAME (an environment
+variable) or `--cep-password-file` FILE (its first line; - for standard input), never as an argument. Both replace
+the stored ones; without them the stored ones are kept. The CA's CEP URLs are in `pkiaas ca show`.
+
+`--service-key-type` is the key of the CA's OCSP responder and time-stamping certificates, as `pkiaas key types`
+names it. `--service-signature-algorithm` is the hash they are signed with; ML-DSA and SLH-DSA keys have their own,
+so it doesn't apply to them. With a new RSA or EC key type and no `--service-signature-algorithm`, the stored hash
+is kept (sha256 if there is none). The certificates get the new key when they are next made: when they expire
+(yearly) or are revoked.
+
+The command reads the CA's settings, changes those given, and sends them all back with the version it read. If
+someone changed the CA in between, nothing is saved and it fails with ca_changed: run it again. Running it again
+after it succeeded changes nothing more. When the CA already has the settings given, nothing is sent and the
+result is the CA as it is. `--dry-run` sends nothing and shows what would change, each setting old → new; with
+`--json`, the CA as it is now with dryRun true and changes.
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--cep` | string | turn Windows certificate enrollment (CEP/CES) on or off |
+| `--cep-password-env` | string | read the CEP password from this environment variable. Not with `--cep-password-file`. |
+| `--cep-password-file` | string | read the CEP password from this file's first line (- for standard input). Not with `--cep-password-env`. |
+| `--cep-username` | string | the CEP user name, with the password from `--cep-password-env` or `--cep-password-file`; replaces the stored ones |
+| `--cps-file` | string | the new CPS, in Markdown, from this file (- for standard input); `pkiaas ca export --cps` exports the current one |
+| `--dry-run` | bool | send nothing; show what would change |
+| `--policy-oid` | string | the certificate policy OID, in dotted form, e.g. 2.5.29.32.0 (at most 50 characters), or none |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+| `--service-key-type` | string | the key of the OCSP and time-stamping certificates: rsa-2048, rsa-4096, ec-p256, ec-p384, ec-p521, ml-dsa-44, ml-dsa-65, ml-dsa-87, slh-dsa-sha2-128s, slh-dsa-sha2-128f, slh-dsa-sha2-192s, slh-dsa-sha2-192f, slh-dsa-sha2-256s, slh-dsa-sha2-256f, slh-dsa-shake-128s, slh-dsa-shake-128f, slh-dsa-shake-192s, slh-dsa-shake-192f, slh-dsa-shake-256s, slh-dsa-shake-256f |
+| `--service-signature-algorithm` | string | the hash they are signed with: sha256, sha384, sha512 or sha1 (not for ML-DSA and SLH-DSA keys; default: the stored one, else sha256) |
+
+Examples:
+
+```sh
+pkiaas ca update --cps-file cps.md
+pkiaas ca update --cps-file cps.md --dry-run
+pkiaas ca update --cep on --cep-username enroll --cep-password-env CEP_PASSWORD --json
+pkiaas ca update --cep off
+pkiaas ca update --ca a1B2c3D4e5 --policy-oid 1.3.6.1.4.1.99999.1 --json
+pkiaas ca update --ca "Example CA" --policy-oid none --dry-run
+pkiaas ca update --service-key-type ec-p384 --service-signature-algorithm sha384 --dry-run --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `server` | string | the server |
+| `id` | string or null | the CA's ID; null if the account has no CAs |
+| `name` | string or null | the CA's name (its certificate's common name) |
+| `source` | string | how the CA was chosen: flag (`--ca`), environment (`PKIAAS_CA`), or as the active CA: set (with `pkiaas ca set`, or at login), website (the CA last used on the website), first (the first CA by name); none if the account has no CAs. For `pkiaas ca create`: created, or set with `--set` |
+| `signed` | boolean or null | false while the CA waits for its signed certificate to be imported |
+| `hsm` | boolean or null | whether the CA's private key is on the user's HSM rather than on the platform |
+| `keyType` | string or null | the algorithm of the CA's key, as OpenSSL names it, e.g. rsaEncryption, id-ecPublicKey, ML-DSA-65 |
+| `keySize` | integer or null | the key size in bits (the curve size for EC keys); null where it doesn't apply, e.g. ML-DSA |
+| `signatureAlgorithm` | string or null | the algorithm of the CA certificate's signature, as OpenSSL names it |
+| `serial` | string or null | the CA certificate's serial number (hex); null if unsigned |
+| `thumbprint` | string or null | the CA certificate's SHA-1 fingerprint (hex), as Windows shows it; null if unsigned |
+| `validFrom` | string or null | when the CA's certificate became valid (ISO 8601, UTC); null if unsigned |
+| `validTo` | string or null | when the CA's certificate expires (ISO 8601, UTC); null if unsigned |
+| `activeCertificates` | integer or null | how many certificates the CA issued that have neither expired nor been revoked |
+| `policyOid` | string or null | the certificate policy OID the CA puts in the certificates it issues; null if none |
+| `cep` | boolean or null | whether Windows certificate enrollment (CEP/CES) is on |
+| `urls` | object or null | the CA's public services; null until the CA is signed |
+| `urls.certificate` | string | the CA's certificate (DER), as the certificates it issues name it (AIA caIssuers) |
+| `urls.chain` | string | the CA's certificate and those that issued it (PKCS#7, DER) |
+| `urls.crl` | string | the CRL (CRL distribution point) |
+| `urls.ocsp` | string | the OCSP responder (AIA OCSP) |
+| `urls.timestamp` | string | the RFC 3161 time-stamping service |
+| `urls.cps` | string | the CA's public page: its certification practice statement and downloads |
+| `urls.cep` | string | Windows certificate enrollment (CEP/CES) with a user name and password; works when cep is true |
+| `urls.cepCertificate` | string | Windows certificate enrollment (CEP/CES) with a client certificate; works when cep is true |
+| `settings` | object or null | the CA's settings, which `pkiaas ca update` changes (the website's Edit CA page); null if the account has no CAs |
+| `settings.policyOid` | string or null | the certificate policy OID the CA puts in certificates from templates with policies, next to the address of its CPS page; null if none is set |
+| `settings.cps` | object | the certification practice statement on the CA's public page (urls.cps) |
+| `settings.cps.format` | string | markdown, or html for a CPS written in the website's old editor (shown as it is until someone converts it to Markdown) |
+| `settings.cps.text` | string | the CPS as stored; `pkiaas ca export --cps` writes it to a file |
+| `settings.cep` | object | Windows certificate enrollment (CEP/CES) with a user name and password |
+| `settings.cep.enabled` | boolean | whether Windows certificate enrollment (CEP/CES) is on |
+| `settings.cep.credentialsSet` | boolean | whether a CEP user name and password are stored (they are never shown) |
+| `settings.serviceCertificates` | object | the key the OCSP responder and time-stamping certificates get when they are next made: when they expire (yearly) or are revoked |
+| `settings.serviceCertificates.keyType` | string or null | the key type, as `pkiaas key types` names it; null if the stored one is none of them (e.g. the retired dilithium) |
+| `settings.serviceCertificates.signatureAlgorithm` | string or null | the hash they are signed with: sha1, sha256, sha384 or sha512; null for ML-DSA and SLH-DSA keys, which have their own |
+| `dryRun` | boolean, optional | true for `--dry-run`: nothing was sent, and the CA is as it is now |
+| `changes` | object[], optional | `--dry-run` only: the settings that would change; empty if none would |
+| `changes[].field` | string | the setting, as in settings: policyOid, cps.format, cps.text, cep.enabled, cep.credentials, serviceCertificates.keyType or serviceCertificates.signatureAlgorithm |
+| `changes[].from` | string or null | its value now, as text: for cps.text the size, e.g. "2153 bytes"; for cep.enabled on or off; for cep.credentials set, or null if none are stored; null if not set |
+| `changes[].to` | string or null | its new value, as from; for cep.credentials always "replaced" (the user name and password are never shown) |
+
+Side effects:
+
+- changes the CA's settings on the server, only those given; nothing when the CA already has them, or with `--dry-run`
+- with `--cep-username`, replaces the stored CEP user name and password, which Windows clients enroll with
+- OCSP and time-stamping certificates use the new key from their next renewal (yearly, or when revoked)
+- an HTML CPS written in the website's old editor is replaced by the Markdown you send; convert it on the website to keep its formatting
+- the CA's log records the change
 
 ## pkiaas cert
 
@@ -567,6 +797,17 @@ With `--json`, the result is an object with these fields:
 | `issuer.name` | string or null | the CA's name (its certificate's common name) |
 | `total` | integer | how many certificates match; more than are listed when it exceeds `--limit` |
 | `certificates` | object[] | the first `--limit` matching certificates, in the `--sort` and `--order` order |
+| `certificates[].serial` | string | the serial number in hex, which commands take to name the certificate in its CA |
+| `certificates[].name` | string or null | the certificate's common name |
+| `certificates[].status` | string | valid, expired, or revoked (also when it has expired since) |
+| `certificates[].template` | string or null | the template it was issued with; null for a CA certificate the CA signed, or a deleted template |
+| `certificates[].validFrom` | string | when it became valid (ISO 8601, UTC) |
+| `certificates[].validTo` | string | when it expires (ISO 8601, UTC) |
+| `certificates[].keyType` | string | the algorithm of its key, as OpenSSL names it, e.g. rsaEncryption, id-ecPublicKey |
+| `certificates[].keySize` | integer or null | the key size in bits (the curve size for EC keys); null where it doesn't apply, e.g. ML-DSA |
+| `certificates[].revocation` | object or null | null unless the certificate is revoked |
+| `certificates[].revocation.reason` | string or null | the reason, as RFC 5280 names it, e.g. keyCompromise, superseded or certificateHold |
+| `certificates[].revocation.revokedAt` | string or null | when it was revoked (ISO 8601, UTC); null for the few revocations stored without a date |
 
 ## pkiaas cert revoke
 
@@ -980,6 +1221,13 @@ With `--json`, the result is an object with these fields:
 |---|---|---|
 | `total` | integer | how many lines match; more than are listed when it exceeds `--limit` |
 | `logs` | object[] | the first `--limit` matching lines, in the `--sort` and `--order` order |
+| `logs[].ca` | object | the CA the line belongs to |
+| `logs[].ca.id` | string | the ID of the CA the line belongs to, which `--ca` takes |
+| `logs[].ca.name` | string or null | the CA's name (its certificate's common name) |
+| `logs[].level` | string | how severe it is, as syslog names the levels: emergency, alert, critical, error, warning, notice, info or debug |
+| `logs[].time` | string | when it was logged (ISO 8601, UTC) |
+| `logs[].ip` | string | the IP address of the client whose request it logs; empty for the platform's own work |
+| `logs[].message` | string | what happened, e.g. a SCEP, CEP/CES or ACME request, an approval or a revocation, and why it failed |
 
 ## pkiaas login
 
@@ -1460,6 +1708,16 @@ With `--json`, the result is an object with these fields:
 | `ca.name` | string or null | the CA's name (its certificate's common name) |
 | `total` | integer | how many requests match; more than are listed when it exceeds `--limit` |
 | `requests` | object[] | the first `--limit` matching requests, in the `--sort` and `--order` order |
+| `requests[].id` | string | the request's ID, which the request commands take |
+| `requests[].status` | string | pendingApproval, pendingEmailVerification, preApproved or processing (see the command's help) |
+| `requests[].name` | string or null | the CSR's common name (or its first subject attribute), which the website shows as the request's name |
+| `requests[].template` | string or null | the template's name |
+| `requests[].templateId` | string or null | the template's ID |
+| `requests[].requestedAt` | string or null | when it was requested (ISO 8601, UTC) |
+| `requests[].hasCsr` | boolean | it has a CSR, so `pkiaas request approve` can issue it; one without needs an approved voucher, which only the website sends |
+| `requests[].source` | string or null | where it came from: scep, web, system, createCa, ces or api (this CLI and the new pages); null if unknown |
+| `requests[].expiresAt` | string or null | when the pre-approval (voucher, email confirmation or SCEP challenge) expires (ISO 8601, UTC); null if it never does |
+| `requests[].processingSince` | string or null | while it is processing, when signing started (ISO 8601, UTC); otherwise null |
 
 ## pkiaas request show
 
@@ -1571,6 +1829,9 @@ With `--json`, the result is an object with these fields:
 | `ca.name` | string or null | the CA's name (its certificate's common name) |
 | `total` | integer | how many templates the CA has; more than are listed when it exceeds `--limit` |
 | `templates` | object[] | the first `--limit` templates, by name |
+| `templates[].id` | string | the template's ID; `pkiaas request create --template` takes it or the name |
+| `templates[].name` | string or null | the template's name |
+| `templates[].enabled` | boolean | whether it takes requests; a disabled template is refused (template_not_found) |
 
 ## pkiaas version
 

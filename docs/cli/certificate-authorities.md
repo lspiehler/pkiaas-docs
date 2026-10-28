@@ -1,6 +1,6 @@
 ---
 title: "Certificate Authorities in the pkiaas CLI"
-description: "Create certificate authorities with the pkiaas CLI, list them, show their details, export their certificates, chains and CSRs, and choose the CA to work in."
+description: "Create certificate authorities with the pkiaas CLI, list them, show their details, export their certificates, chains, CSRs and CPS, change their settings, delete them, and choose the CA to work in."
 ---
 ## Choose Your CA
 Commands that work in a certificate authority use the active CA unless you tell them otherwise. When you log in, the active CA is the one you last worked in on the website, and `pkiaas login` shows it:
@@ -12,7 +12,7 @@ Change it with: pkiaas ca set <NAME|ID> (pkiaas ca list shows your CAs)
 
 - **List your CAs:** `pkiaas ca list` shows the CAs you own and those you were invited to, with their names and IDs. The active one is marked with `*`.
 - **Change the active CA:** `pkiaas ca set "Example Issuing CA"`, with a name or ID from the list.
-- **Show a CA's details:** `pkiaas ca show` shows the active CA: its key, its certificate (serial, thumbprint, validity), how many of the certificates it issued are still valid, and the URLs of its public services (certificate, chain, CRL, OCSP, time stamping, the CPS page and Windows enrollment).
+- **Show a CA's details:** `pkiaas ca show` shows the active CA: its key, its certificate (serial, thumbprint, validity), how many of the certificates it issued are still valid, the URLs of its public services (certificate, chain, CRL, OCSP, time stamping, the CPS page and Windows enrollment), and its settings.
 - **Export a CA's certificate:** `pkiaas ca export --out ca.pem` saves the CA's certificate as PEM. Add `--chain` for the CA's certificate followed by the certificates that issued it, which is what servers and `pkiaas pkcs12 create --chain-file` need. A root CA's certificate alone is what clients add to their trust store. See [Export](certificates.md#export) for standard output and DER.
 
 The active CA is kept on your computer, for each server, until you log out. Changing it doesn't change the CA you work in on the website, and switching CA on the website doesn't change the CLI's.
@@ -28,4 +28,32 @@ Names work in any case. Two of your CAs can have the same name: a name that more
 - **A CA another CA signs:** with `--csr-only`, the CA waits for its signed certificate. Export its CSR with `pkiaas ca export --csr --out ca.csr`, have the other CA sign it, then import the signed certificate on the website.
 - **Safe to repeat:** give `--idempotency-key` with any text, e.g. a UUID. Running the same command again with the same key within 24 hours returns the CA it created instead of a second one.
 
-You can create 20 CAs an hour. SHA-1 (`--signature-algorithm sha1`) is for testing only and asks for confirmation. To delete a CA, use the website: see [Delete Certificate Authorities](../certificate-authorities/delete.md).
+You can create 20 CAs an hour. SHA-1 (`--signature-algorithm sha1`) is for testing only and asks for confirmation.
+
+## Change a CA's Settings
+`pkiaas ca update` changes the settings of the active CA (or the one `--ca` names), as the website's [Edit CA](../certificate-authorities/edit.md) page does. Only the settings whose flags you give change, and you need the modify privilege in the CA. `pkiaas ca show` lists the settings as they are now.
+
+The CA's certification practice statement (CPS) is the text of its public page. To change it, export it, edit the file, and send it back:
+
+```sh
+pkiaas ca export --cps > cps.md
+pkiaas ca update --cps-file cps.md
+```
+
+The CPS you send is Markdown. A CPS written in the website's old HTML editor is replaced by it, so convert it on the website first if you want to keep its formatting. The other settings:
+
+- **The policy identifier:** `--policy-oid 1.3.6.1.4.1.99999.1` sets the certificate policy OID the CA puts, next to the address of its CPS page, in certificates from templates with policies. `--policy-oid none` removes it.
+- **Windows enrollment (CEP/CES):** `pkiaas ca update --cep on --cep-username enroll --cep-password-env CEP_PASSWORD` turns it on with the user name and password Windows clients enroll with. The password comes from an environment variable or, with `--cep-password-file`, from a file, never from the command line. `--cep off` turns it off.
+- **Service certificates:** `--service-key-type ec-p384 --service-signature-algorithm sha384` sets the key of the CA's OCSP and time-stamping certificates. They get it when they are next made: when they expire (yearly) or are revoked.
+
+Add `--dry-run` to see what would change, each setting old → new, without saving anything. Running the same command again changes nothing more, and if someone changed the CA at the same time, nothing is saved and the command asks you to run it again.
+
+## Delete a CA
+`pkiaas ca delete "Example Test CA"` deletes a CA you own, with every certificate it issued, its pending requests, templates, ACME policies and log lines. OCSP, the CRL, SCEP, ACME and Windows enrollment stop answering for it, so clients can no longer check its certificates, and the users it is shared with lose it. For a CA whose key is on your HSM, the HSM keeps the key. **It can't be undone.**
+
+The CA must be named, by its name or ID; the command never deletes the active CA by default. It first shows what the delete takes with it, then asks you to type the CA's name: only the exact name deletes it.
+
+- **Preview only:** `--dry-run` shows what the delete would take with it and deletes nothing.
+- **In scripts:** without a terminal, add `--yes` to delete without typing the name, for example for a test CA a CI job created.
+
+You can also delete a CA on the website: see [Delete Certificate Authorities](../certificate-authorities/delete.md).
