@@ -30,7 +30,8 @@ Your commands and their output may be logged, so keep secrets out of both.
 
 - Passphrases are never command-line arguments. Give them with `--passphrase-env NAME` (an environment variable
   the user has set) or `--passphrase-file PATH` (the first line of a file). Commands that read a key and write
-  another file take `--key-passphrase-env` and `--key-passphrase-file` for the key's passphrase.
+  another file take `--key-passphrase-env` and `--key-passphrase-file` for the key's passphrase, and `ca update`
+  takes `--cep-password-env` and `--cep-password-file` for a CA's CEP password.
 - Ask the user to set the variable or write the file themselves. Don't put a passphrase in a command you run, for
   example `echo secret | pkiaas ...` or `export KEY_PASSPHRASE=secret`.
 - If you have to make a passphrase up, generate it into a file without printing it, and tell the user where it is,
@@ -103,6 +104,43 @@ beyond that it fails with `http_429` and says how long to wait. When a step fail
 Windows reject SHA-1 chains) and needs confirmation: pass `--yes` only when the person asked for SHA-1. As with requests, pass `--idempotency-key KEY` and keep the key (see
 "Requesting certificates").
 
+`pkiaas ca update --json` changes a CA's settings, as the website's Edit CA page does; only the settings whose flags
+are given change, and it needs the modify privilege in the CA (`forbidden` without it). `settings` in
+`pkiaas ca show --json` shows them all. To edit the CA's CPS (the text of its public page), export it, change the
+file, and send it back:
+
+```sh
+pkiaas ca export --cps > cps.md
+pkiaas ca update --cps-file cps.md --json
+```
+
+The CPS you send is Markdown; an HTML CPS written in the website's old editor is replaced by it, so tell the user
+that converting it on the website keeps its formatting. `--policy-oid` sets the certificate policy OID, and
+`--service-key-type` (with `--service-signature-algorithm` for RSA and EC keys) the key of the OCSP and
+time-stamping certificates, which they get at their next renewal. To turn Windows enrollment (CEP/CES) on, the
+user puts the password in an environment variable or a file: `pkiaas ca update --cep on --cep-username enroll
+--cep-password-env CEP_PASSWORD --json`. Add `--dry-run` to see what would change (`changes`, old and new) without
+sending anything; show it to the user before changes they haven't spelled out. A CA that already has the settings
+is left as it is, so the command is safe to run again. If someone changed the CA between reading and saving, it
+fails with `ca_changed` and nothing is saved: run it again.
+
+`pkiaas ca delete NAME --json` deletes a CA, with every certificate it issued, its pending requests, templates,
+ACME policies and log lines. OCSP, the CRL, SCEP, ACME and CEP stop answering for it, its ACME accounts stop
+working, and the users it is shared with lose it; an HSM keeps the key of a CA whose key is on it. It can't be
+undone, and only the CA's owner can do it (`forbidden` otherwise). The CA is always named (its name or `id`); it
+is never the active CA by default. Delete a CA only when the user asks you to:
+
+1. Preview it: `pkiaas ca delete NAME --dry-run --json` changes nothing; `impact` says how many certificates
+   (`activeCertificates` still valid), pending requests, templates, ACME accounts and other users (`delegates`)
+   the delete takes with it, and `hsm`.
+2. Show that to the user, naming the CA (name and `id`), and ask whether to go ahead.
+3. Only if they agree, run `pkiaas ca delete ID --yes --json`. Without `--yes` and without a terminal it fails
+   with `usage`; on a terminal it asks for the CA's name to be typed instead.
+
+If the CA changed between the preview and the delete, it fails with `ca_changed` and deletes nothing: preview it
+again and ask again. A retry of a delete that already went through reports `deleted` as true. If the deleted CA
+was the active one, the active CA is cleared on this computer.
+
 ## Exporting
 
 `ca export` and `cert export` work the same way, as `openssl x509` does:
@@ -174,8 +212,8 @@ reason, and only then run the command with `--yes`. Without `--yes` and without 
 - Both need a subscription, the user's or the CA owner's; without one they fail with
   `subscription_required`. Tell the user rather than retrying.
 
-Requests that are safe to repeat (reading, revoking, unrevoking, and requesting a certificate or creating a CA with its
-Idempotency-Key) are tried up to 3 times in all when the connection fails or the server answers with a 5xx or 429; a notice goes to standard error. Only run a command again yourself after it has
+Requests that are safe to repeat (reading, revoking, unrevoking, changing a CA's settings, deleting a CA, and requesting a certificate
+or creating a CA with its Idempotency-Key) are tried up to 3 times in all when the connection fails or the server answers with a 5xx or 429; a notice goes to standard error. Only run a command again yourself after it has
 failed. When the server asks to wait longer than 10 seconds, the command fails at once and its message says how long
 to wait before running it again.
 
@@ -318,9 +356,13 @@ pkiaas ca create --name "Test CA $RUN" --key-type ec-p256 --days 7 --idempotency
 ```
 
 Keep the result's `id` and give it to every command with `--ca ID` (e.g. `pkiaas template list --ca ID --json`,
-`pkiaas request create --ca ID ...`), rather than making the test CA the active one. Deleting a CA comes in a
-later version of pkiaas: for now, ask the user to delete it on the website (Edit CA, then Delete) when the tests
-are done, and tell them its name and `id`.
+`pkiaas request create --ca ID ...`), rather than making the test CA the active one. When the tests are done,
+delete it by its `id`; the user agreed to the whole run, so `--yes` is fine here, for the CA you created only:
+
+```sh
+pkiaas ca delete "$ID" --dry-run --json
+pkiaas ca delete "$ID" --yes --json
+```
 
 ## Versions
 
@@ -371,6 +413,7 @@ With `--json`, an error is `{"error": {"code", "message", "hint"}}`. The hint is
 | `request_processing` | 5 | the request is being signed right now | wait a few seconds, then check it with `pkiaas request show ID --json`; one processing for more than 10 minutes (processingSince) is stuck: decline it and make a new request |
 | `signing_failed` | 1 | the CA couldn't sign the request, e.g. its IoT HSM didn't answer or the template doesn't fit the CSR; the CA's log says why | tell the user, who can read the CA's log on the website; the request waits for approval again (or stays processing if the certificate was signed), so approve it again once the cause is fixed |
 | `ca_creation_failed` | 1 | creating the CA failed on the server at the step the message names; nothing was kept, unless the message says the half-made CA couldn't be removed | run the same command again once (with the same `--idempotency-key`); if it fails again, tell the user and quote the request ID from the message. Each try counts toward the limit of 20 CAs an hour |
+| `ca_changed` | 5 | someone changed the CA since the command read it (`pkiaas ca update`) or previewed its delete (`pkiaas ca delete`), so nothing was saved or deleted | someone changed the CA since it was read; run the command again (it reads the CA again and applies only its own flags); `pkiaas ca show --json` shows the CA's settings now |
 | `cli_outdated` | 1 | the server needs a newer pkiaas | update pkiaas with the install command in the message, then run the command again |
 | `connection_failed` | 1 | the server couldn't be reached | check the server address (`--server` or `PKIAAS_SERVER`) and the network, then try again |
 | `http_<status>` | 1 | the server answered with an unexpected HTTP status, e.g. http_500; the message has the request ID to quote | try again later; if it persists, report the request ID |
