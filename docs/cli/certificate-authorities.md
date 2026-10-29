@@ -48,6 +48,20 @@ The CPS you send is Markdown. A CPS written in the website's old HTML editor is 
 
 Add `--dry-run` to see what would change, each setting old → new, without saving anything. Running the same command again changes nothing more, and if someone changed the CA at the same time, nothing is saved and the command asks you to run it again.
 
+## Read the logs
+`pkiaas log list` lists what the platform logged for your CAs, as the website's Logs page does: SCEP, CEP/CES and ACME requests, certificate approvals, revocations and the errors they met. Use it to find out why something failed, such as a device's enrollment. It lists the latest lines of all your CAs, not only the active one, in time order: the oldest first and the newest last, just above the prompt. Each line shows the time in your computer's time zone, the level, the CA's name in brackets, the client's IP address and the message:
+
+```
+2026-10-28T21:56:53-05:00 INFO    [Example Issuing CA] 203.0.113.7 Received SCEP request for template Web Server
+```
+
+- **One CA:** `--ca "Example Issuing CA"` (any case, or its ID); repeat it for more.
+- **Warnings and errors:** `--level warning` keeps warnings and the more severe lines.
+- **A time range:** `--since 24h` keeps the last day; `--since` and `--until` also take a date or a time, such as `2026-10-24T08:00:00-05:00`.
+- **Search:** `--search 203.0.113.7` keeps the lines with that text in the message or the IP address, such as a device's name, a serial number or an error.
+
+When there are more lines than it lists (50 by default, `--limit` up to 1000), it says how many and how to narrow them. `TZ=UTC pkiaas log list` shows the times in UTC; `--json` always has them in UTC.
+
 ## Delete a CA
 `pkiaas ca delete "Example Test CA"` deletes a CA you own, with every certificate it issued, its pending requests, templates, ACME policies and log lines. OCSP, the CRL, SCEP, ACME and Windows enrollment stop answering for it, so clients can no longer check its certificates, and the users it is shared with lose it. For a CA whose key is on your HSM, the HSM keeps the key. **It can't be undone.**
 

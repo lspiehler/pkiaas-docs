@@ -5,7 +5,7 @@ description: "Install the pkiaas CLI on Linux, macOS or Windows, log in, find, e
 ## Overview
 `pkiaas` is the PKIaaS.io command-line tool (CLI). It runs on Linux, macOS and Windows, and is built to be used by AI agents (Claude Code, Codex, Copilot and others) as well as by people. Today it covers:
 
-- **[Certificate Authorities](certificate-authorities.md):** create CAs, list them, show their details, export their certificates, chains, CSRs and CPS, change their settings, delete them, and choose the one to work in.
+- **[Certificate Authorities](certificate-authorities.md):** create CAs, list them, show their details, export their certificates, chains, CSRs and CPS, change their settings, delete them, choose the one to work in, and read their logs.
 - **[Certificates](certificates.md):** list the certificates a CA issued, show their details and status, export them with their chain or CSR as PEM or DER, and revoke them or put them on hold.
 - **[Request Certificates](requests.md):** list a CA's templates and request a certificate with a CSR, safely repeatable with an idempotency key, and have it issued and saved in the same command.
 - **[Approve Requests](pending-requests.md):** list a CA's pending requests, check what each asks for, and approve or decline them.

@@ -33,7 +33,7 @@ pkiaas
 │   ├── create                 --force --format=STRING --no-passphrase --out=STRING --passphrase-env=STRING --passphrase-file=STRING --type=STRING
 │   └── types
 ├── log
-│   └── list                   --ca=STRING --level=STRING --limit=INT --order=STRING --sort=STRING
+│   └── list                   --ca=STRING --level=STRING --limit=INT --order=STRING --search=STRING --since=STRING --sort=STRING --until=STRING
 ├── login                      --device
 ├── logout                     --all
 ├── pkcs12
@@ -1168,15 +1168,15 @@ Commands:
 
 ## pkiaas log list
 
-List the log lines of your CAs, the newest first.
+List the latest log lines of your CAs.
 
 ```
-pkiaas log list [--ca NAME|ID]... [--level LEVEL] [--sort time|ca [--order asc|desc]] [--limit N] [flags]
+pkiaas log list [--ca NAME|ID]... [--level LEVEL] [--since TIME] [--until TIME] [--search TEXT] [--sort time|ca [--order asc|desc]] [--limit N] [flags]
 ```
 
 List what the platform logged for your CAs, as the website's Logs page does: SCEP, CEP/CES and ACME requests,
-certificate approvals, revocations and the errors they met, the newest first. Use it to find out why something
-failed, e.g. a device's enrollment or a signing. It changes nothing.
+certificate approvals, revocations and the errors they met, by default the latest ones. Use it to find out why
+something failed, e.g. a device's enrollment or a signing. It changes nothing.
 
 By default it lists the lines of all the CAs your account has, its own and those it was invited to: unlike the
 commands that work in one CA, it doesn't use the active CA or `PKIAAS_CA`. `--ca` NAME\|ID (any case for a name)
@@ -1185,12 +1185,25 @@ keeps the lines of that CA; repeat it for more, up to 20. Lines are deleted afte
 `--level` LEVEL keeps the lines of this level and the more severe ones: emergency, alert, critical, error,
 warning, notice, info or debug (the least severe), e.g. `--level` warning for warnings and errors.
 
-It lists the first `--limit` lines (default 50, at most 1000); total says how many match, so when it is more,
-narrow the list with `--ca` or `--level`. `--sort` takes time or ca (the CA's name, the newest first within a CA), in
-`--order` asc (the default with `--sort` ca) or desc (the default with `--sort` time). Without `--sort`: time, desc.
+`--since` TIME keeps the lines logged at that time or later, `--until` TIME those logged before it. TIME is an
+RFC 3339 time (2026-10-24T08:00:00Z, or with an offset such as -05:00), a date (2026-10-24, midnight in this
+computer's time zone), or
+how long ago: a number with m, h or d (90m, 24h, 7d). The result says which times they stood for.
 
-Each line has its CA (id and name), level, time (UTC), the IP address of the client whose request it logs
-(empty for the platform's own work) and the message.
+`--search` TEXT keeps the lines with that text in the message or the client's IP address, in any case, e.g. a
+device's name, a certificate's serial or an error.
+
+It lists `--limit` lines (default 50, at most 1000), the latest ones; total says how many match, so when it is
+more, narrow the list with `--ca`, `--level`, `--since`, `--until` or `--search`. It lists them in time order, as logs are
+read: the oldest first, the newest last, by the prompt. `--sort` time `--order` asc lists the earliest lines instead.
+`--sort` ca groups the lines by the CA's name, in `--order` asc (the default) or desc, each group in time order; it
+picks the lines of the first names, the latest of each.
+
+Each line shows, as log tools do: the time (RFC 3339, in this computer's time zone, which TZ changes, e.g.
+TZ=UTC), the level, the CA's name in brackets (a ] or \ in it escaped with \), the IP address of the client whose
+request it logs (- for the platform's own work) and the message. Control characters in it show as escapes such as
+\x1b. `--json` has the CA's id and name, the level, the time (UTC), the IP address ("" for none) and the message,
+unescaped.
 
 This command calls the PKIaaS server and needs a login.
 
@@ -1201,15 +1214,20 @@ Flags:
 | `--ca` | string, repeatable | only the lines of this CA, by its name (any case) or ID from `pkiaas ca list`; repeatable, up to 20 (default: all your CAs, not the active CA) |
 | `--level` | string | only lines of this level or more severe: emergency, alert, critical, error, warning, notice, info, debug |
 | `--limit` | int | how many lines to list (1-1000). Default: `50`. |
-| `--order` | string | asc or desc (default: desc with `--sort` time, asc with `--sort` ca) |
+| `--order` | string | asc or desc (default: desc with `--sort` time, the latest lines; asc with `--sort` ca) |
+| `--search` | string | only lines with this text in the message or the IP address, in any case (at most 100 characters) |
 | `--server` | string | the PKIaaS server (default: the last one you logged in to) |
-| `--sort` | string | what to sort by: time, ca (default: time, desc) |
+| `--since` | string | only lines logged at this time or later: RFC 3339, a date (midnight in this computer's time zone), or how long ago (90m, 24h, 7d) |
+| `--sort` | string | what picks the lines: time, ca (default: time, desc, the latest lines); they are listed in time order, grouped by CA with ca |
+| `--until` | string | only lines logged before this time: RFC 3339, a date (midnight in this computer's time zone), or how long ago (90m, 24h, 7d) |
 
 Examples:
 
 ```sh
 pkiaas log list
 pkiaas log list --ca "Example Root CA" --level warning
+pkiaas log list --since 24h --search "challenge password"
+pkiaas log list --since 2026-10-24 --until 2026-10-25 --search 203.0.113.7 --json
 pkiaas log list --ca a1B2c3D4e5 --ca f6G7h8I9j0 --level error --json
 pkiaas log list --sort ca --json
 pkiaas log list --json --limit 200
@@ -1219,8 +1237,10 @@ With `--json`, the result is an object with these fields:
 
 | Field | Type | Description |
 |---|---|---|
+| `since` | string, optional | the time `--since` stands for (ISO 8601, UTC): only lines logged then or later; only with `--since` |
+| `until` | string, optional | the time `--until` stands for (ISO 8601, UTC): only lines logged before it; only with `--until` |
 | `total` | integer | how many lines match; more than are listed when it exceeds `--limit` |
-| `logs` | object[] | the first `--limit` matching lines, in the `--sort` and `--order` order |
+| `logs` | object[] | `--limit` matching lines, the latest unless `--sort` time `--order` asc, in time order: the oldest first, the newest last (with `--sort` ca grouped by the CA's name, in time order within it) |
 | `logs[].ca` | object | the CA the line belongs to |
 | `logs[].ca.id` | string | the ID of the CA the line belongs to, which `--ca` takes |
 | `logs[].ca.name` | string or null | the CA's name (its certificate's common name) |
