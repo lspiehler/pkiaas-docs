@@ -280,14 +280,18 @@ allows; declining is final.
 ## Troubleshooting with the logs
 
 When something failed on the platform rather than in the CLI, e.g. a device's SCEP enrollment, a CEP/CES or ACME
-request, or `signing_failed`, the CA's log says why. `pkiaas log list --json` lists the log lines of all the
-user's CAs, the newest first: each has its `ca` (`id` and `name`), `level`, `time` (UTC), the client's `ip` and
-the `message`. It doesn't use the active CA or `PKIAAS_CA`; `--ca NAME` (or `ID`, repeatable) keeps the lines of
-those CAs. `--level warning` keeps warnings and the more severe lines (error, critical, alert, emergency). To find
-why a request failed, e.g.:
+request, or `signing_failed`, the CA's log says why. `pkiaas log list --json` lists the latest log lines of all the
+user's CAs in time order, the newest last (`.logs[-1]`): each has its `ca` (`id` and `name`), `level`, `time`
+(UTC), the client's `ip` and the `message`. It doesn't use the active CA or `PKIAAS_CA`; `--ca NAME` (or `ID`,
+repeatable) keeps the lines of those CAs. `--level warning` keeps warnings and the more severe lines (error,
+critical, alert, emergency). `--since` and `--until` keep the lines from a time and before a time: RFC 3339, a date
+(midnight in the computer's time zone, so prefer RFC 3339 with an offset) or how long ago (`90m`, `24h`, `7d`); the
+result's `since` and `until` say which times they stood for. `--search TEXT` keeps the lines with that text in the
+message or the client's IP address, in any case. To find why a request failed, e.g.:
 
 ```sh
-pkiaas log list --ca "Example Issuing CA" --level warning --limit 200 --json
+pkiaas log list --ca "Example Issuing CA" --level warning --since 24h --json
+pkiaas log list --search 203.0.113.7 --since 2026-10-24T08:00:00Z --until 2026-10-24T09:00:00Z --json
 ```
 
 and look for the lines near the time it failed, from the client's IP address. Lines are kept for a while (by
