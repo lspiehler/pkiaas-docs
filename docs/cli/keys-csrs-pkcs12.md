@@ -40,7 +40,8 @@ Passphrases are never given on the command line. Without a terminal to prompt on
 ### Standard Input and Output
 Like [Export](certificates.md#export), these commands work as OpenSSL does:
 
-- **Standard output or a file:** without `--out`, or with `--out -`, `key create`, `csr create` and `pkcs12 create` write to standard output. There is no result then, so `--json` needs `--out FILE`. Keys and PKCS#12 files are secrets: prefer `--out` for them, because output on screen can end up in logs and transcripts.
+- **Standard output or a file:** without `--out`, or with `--out -`, `key create`, `csr create` and `pkcs12 create` write to standard output. There is no result then, so `--json` needs `--out FILE`.
+- **Keys and PKCS#12 files are secrets:** save them with `--out FILE`, which only you can read. Without `--out`, `key create` and `pkcs12 create` print to a terminal, followed by a "Not saved" notice, but refuse to write into a pipe, captured output or a `--json` result, with the error code `secret_destination`: output there can end up in logs and transcripts. Add `--out -` to pipe one into another command on purpose.
 - **PEM or DER:** `key create` and `csr create` take `--format pem` (the default) or `--format der`, as OpenSSL's `-outform`. A PKCS#12 file is always DER.
 - **Standard input:** `--key`, `--cert` and `--chain-file` can be `-` to read standard input. PEM or DER is recognized from the content, and `--cert` and `--chain-file` also read PKCS#7 (.p7b). Only one input or passphrase per command can come from standard input. Passphrases can't be prompted for then, so give them with `--passphrase-env`, `--key-passphrase-env` or a passphrase file.
 
@@ -50,3 +51,5 @@ pkiaas cert export <SERIAL> --chain | pkiaas pkcs12 create --cert - --key server
 ```
 
 **Windows PowerShell 5.1:** `>` and `|` re-encode output as UTF-16, which breaks keys, certificates and PKCS#12 files. Always use `--out FILE` there, and give file names rather than `-`. PowerShell 7.4 and later keep the bytes. A file re-encoded this way fails with a message saying so.
+
+**Git Bash (mintty):** a key or PKCS#12 file prints on screen there as in any terminal, but pkiaas can't prompt for a passphrase in mintty. Give passphrases with `--passphrase-file` or `--passphrase-env`, or run the command through `winpty` (for example `winpty pkiaas key create --out server.key`), which prompts normally.
