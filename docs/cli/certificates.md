@@ -41,7 +41,7 @@ The serial names the certificate in its CA. `pkiaas cert show <SERIAL>` shows it
 - **Standard output or a file:** without `--out`, the certificate goes to standard output, so you can read it or pipe it into another command. With `--out FILE`, it's saved to the file, which is never replaced unless you add `--force`.
 - **PEM or DER:** `--format pem` (the default) or `--format der`, as OpenSSL's `-outform`. DER is the binary form (`.cer`) that Windows and Java also take.
 - **The chain:** `--chain` adds the certificates that issued it, up to the root, which is what a server sends. It needs PEM.
-- **The CSR:** `pkiaas cert export <SERIAL> --csr` exports the certificate signing request the certificate was issued from, when it's stored. A CSR sent by SCEP contains the enrollment's challenge password, so keep it as private as the password.
+- **The CSR:** `pkiaas cert export <SERIAL> --csr` exports the certificate signing request the certificate was issued from, when it's stored. A CSR sent by SCEP contains the enrollment's challenge password, so pkiaas treats it as a secret, like a key: save it with `--out FILE`. Without `--out` it prints only to a terminal, and in a pipe or with `--json` the command fails with `secret_destination`; add `--out -` to pipe it on purpose.
 
 ```sh
 pkiaas cert export 25ab765c7238b3d28d2bab03271f5fa8f2fccf86 --chain --out fullchain.pem

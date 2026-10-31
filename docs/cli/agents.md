@@ -40,8 +40,14 @@ Your commands and their output may be logged, so keep secrets out of both.
   `[Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(32)) | Set-Content server.key.pass`.
 - Keys are encrypted by default. Only use `--no-passphrase` when the user asks for an unencrypted key, e.g. for a
   service that loads its key at startup without a passphrase.
-- pkiaas never prints keys, passphrases or tokens. Don't print `PKIAAS_TOKEN`, and don't read the CLI's
-  `hosts.json`.
+- Keys, PKCS#12 files and CSRs from `cert export --csr` (a SCEP CSR holds the challenge password) are secrets:
+  `pkiaas help --json` names them in a command's `secretOutput`. Ask the user before you make one, and say where it
+  will go. Write it with `--out FILE` (readable by the user only), tell the user where the file is, and never read
+  the file yourself. Suggest that the user add a deny rule for the folder to your settings (e.g. Claude Code's
+  `permissions.deny`), so that the file stays out of your reach.
+- pkiaas prints a secret only with `--out -` or to a terminal, and never puts one in a result: without `--out` in
+  a pipe or captured output, or with `--json`, the command fails with `secret_destination`. It never prints
+  passphrases or tokens. Don't print `PKIAAS_TOKEN`, and don't read the CLI's `hosts.json`.
 
 ## Logging in
 
@@ -147,6 +153,7 @@ was the active one, the active CA is cleared on this computer.
 
 - Without `--out`, the output goes to standard output, ready to pipe into another command; there is no result
   then, so `--json` needs `--out FILE`. With `--out FILE --json`, the file is written and the result describes it.
+  A CSR from `cert export --csr` is a secret (see "Secrets"): write it with `--out FILE`.
 - `--format pem` (default) or `--format der`, as OpenSSL's `-outform`. PEM is what servers, OpenSSL and
   `pkcs12 create` read; DER is the binary form (`.cer`, `.der`) Windows and Java also take. DER holds one
   certificate, so it can't be combined with `--chain`. Redirect or pipe DER: it is binary.
@@ -158,14 +165,17 @@ standard output only to pipe the output straight into another command.
 ## Standard input and output
 
 The local commands work the same way: `key create`, `csr create` and `pkcs12 create` write to standard output
-without `--out` (then `--json` needs `--out FILE`), and `key create` and `csr create` take `--format pem|der`
+without `--out` (then `--json` needs `--out FILE`; keys and PKCS#12 files only to a terminal, see below), and `key create` and `csr create` take `--format pem|der`
 (`pkcs12 create` always writes DER). Their input files, `--key`, `--cert` and `--chain-file`, may be `-` for
 standard input; PEM or DER is recognized from the content. Only one input or passphrase per command can come
 from standard input, and with data on standard input passphrases can't be prompted for, so give them with
 `--*passphrase-env` or `--*passphrase-file FILE`.
 
-Keys and PKCS#12 files are secrets: always write them with `--out FILE` (owner-only), never to standard output,
-since your transcript is kept. Pipe certificates and CSRs instead, e.g.
+Keys, PKCS#12 files and CSRs from `cert export --csr` are secrets: always write them with `--out FILE`
+(owner-only), since your transcript is kept. Without `--out`, they go to standard output only when it is a
+terminal; in a pipe the command fails with `secret_destination`. `--out -` sends them to standard output anyway:
+use it only to pipe one straight into another command, never to read it. Pipe certificates, and CSRs you made
+with `csr create` or a CA's CSR from `ca export --csr`, e.g.
 `pkiaas cert export SERIAL --chain | pkiaas pkcs12 create --cert - --key server.key ... --out server.pfx`.
 
 In Windows PowerShell 5.1, `>` and `|` re-encode output, which breaks keys, certificates and PKCS#12 files: always
@@ -394,6 +404,7 @@ With `--json`, an error is `{"error": {"code", "message", "hint"}}`. The hint is
 | `error` | 1 | an error without a more specific code; the message says what failed | read the message: fix the cause if it is clear (e.g. a wrong file path), otherwise tell the user |
 | `usage` | 2 | the command line is wrong, or a needed option (such as a passphrase without a terminal to prompt on) is missing | fix the command line; run the command with `--help` (or `pkiaas help --json <command>`) for its flags |
 | `file_exists` | 5 | an output file exists, and files are never replaced without `--force` | if an earlier run of yours wrote the file, it is the result: use it; otherwise choose another output file, or add `--force` if the user wants the file replaced |
+| `secret_destination` | 2 | the output is a secret (a key, a PKCS#12 file or a stored CSR), so it isn't sent into a pipe, captured output or a `--json` result without `--out` | save it with `--out` FILE, tell the user where the file is, and don't read it yourself; use `--out` - only to pipe it straight into another command, since your output may be logged |
 | `wrong_passphrase` | 1 | the key's passphrase is wrong, or the key file is damaged | ask the user for the right passphrase, given the same way (environment variable or file) |
 | `not_logged_in` | 3 | there is no login for the server, and `PKIAAS_TOKEN` isn't set | ask the user to run `pkiaas login` (or `pkiaas login --device` where no browser can open); see `pkiaas help agents` |
 | `invalid_token` | 3 | the server refused the token: the login expired, was revoked, or the account was removed | ask the user to run `pkiaas login` (or `pkiaas login --device` where no browser can open); see `pkiaas help agents` |

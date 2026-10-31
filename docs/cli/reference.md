@@ -664,8 +664,10 @@ Export a certificate that a CA issued, by default the active CA, by its serial n
 
 With `--csr`, it exports the certificate signing request the certificate was issued from instead. It is stored for
 most certificates, but not all (e.g. not for ACME): `pkiaas cert show` says whether (hasCsr), and a certificate
-without one fails with csr_not_stored. A CSR sent by SCEP holds the enrollment's challenge password, so keep it
-as private as the password; an `--out` file with a CSR is readable by its owner only.
+without one fails with csr_not_stored. A CSR sent by SCEP holds the enrollment's challenge password, so every
+exported CSR is a secret: an `--out` file with it is readable by its owner only, and without `--out` it goes to
+standard output only when that is a terminal (in a pipe or captured output the command fails with
+secret_destination); give `--out` - to pipe it.
 
 Without `--out` (or with `--out` -), the output goes to standard output, as OpenSSL writes it, to read or to pipe to
 another command; there is no result then, so `--json` needs `--out`. With `--out` FILE, it is written to the file,
@@ -682,6 +684,8 @@ In Windows PowerShell 5.1, > and \| re-encode output, so write files with `--out
 keep the bytes).
 
 This command calls the PKIaaS server and needs a login.
+
+Its output (the CSR, with --csr) is a secret: it goes to `--out FILE`, to `--out -`, or to a terminal, never into a pipe without `--out -` or into a `--json` result (error `secret_destination`).
 
 Flags:
 
@@ -702,7 +706,7 @@ pkiaas cert export 25ab765c7238b3d28d2bab03271f5fa8f2fccf86
 pkiaas cert export 25ab765c7238b3d28d2bab03271f5fa8f2fccf86 | openssl x509 -noout -subject
 pkiaas cert export 25ab765c7238b3d28d2bab03271f5fa8f2fccf86 --chain --out fullchain.pem --json
 pkiaas cert export 25ab765c7238b3d28d2bab03271f5fa8f2fccf86 --format der --out www.cer
-pkiaas cert export 25ab765c7238b3d28d2bab03271f5fa8f2fccf86 --csr | openssl req -noout -text
+pkiaas cert export 25ab765c7238b3d28d2bab03271f5fa8f2fccf86 --csr --out - | openssl req -noout -text
 ```
 
 With `--json`, the result is an object with these fields:
@@ -721,7 +725,7 @@ With `--json`, the result is an object with these fields:
 
 Side effects:
 
-- with `--out`, writes the file (readable by everyone for certificates, by its owner only for a CSR); otherwise writes to standard output and prints no result
+- with `--out` FILE, writes the file (readable by everyone for certificates, by its owner only for a CSR); otherwise writes to standard output (a CSR only with `--out` - or to a terminal) and prints no result
 
 ## pkiaas cert list
 
@@ -1088,12 +1092,16 @@ Create a private key in PKCS#8 form, and save it in a file that only you can rea
 The key is encrypted with a passphrase (AES-256-CBC, PBKDF2-HMAC-SHA256 with 600,000 iterations) unless
 `--no-passphrase` is given. Run `pkiaas key types` to list the key types.
 
-Without `--out` (or with `--out` -), the key goes to standard output, as OpenSSL writes it, to pipe to another
-command; there is no result then, so `--json` needs `--out`. Prefer `--out`: a key on standard output can end up in
-logs and transcripts. `--format` is pem (default) or der, as OpenSSL's -outform.
+The key is a secret, so without `--out` it goes to standard output only when that is a terminal, followed by a
+notice that it wasn't saved; in a pipe or captured output the command fails with secret_destination. `--out` -
+sends it to standard output anyway, as OpenSSL writes it, to pipe to another command. There is no result then,
+so `--json` needs `--out` FILE. Prefer `--out` FILE: a key on standard output can end up in logs and transcripts.
+`--format` is pem (default) or der, as OpenSSL's -outform.
 
 In Windows PowerShell 5.1, > and \| re-encode output, so write files with `--out` (PowerShell 7.4 and later
 keep the bytes).
+
+Its output (the key) is a secret: it goes to `--out FILE`, to `--out -`, or to a terminal, never into a pipe without `--out -` or into a `--json` result (error `secret_destination`).
 
 Flags:
 
@@ -1113,7 +1121,7 @@ Examples:
 pkiaas key create --out server.key
 pkiaas key create --type ml-dsa-65 --out pq.key --passphrase-env KEY_PASSPHRASE --json
 pkiaas key create --type ec-p256 --out ci.key --no-passphrase --json
-pkiaas key create --type ec-p256 --no-passphrase | openssl pkey -noout -text
+pkiaas key create --type ec-p256 --no-passphrase --out - | openssl pkey -noout -text
 ```
 
 With `--json`, the result is an object with these fields:
@@ -1127,7 +1135,7 @@ With `--json`, the result is an object with these fields:
 
 Side effects:
 
-- with `--out`, writes the file, readable by the owner only; otherwise writes the key to standard output and no result
+- with `--out` FILE, writes the file, readable by the owner only; with `--out` - or to a terminal, writes the key to standard output and no result
 
 ## pkiaas key types
 
@@ -1379,11 +1387,15 @@ later, macOS, Java 12 and later, and OpenSSL 1.1.1 and later read. `--legacy` us
 systems. `--no-passphrase` writes the key unencrypted, for programs that load PKCS#12 files without a password;
 protect such a file like a plain private key.
 
-Without `--out` (or with `--out` -), the PKCS#12 file (always DER, as OpenSSL writes it) goes to standard output,
-to pipe to another command; there is no result then, so `--json` needs `--out`.
+The PKCS#12 file holds the key, so it is a secret: without `--out`, it (always DER, as OpenSSL writes it) goes
+to standard output only when that is a terminal, and in a pipe or captured output the command fails with
+secret_destination. `--out` - sends it to standard output anyway, to pipe to another command. There is no result
+then, so `--json` needs `--out` FILE.
 
 In Windows PowerShell 5.1, > and \| re-encode output, so write files with `--out` (PowerShell 7.4 and later
 keep the bytes).
+
+Its output (the PKCS#12 file) is a secret: it goes to `--out FILE`, to `--out -`, or to a terminal, never into a pipe without `--out -` or into a `--json` result (error `secret_destination`).
 
 Flags:
 
@@ -1420,7 +1432,7 @@ With `--json`, the result is an object with these fields:
 
 Side effects:
 
-- with `--out`, writes the file, readable by the owner only; otherwise writes the PKCS#12 file to standard output and no result
+- with `--out` FILE, writes the file, readable by the owner only; with `--out` - or to a terminal, writes the PKCS#12 file to standard output and no result
 
 ## pkiaas request
 
