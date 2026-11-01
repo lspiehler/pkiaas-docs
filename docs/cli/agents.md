@@ -222,8 +222,8 @@ reason, and only then run the command with `--yes`. Without `--yes` and without 
 - Both need a subscription, the user's or the CA owner's; without one they fail with
   `subscription_required`. Tell the user rather than retrying.
 
-Requests that are safe to repeat (reading, revoking, unrevoking, changing a CA's settings, deleting a CA, and requesting a certificate
-or creating a CA with its Idempotency-Key) are tried up to 3 times in all when the connection fails or the server answers with a 5xx or 429; a notice goes to standard error. Only run a command again yourself after it has
+Requests that are safe to repeat (reading, revoking, unrevoking, changing a CA's or an ACME policy's settings, deleting a CA or
+an ACME policy, and requesting a certificate or creating a CA or an ACME policy with its Idempotency-Key) are tried up to 3 times in all when the connection fails or the server answers with a 5xx or 429; a notice goes to standard error. Only run a command again yourself after it has
 failed. When the server asks to wait longer than 10 seconds, the command fails at once and its message says how long
 to wait before running it again.
 
@@ -286,6 +286,39 @@ allows; declining is final.
   issued request is never signed again: running the command again with other changes succeeds but applies none.
 - `pkiaas request decline ID --yes --json` declines it for good. Declining a declined request succeeds; an issued
   one fails with `request_issued` (revoke its certificate instead, if the user wants that).
+
+## ACME policies
+
+ACME clients (certbot, acme.sh, Windows and network devices) get certificates from a CA by registering under one of
+its ACME policies with an external account binding (EAB) made for the policy. A policy names the template
+certificates are issued with (the names in them come from the order), and the domains an order may have without a
+challenge (`preApprovedDomains`: `*` matches any text, and `*.example.com` also matches example.com); other names
+need an http-01, dns-01 or tls-alpn-01 challenge. Like the other commands that work in a CA, the `acme policy`
+commands take `--ca NAME` (or `ID`) and name the CA in `ca`; a policy is named by its numeric `id`.
+
+- `pkiaas acme policy list --json` lists the CA's policies by name, with how many EABs, ACME accounts and valid
+  orders each has (`eabCount`, `accountCount`, `validOrderCount`). `--search TEXT` keeps those whose name,
+  template or pre-approved domains contain the text; `--sort` takes name, template, preApprovedDomains, eabCount,
+  accountCount or validOrderCount, with `--order asc|desc`. `pkiaas acme policy show ID --json` shows one.
+- `pkiaas acme policy create --name NAME --template NAME --pre-approved "*.example.com,example.org" --json` creates
+  one, when the user asks for it. The name is 1 to 50 letters, digits, spaces, hyphens and underscores; the
+  template is any of the CA's templates, by name or `id` (`template_not_found`, `template_ambiguous` as for
+  requests). Pass `--idempotency-key KEY` and keep the key, as for requests.
+- `pkiaas acme policy update ID --json` changes only the settings whose flags are given: `--name`, `--template`, and
+  `--pre-approved`, which replaces the whole list (`--pre-approved ""` clears it, so every name needs a challenge).
+  Pre-approving a domain lets anyone with the policy's EAB get certificates for it without proving control, so
+  only pre-approve what the user names. Add `--dry-run` to see the changes (`changes`, old and new) without sending
+  anything. A policy that already has the settings is left as it is. A template that was deleted shows as
+  `template` null: orders under the policy fail until `update --template` chooses another. If someone changed the
+  policy between reading and saving, it fails with `acme_changed`: run it again.
+- `pkiaas acme policy delete ID --json` deletes a policy with its EABs and provisioning URLs, so ACME clients can no
+  longer register with them. Its ACME accounts keep working only if they move to another policy of the CA:
+  `--move-accounts-to ID`; a policy with accounts isn't deleted without it (`policy_has_accounts`). Delete a
+  policy only when the user asks you to: preview it with `--dry-run --json` (`impact`: `eabs`, `provisioningUrls`,
+  `accounts` and `moveAccountsTo`), show that to the user, and only if they agree run it with `--yes` (with the same
+  `--move-accounts-to`). Without `--yes` and without a terminal it fails with `usage`. If the policy changed after
+  the preview, it fails with `acme_changed` and deletes nothing: preview it again and ask again. A retry of a delete
+  that already went through reports `deleted` as true.
 
 ## Troubleshooting with the logs
 
@@ -429,6 +462,8 @@ With `--json`, an error is `{"error": {"code", "message", "hint"}}`. The hint is
 | `signing_failed` | 1 | the CA couldn't sign the request, e.g. its IoT HSM didn't answer or the template doesn't fit the CSR; the CA's log says why | tell the user, who can read the CA's log on the website; the request waits for approval again (or stays processing if the certificate was signed), so approve it again once the cause is fixed |
 | `ca_creation_failed` | 1 | creating the CA failed on the server at the step the message names; nothing was kept, unless the message says the half-made CA couldn't be removed | run the same command again once (with the same `--idempotency-key`); if it fails again, tell the user and quote the request ID from the message. Each try counts toward the limit of 20 CAs an hour |
 | `ca_changed` | 5 | someone changed the CA since the command read it (`pkiaas ca update`) or previewed its delete (`pkiaas ca delete`), so nothing was saved or deleted | someone changed the CA since it was read; run the command again (it reads the CA again and applies only its own flags); `pkiaas ca show --json` shows the CA's settings now |
+| `acme_changed` | 5 | someone changed the ACME policy since the command read it (`pkiaas acme policy update`) or previewed its delete (`pkiaas acme policy delete`), so nothing was saved or deleted | run the command again: it reads the policy again and applies only its own flags; `pkiaas acme policy show ID --json` shows the policy now |
+| `policy_has_accounts` | 5 | the ACME policy has ACME accounts, so it isn't deleted without another policy of the CA to move them to; nothing was deleted | run `pkiaas acme policy list --json` (with the same `--ca`) to pick another policy, ask the user if it isn't clear which, then run the delete again with `--move-accounts-to` ID |
 | `cli_outdated` | 1 | the server needs a newer pkiaas | update pkiaas with the install command in the message, then run the command again |
 | `connection_failed` | 1 | the server couldn't be reached | check the server address (`--server` or `PKIAAS_SERVER`) and the network, then try again |
 | `http_<status>` | 1 | the server answered with an unexpected HTTP status, e.g. http_500; the message has the request ID to quote | try again later; if it persists, report the request ID |

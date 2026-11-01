@@ -42,6 +42,7 @@ nav:
     - Request Certificates: cli/requests.md
     - Approve Requests: cli/pending-requests.md
     - Keys, CSRs and PKCS#12: cli/keys-csrs-pkcs12.md
+    - ACME Policies: cli/acme-policies.md
     - AI Agents: cli/agents.md
     - Command Reference: cli/reference.md
   - ACME:
