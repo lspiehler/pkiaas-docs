@@ -12,6 +12,13 @@ Every command with its arguments and flags, apart from the global flags below an
 
 ```text
 pkiaas
+├── acme
+│   └── policy
+│       ├── create             --ca=STRING --idempotency-key=STRING --name=STRING --pre-approved=STRING --template=STRING
+│       ├── delete ID          --ca=STRING --dry-run --move-accounts-to=STRING --yes
+│       ├── list               --ca=STRING --limit=INT --order=STRING --search=STRING --sort=STRING
+│       ├── show ID            --ca=STRING
+│       └── update ID          --ca=STRING --dry-run --name=STRING --pre-approved=STRING --template=STRING
 ├── ca
 │   ├── create                 --csr-only --days=INT --extended-key-usage=STRING --idempotency-key=STRING --key-type=STRING --key-usage=STRING --name=STRING --path-length=INT --set --signature-algorithm=STRING --subject=STRING --yes
 │   ├── delete NAME|ID         --dry-run --yes
@@ -66,6 +73,352 @@ pkiaas
 | `PKIAAS_CA` | the name (any case) or ID of the CA that commands work in when `--ca` isn't given, instead of the active CA; scripts should give the ID |
 
 Exit codes and error codes are listed in the [agent guide](agents.md#exit-codes).
+
+## pkiaas acme
+
+Manage a CA's ACME policies.
+
+```
+pkiaas acme [flags]
+```
+
+Commands:
+
+- [`pkiaas acme policy`](reference.md#pkiaas-acme-policy)
+
+## pkiaas acme policy
+
+List a CA's ACME policies, show one, create, update or delete one.
+
+```
+pkiaas acme policy [flags]
+```
+
+Commands:
+
+- [`pkiaas acme policy create`](reference.md#pkiaas-acme-policy-create)
+- [`pkiaas acme policy delete`](reference.md#pkiaas-acme-policy-delete)
+- [`pkiaas acme policy list`](reference.md#pkiaas-acme-policy-list)
+- [`pkiaas acme policy show`](reference.md#pkiaas-acme-policy-show)
+- [`pkiaas acme policy update`](reference.md#pkiaas-acme-policy-update)
+
+## pkiaas acme policy create
+
+Create an ACME policy.
+
+```
+pkiaas acme policy create --name NAME --template NAME|ID [--pre-approved DOMAIN,...] [--ca NAME|ID] [--idempotency-key KEY] [flags]
+```
+
+Create an ACME policy in a CA, by default the active CA, as the website's ACME Policies page does. ACME clients
+register under a policy with an external account binding (EAB) made for it; the policy says what they get.
+
+`--name` is the policy's name: 1 to 50 letters, digits, spaces, hyphens and underscores. `--template` is the name of
+one of the CA's templates, in any case, as `pkiaas template list` shows it, or its ID (error template_not_found);
+certificates are issued with it, with the names the order asks for. A name that more than one template has is
+refused (error template_ambiguous): give the ID then.
+
+`--pre-approved` lists the domains an order may have without a challenge, comma-separated or repeated: * matches
+any text, dots included, and *.example.com also matches example.com. They are stored in lowercase; duplicates are
+dropped. Other names need an http-01, dns-01 or tls-alpn-01 challenge. Without it, every name needs a challenge.
+
+Each run is a new policy, unless it has the `--idempotency-key` of an earlier run (any text, e.g. a UUID) and the
+same flags: within 24 hours that gives the earlier result instead of a second policy. Without `--idempotency-key`,
+the CLI makes a key and reports it (idempotencyKey), and uses it when it retries by itself. A key used for
+different flags is refused (error idempotency_key_reused).
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--idempotency-key` | string | repeat an earlier run with this key instead of creating a second policy (default: a new random key) |
+| `--name` | string | the policy's name: 1 to 50 letters, digits, spaces, hyphens and underscores |
+| `--pre-approved` | string, repeatable | the domains orders may have without a challenge, comma-separated or repeated (* matches any text); replaces the whole list, "" clears it |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+| `--template` | string | the name or ID of the CA's template to issue with (pkiaas template list) |
+
+Examples:
+
+```sh
+pkiaas acme policy create --name "Web servers" --template "Web Server"
+pkiaas acme policy create --name "Web servers" --template "Web Server" --pre-approved "*.example.com,example.org" --json
+pkiaas acme policy create --name Intranet --template f5IK8ghmT0 --ca a1B2c3D4e5 --idempotency-key 8e03978e-40d5-43e8-bc93-6894a57f9324 --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `ca` | object | the CA the policy belongs to |
+| `ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
+| `ca.name` | string or null | the CA's name (its certificate's common name) |
+| `id` | integer | the policy's ID, which the 'acme policy' commands take to name it in its CA |
+| `name` | string | the policy's name |
+| `template` | object or null | the template certificates are issued with (the names in them come from the order); null if the template was deleted: orders then fail until another is chosen with `pkiaas acme policy update --template` |
+| `template.id` | string | the template's ID, which `--template` takes |
+| `template.name` | string or null | the template's name |
+| `preApprovedDomains` | string[] | names an order may have without a challenge: * matches any text, dots included, and *.example.com also matches example.com; other names need an http-01, dns-01 or tls-alpn-01 challenge |
+| `eabCount` | integer | external account bindings (EABs) of the policy, which ACME clients register with |
+| `provisioningUrlCount` | integer | provisioning URLs of the policy (deprecated: no new ones can be made) |
+| `accountCount` | integer | ACME accounts registered under the policy |
+| `validOrderCount` | integer | orders of the policy's accounts that were issued a certificate |
+| `idempotencyKey` | string | the Idempotency-Key it was sent with: the same command with `--idempotency-key` and this key, within 24 hours, gives this result again instead of a second policy |
+
+Side effects:
+
+- creates an ACME policy in the CA on the server; with the `--idempotency-key` of an earlier run (within 24 hours), nothing new
+- the CA's log records it
+
+## pkiaas acme policy delete
+
+Delete an ACME policy, with its EABs, moving its accounts to another policy.
+
+```
+pkiaas acme policy delete ID [--move-accounts-to ID] [--ca NAME|ID] [--dry-run] [--yes] [flags]
+```
+
+Delete an ACME policy of a CA, by default the active CA's, by its ID from `pkiaas acme policy list`. Its external
+account bindings (EABs) and provisioning URLs are deleted with it, so ACME clients can no longer register with
+them. Its ACME accounts move to the policy `--move-accounts-to` names, another policy of the same CA, and keep
+working there; a policy with accounts isn't deleted without it (error policy_has_accounts). It can't be undone.
+
+The command first asks the server what the delete takes with it (a dry run, which changes nothing) and prints
+that. `--dry-run` stops there; with `--json`, the result is the dry run. Otherwise, on a terminal, it asks for
+confirmation; without a terminal, give `--yes`, which deletes without asking; without it, the command stops with a
+usage error.
+
+The delete is sent with the version of the policy the dry run saw: if someone changed the policy in between,
+nothing is deleted and it fails with acme_changed: run the command again to see the impact now. Running it again
+after it succeeded fails with not_found, as for a policy that never existed; if a retry of the same delete finds
+the policy gone, the result says it is deleted.
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--dry-run` | bool | show what the delete would take with it, and delete nothing |
+| `--move-accounts-to` | string | the ID of another policy of the CA, which gets this policy's ACME accounts |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+| `--yes` | bool | delete without asking; only after the person saw what the delete takes with it and agreed |
+
+Examples:
+
+```sh
+pkiaas acme policy delete 205 --dry-run
+pkiaas acme policy delete 205 --move-accounts-to 206 --dry-run --json
+pkiaas acme policy delete 205 --move-accounts-to 206
+pkiaas acme policy delete 205 --yes --json
+pkiaas acme policy delete 205 --move-accounts-to 206 --ca a1B2c3D4e5 --yes --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `ca` | object | the CA the policy belongs to |
+| `ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
+| `ca.name` | string or null | the CA's name (its certificate's common name) |
+| `policy` | object | the policy |
+| `policy.id` | integer | the policy's ID |
+| `policy.name` | string | the policy's name |
+| `impact` | object | what deleting the policy takes with it |
+| `impact.eabs` | integer | external account bindings (EABs) of the policy, deleted with it: ACME clients can no longer register with them |
+| `impact.provisioningUrls` | integer | provisioning URLs of the policy, deleted with it |
+| `impact.accounts` | integer | ACME accounts of the policy: they move to moveAccountsTo and keep working there; without `--move-accounts-to`, a policy with accounts isn't deleted (policy_has_accounts) |
+| `impact.moveAccountsTo` | object or null | the policy that gets the accounts (`--move-accounts-to`); null if none was given |
+| `impact.moveAccountsTo.id` | integer | the policy's ID |
+| `impact.moveAccountsTo.name` | string | the policy's name |
+| `dryRun` | boolean, optional | true for `--dry-run`: nothing was deleted |
+| `deleted` | boolean | true: the policy is deleted, also when an earlier try of the same delete did it; false with `--dry-run` |
+
+Side effects:
+
+- deletes the ACME policy on the server, with its EABs and provisioning URLs; nothing with `--dry-run`
+- with `--move-accounts-to`, moves its ACME accounts to that policy, where they keep working
+- it can't be undone; the CA's log records it
+
+## pkiaas acme policy list
+
+List a CA's ACME policies, by name.
+
+```
+pkiaas acme policy list [--ca NAME|ID] [--search TEXT] [--sort FIELD [--order asc|desc]] [--limit N] [flags]
+```
+
+List the ACME policies of a CA, by default the active CA's, by name. An ACME policy is what ACME clients register
+under, with an external account binding (EAB) made for it: it names the template certificates are issued with,
+and the domains an order may have without a challenge (pre-approved). The ID is what the other 'acme policy'
+commands take to name a policy.
+
+It lists the first `--limit` policies (default 50, at most 1000); total says how many match. `--search` keeps the
+policies whose name, template or pre-approved domains contain the text, in any case. `--sort` takes name, template,
+preApprovedDomains, eabCount, accountCount or validOrderCount, in `--order` asc (the default with `--sort`) or desc.
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--limit` | int | how many policies to list (1-1000). Default: `50`. |
+| `--order` | string | asc or desc (default: asc with `--sort`) |
+| `--search` | string | only policies with this text in the name, template or pre-approved domains |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+| `--sort` | string | what to sort by: name, template, preApprovedDomains, eabCount, accountCount, validOrderCount (default: name) |
+
+Examples:
+
+```sh
+pkiaas acme policy list
+pkiaas acme policy list --search example.com --json
+pkiaas acme policy list --sort accountCount --order desc --ca a1B2c3D4e5 --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `ca` | object | the CA the policies belong to |
+| `ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
+| `ca.name` | string or null | the CA's name (its certificate's common name) |
+| `total` | integer | how many policies match; more than are listed when it exceeds `--limit` |
+| `policies` | object[] | the first `--limit` matching policies, in the `--sort` and `--order` order (by name without `--sort`) |
+| `policies[].id` | integer | the policy's ID, which the 'acme policy' commands take to name it in its CA |
+| `policies[].name` | string | the policy's name |
+| `policies[].template` | object or null | the template certificates are issued with (the names in them come from the order); null if the template was deleted: orders then fail until another is chosen with `pkiaas acme policy update --template` |
+| `policies[].template.id` | string | the template's ID, which `--template` takes |
+| `policies[].template.name` | string or null | the template's name |
+| `policies[].preApprovedDomains` | string[] | names an order may have without a challenge: * matches any text, dots included, and *.example.com also matches example.com; other names need an http-01, dns-01 or tls-alpn-01 challenge |
+| `policies[].eabCount` | integer | external account bindings (EABs) of the policy, which ACME clients register with |
+| `policies[].provisioningUrlCount` | integer | provisioning URLs of the policy (deprecated: no new ones can be made) |
+| `policies[].accountCount` | integer | ACME accounts registered under the policy |
+| `policies[].validOrderCount` | integer | orders of the policy's accounts that were issued a certificate |
+
+## pkiaas acme policy show
+
+Show an ACME policy's settings and counts.
+
+```
+pkiaas acme policy show ID [--ca NAME|ID] [flags]
+```
+
+Show an ACME policy of a CA, by default the active CA's, by its ID from `pkiaas acme policy list`: its template,
+its pre-approved domains, and how many EABs, provisioning URLs, ACME accounts and valid orders it has.
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+
+Examples:
+
+```sh
+pkiaas acme policy show 205
+pkiaas acme policy show 205 --ca a1B2c3D4e5 --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `ca` | object | the CA the policy belongs to |
+| `ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
+| `ca.name` | string or null | the CA's name (its certificate's common name) |
+| `id` | integer | the policy's ID, which the 'acme policy' commands take to name it in its CA |
+| `name` | string | the policy's name |
+| `template` | object or null | the template certificates are issued with (the names in them come from the order); null if the template was deleted: orders then fail until another is chosen with `pkiaas acme policy update --template` |
+| `template.id` | string | the template's ID, which `--template` takes |
+| `template.name` | string or null | the template's name |
+| `preApprovedDomains` | string[] | names an order may have without a challenge: * matches any text, dots included, and *.example.com also matches example.com; other names need an http-01, dns-01 or tls-alpn-01 challenge |
+| `eabCount` | integer | external account bindings (EABs) of the policy, which ACME clients register with |
+| `provisioningUrlCount` | integer | provisioning URLs of the policy (deprecated: no new ones can be made) |
+| `accountCount` | integer | ACME accounts registered under the policy |
+| `validOrderCount` | integer | orders of the policy's accounts that were issued a certificate |
+
+## pkiaas acme policy update
+
+Change an ACME policy's name, template or pre-approved domains.
+
+```
+pkiaas acme policy update ID [--name NAME] [--template NAME|ID] [--pre-approved DOMAIN,...] [--ca NAME|ID] [--dry-run] [flags]
+```
+
+Change the settings of an ACME policy of a CA, by default the active CA's, by its ID from `pkiaas acme policy
+list`, as the website's Edit button does. Only the settings whose flags are given change; the others stay as they
+are. Accounts, EABs and orders stay as they are; a new template and new pre-approved domains apply to the orders
+that follow.
+
+`--name` is the new name: 1 to 50 letters, digits, spaces, hyphens and underscores. `--template` is the name (any
+case) or ID of one of the CA's templates, as for `pkiaas acme policy create`. `--pre-approved` replaces the whole
+list of domains that need no challenge, comma-separated or repeated (* matches any text); `--pre-approved` ""
+clears it, so that every name needs a challenge.
+
+The command reads the policy, changes the settings given, and sends them all back with the version it read. If
+someone changed the policy in between, nothing is saved and it fails with acme_changed: run it again. When the
+policy already has the settings given, nothing is sent and the result is the policy as it is, so the command is
+safe to run again. `--dry-run` sends nothing and shows what would change, each setting old → new; with `--json`, the
+policy as it is now with dryRun true and changes.
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--dry-run` | bool | send nothing; show what would change |
+| `--name` | string | the policy's new name: 1 to 50 letters, digits, spaces, hyphens and underscores |
+| `--pre-approved` | string, repeatable | the domains orders may have without a challenge, comma-separated or repeated (* matches any text); replaces the whole list, "" clears it |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+| `--template` | string | the name or ID of the CA's template to issue with (pkiaas template list) |
+
+Examples:
+
+```sh
+pkiaas acme policy update 205 --pre-approved "*.example.com,example.org" --dry-run
+pkiaas acme policy update 205 --name "Web servers 2" --template "Web Server" --json
+pkiaas acme policy update 205 --pre-approved "" --ca a1B2c3D4e5 --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `ca` | object | the CA the policy belongs to |
+| `ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
+| `ca.name` | string or null | the CA's name (its certificate's common name) |
+| `id` | integer | the policy's ID, which the 'acme policy' commands take to name it in its CA |
+| `name` | string | the policy's name |
+| `template` | object or null | the template certificates are issued with (the names in them come from the order); null if the template was deleted: orders then fail until another is chosen with `pkiaas acme policy update --template` |
+| `template.id` | string | the template's ID, which `--template` takes |
+| `template.name` | string or null | the template's name |
+| `preApprovedDomains` | string[] | names an order may have without a challenge: * matches any text, dots included, and *.example.com also matches example.com; other names need an http-01, dns-01 or tls-alpn-01 challenge |
+| `eabCount` | integer | external account bindings (EABs) of the policy, which ACME clients register with |
+| `provisioningUrlCount` | integer | provisioning URLs of the policy (deprecated: no new ones can be made) |
+| `accountCount` | integer | ACME accounts registered under the policy |
+| `validOrderCount` | integer | orders of the policy's accounts that were issued a certificate |
+| `dryRun` | boolean, optional | true for `--dry-run`: nothing was sent, and the policy is as it is now |
+| `changes` | object[], optional | `--dry-run` only: the settings that would change; empty if none would |
+| `changes[].field` | string | the setting: name, template or preApprovedDomains |
+| `changes[].from` | string or null | its value now, as text: for template the template's ID, for preApprovedDomains the domains separated by commas; null if none |
+| `changes[].to` | string or null | its new value, as from |
+
+Side effects:
+
+- changes the policy's settings on the server, only those given; nothing when the policy already has them, or with `--dry-run`
+- a new template and new pre-approved domains apply to the orders that follow; accounts, EABs and orders stay as they are
+- the CA's log records the change
 
 ## pkiaas ca
 

@@ -6,4 +6,6 @@ An ACME policy associates ACME certificate requests with a specified certificate
 
 To create an ACME policy, log in to PKIaaS.io and navigate to **ACME -> Policies**. Click "Create", enter a unique name for the new ACME policy, select which template should be used when signing certificates requested using this policy, optionally enter any pre-approved domains, and click "Create Policy."
 
+You can also create and manage ACME policies with the `pkiaas` command-line tool: see [ACME Policies in the CLI](../cli/acme-policies.md).
+
 Next, see [Generate EAB Credentials](generate-eab-credentials.md).
