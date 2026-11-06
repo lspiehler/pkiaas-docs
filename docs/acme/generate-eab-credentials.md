@@ -10,4 +10,6 @@ When the new EAB is generated, a modal will appear providing the ACME directory 
 
 **Note:** After an ACME account is registered with an EAB, it is permanently associated with the policy the EAB was generated for. It is safe to delete an EAB after an ACME account has been registered with it.
 
+The pkiaas CLI can create and manage EABs too: see [ACME EABs in the pkiaas CLI](../cli/acme-eabs.md).
+
 Next, see [Register an ACME Account](register-acme-account.md).
