@@ -41,6 +41,7 @@ nav:
     - Certificates: cli/certificates.md
     - Request Certificates: cli/requests.md
     - Approve Requests: cli/pending-requests.md
+    - Certificate Templates: cli/templates.md
     - Keys, CSRs and PKCS#12: cli/keys-csrs-pkcs12.md
     - ACME Policies: cli/acme-policies.md
     - ACME EABs: cli/acme-eabs.md
