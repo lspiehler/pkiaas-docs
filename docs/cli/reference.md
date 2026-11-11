@@ -13,12 +13,18 @@ Every command with its arguments and flags, apart from the global flags below an
 ```text
 pkiaas
 ├── acme
+│   ├── account
+│   │   ├── list               --ca=STRING --limit=INT --order=STRING --policy=STRING --search=STRING --sort=STRING --status=STRING
+│   │   ├── revoke ID          --ca=STRING --yes
+│   │   └── show ID            --ca=STRING
 │   ├── eab
 │   │   ├── create             --ca=STRING --expires=STRING --force --idempotency-key=STRING --name=STRING --out=STRING --policy=STRING --uses=INT
 │   │   ├── delete ID          --ca=STRING --yes
 │   │   ├── list               --ca=STRING --limit=INT --order=STRING --policy=STRING --search=STRING --sort=STRING --status=STRING
 │   │   ├── show ID            --ca=STRING
 │   │   └── update ID          --ca=STRING --dry-run --enabled=STRING --expires=STRING --name=STRING --uses=INT
+│   ├── order
+│   │   └── list               --acme-account=STRING --ca=STRING --limit=INT --order=STRING --policy=STRING --search=STRING --sort=STRING --status=STRING
 │   ├── policy
 │   │   ├── create             --ca=STRING --idempotency-key=STRING --name=STRING --pre-approved=STRING --template=STRING
 │   │   ├── delete NAME|ID     --ca=STRING --dry-run --move-accounts-to=STRING --yes
@@ -97,7 +103,7 @@ Exit codes and error codes are listed in the [agent guide](agents.md#exit-codes)
 
 ## pkiaas acme
 
-Manage a CA's ACME policies, external account bindings (EABs) and provisioning URLs.
+Manage a CA's ACME policies, external account bindings (EABs), provisioning URLs and accounts, and list its orders.
 
 ```
 pkiaas acme [flags]
@@ -105,9 +111,250 @@ pkiaas acme [flags]
 
 Commands:
 
+- [`pkiaas acme account`](reference.md#pkiaas-acme-account)
 - [`pkiaas acme eab`](reference.md#pkiaas-acme-eab)
+- [`pkiaas acme order`](reference.md#pkiaas-acme-order)
 - [`pkiaas acme policy`](reference.md#pkiaas-acme-policy)
 - [`pkiaas acme provisioning-url`](reference.md#pkiaas-acme-provisioning-url)
+
+## pkiaas acme account
+
+List a CA's ACME accounts, show one, or revoke one so its client can't order or renew certificates.
+
+```
+pkiaas acme account [flags]
+```
+
+Commands:
+
+- [`pkiaas acme account list`](reference.md#pkiaas-acme-account-list)
+- [`pkiaas acme account revoke`](reference.md#pkiaas-acme-account-revoke)
+- [`pkiaas acme account show`](reference.md#pkiaas-acme-account-show)
+
+## pkiaas acme account list
+
+List a CA's ACME accounts, most recently used first.
+
+```
+pkiaas acme account list [--ca NAME|ID] [--policy NAME|ID] [--status S,...] [--search TEXT] [--sort FIELD [--order asc|desc]] [--limit N] [flags]
+```
+
+List the ACME accounts of a CA, by default the active CA's, most recently used first (never-used ones last):
+those of all its ACME policies, or with `--policy` NAME\|ID only those of that policy (`pkiaas acme policy list`).
+The ID is what the other 'acme account' commands take to name an account.
+
+An ACME account is an ACME client (certbot, win-acme, Certify The Web, Traefik, ...) registered under an ACME
+policy with its own key, which signs its requests. The ID is the number at the end of its account URL (certbot
+show_account prints it), not a certificate serial. lastUsedAt, client and registeredWith are null for accounts
+not used since 2026-10-27, when ACME v2 started recording them. Contacts and client are text the ACME client
+chose: the text output escapes control characters in them; `--json` gives them as stored.
+
+`--status` keeps the accounts with one of these statuses, comma-separated or repeated: valid, deactivated (its
+client ended it) or revoked (a CA member revoked it). It lists the first `--limit` accounts (default 50, at most
+1000); total says how many match. `--search` keeps those whose contacts, client or initial IP address contain the
+text, in any case; an ID matches that account. `--sort` takes id, contact, policy, status, client, createdAt,
+lastUsedAt, orderCount or certificateCount, in `--order` asc (the default with `--sort`) or desc; accounts without that value
+come last either way.
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--limit` | int | how many accounts to list (1-1000). Default: `50`. |
+| `--order` | string | asc or desc (default: asc with `--sort`) |
+| `--policy` | string | only the accounts of this ACME policy, by its name or ID (pkiaas acme policy list) |
+| `--search` | string | only accounts with this text in a contact, the client or the initial IP address; an ID matches its account |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+| `--sort` | string | what to sort by: id, contact, policy, status, client, createdAt, lastUsedAt, orderCount, certificateCount (default: lastUsedAt, newest first) |
+| `--status` | string, repeatable | only accounts with one of these statuses: valid, deactivated, revoked |
+
+Examples:
+
+```sh
+pkiaas acme account list
+pkiaas acme account list --policy "Web servers" --status valid
+pkiaas acme account list --search certbot --json
+pkiaas acme account list --sort createdAt --order desc --ca a1B2c3D4e5 --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `ca` | object | the CA the accounts belong to |
+| `ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
+| `ca.name` | string or null | the CA's name (its certificate's common name) |
+| `total` | integer | how many accounts match; more than are listed when it exceeds `--limit` |
+| `accounts` | object[] | the first `--limit` matching accounts, in the `--sort` and `--order` order (most recently used first without `--sort`; never-used last) |
+| `accounts[].id` | integer | the account's ID: the number at the end of its account URL, which the 'acme account' commands take (not a certificate serial) |
+| `accounts[].url` | string | the account URL its ACME client knows (certbot show_account prints it) |
+| `accounts[].status` | string | valid: it can order certificates; deactivated: its client ended it; revoked: a CA member revoked it (`pkiaas acme account revoke`). Neither can be undone |
+| `accounts[].policy` | object | the ACME policy the account gets certificates under |
+| `accounts[].policy.id` | integer | the policy's ID |
+| `accounts[].policy.name` | string | the policy's name |
+| `accounts[].contacts` | string[] | the contacts its client gave, as stored (usually mailto: URLs); may be empty. Text the client chose |
+| `accounts[].createdAt` | string or null | when it registered (ISO 8601, UTC); null for some very old accounts |
+| `accounts[].lastUsedAt` | string or null | when its client last sent a request (ISO 8601, UTC); null when not used since ACME v2 (2026-10-27) recorded it |
+| `accounts[].client` | string or null | the User-Agent of its last request, as the client sent it; null when not recorded (before 2026-10-27). Text the client chose |
+| `accounts[].initialIp` | string | the IP address it registered from |
+| `accounts[].registeredWith` | object or null | the external account binding or provisioning URL it registered with; null when not recorded (accounts made before 2026-10-27) |
+| `accounts[].registeredWith.kind` | string | eab (an external account binding) or provisioningUrl |
+| `accounts[].registeredWith.id` | integer | the EAB's or provisioning URL's ID |
+| `accounts[].registeredWith.name` | string or null | its name; null when it is deleted or belongs to a policy of another CA |
+| `accounts[].registeredWith.policyId` | integer or null | its own ACME policy, which may differ from the account's after a move; null as for name |
+| `accounts[].key` | object or null | the account's public key; null if the stored key can't be read |
+| `accounts[].key.algorithm` | string | the JWS algorithm of the account's key, e.g. ES256 or RS256 |
+| `accounts[].key.thumbprint` | string | the RFC 7638 SHA-256 thumbprint of the account's public key |
+| `accounts[].orderCount` | integer | orders of the account, in any status (`pkiaas acme order list --acme-account ID` lists them); orders that got no certificate are deleted some time after they expire |
+| `accounts[].certificateCount` | integer | orders of the account that got a certificate; revoking the account leaves them valid |
+| `accounts[].lastOrderAt` | string or null | when it last created an order (ISO 8601, UTC); null if none |
+| `accounts[].inactiveSince` | string or null | when it was deactivated or revoked (ISO 8601, UTC); null while valid |
+
+## pkiaas acme account revoke
+
+Revoke an ACME account, so its client can't order or renew certificates.
+
+```
+pkiaas acme account revoke ID [--ca NAME|ID] [--yes] [flags]
+```
+
+Revoke an ACME account of a CA, by default the active CA's, by its ID from `pkiaas acme account list` (RFC 8555
+status revoked): the ACME server refuses every request its client signs with it, so it can't order or renew
+certificates. It can't be undone: there is no unrevoke.
+
+Certificates it got stay valid; revoke any that mustn't be used with `pkiaas cert revoke SERIAL`. Its key can't
+register again, but a new key can while the account's policy has enabled EABs or provisioning URLs; to keep the
+client out, disable those too (`pkiaas acme eab list --policy ID --status enabled`, then `pkiaas acme eab update
+ID --enabled off`).
+
+The command first reads the account and prints it. On a terminal, it then asks for confirmation; without a
+terminal, give `--yes`, which revokes without asking; without it, the command stops with a usage error. An account
+that is revoked already, or that its client deactivated, is left as it is: the command says so and succeeds
+without changing anything, so it is safe to run again. The result is the account as the server has it then.
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+| `--yes` | bool | revoke without asking; only after the person saw the account and agreed |
+
+Examples:
+
+```sh
+pkiaas acme account revoke 1204
+pkiaas acme account revoke 1204 --yes --json
+pkiaas acme account revoke 1204 --ca a1B2c3D4e5 --yes --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `ca` | object | the CA the account's policy belongs to |
+| `ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
+| `ca.name` | string or null | the CA's name (its certificate's common name) |
+| `id` | integer | the account's ID: the number at the end of its account URL, which the 'acme account' commands take (not a certificate serial) |
+| `url` | string | the account URL its ACME client knows (certbot show_account prints it) |
+| `status` | string | valid: it can order certificates; deactivated: its client ended it; revoked: a CA member revoked it (`pkiaas acme account revoke`). Neither can be undone |
+| `policy` | object | the ACME policy the account gets certificates under |
+| `policy.id` | integer | the policy's ID |
+| `policy.name` | string | the policy's name |
+| `contacts` | string[] | the contacts its client gave, as stored (usually mailto: URLs); may be empty. Text the client chose |
+| `createdAt` | string or null | when it registered (ISO 8601, UTC); null for some very old accounts |
+| `lastUsedAt` | string or null | when its client last sent a request (ISO 8601, UTC); null when not used since ACME v2 (2026-10-27) recorded it |
+| `client` | string or null | the User-Agent of its last request, as the client sent it; null when not recorded (before 2026-10-27). Text the client chose |
+| `initialIp` | string | the IP address it registered from |
+| `registeredWith` | object or null | the external account binding or provisioning URL it registered with; null when not recorded (accounts made before 2026-10-27) |
+| `registeredWith.kind` | string | eab (an external account binding) or provisioningUrl |
+| `registeredWith.id` | integer | the EAB's or provisioning URL's ID |
+| `registeredWith.name` | string or null | its name; null when it is deleted or belongs to a policy of another CA |
+| `registeredWith.policyId` | integer or null | its own ACME policy, which may differ from the account's after a move; null as for name |
+| `key` | object or null | the account's public key; null if the stored key can't be read |
+| `key.algorithm` | string | the JWS algorithm of the account's key, e.g. ES256 or RS256 |
+| `key.thumbprint` | string | the RFC 7638 SHA-256 thumbprint of the account's public key |
+| `orderCount` | integer | orders of the account, in any status (`pkiaas acme order list --acme-account ID` lists them); orders that got no certificate are deleted some time after they expire |
+| `certificateCount` | integer | orders of the account that got a certificate; revoking the account leaves them valid |
+| `lastOrderAt` | string or null | when it last created an order (ISO 8601, UTC); null if none |
+| `inactiveSince` | string or null | when it was deactivated or revoked (ISO 8601, UTC); null while valid |
+
+Side effects:
+
+- revokes the ACME account on the server: its client can't order or renew certificates, and its key can't register again; it can't be undone
+- certificates it got stay valid; a new key can still register while the policy has enabled EABs or provisioning URLs
+- an account that is revoked already or deactivated by its client is left as it is, and nothing is sent; the CA's log records a revoke
+
+## pkiaas acme account show
+
+Show an ACME account.
+
+```
+pkiaas acme account show ID [--ca NAME|ID] [flags]
+```
+
+Show an ACME account of a CA, by default the active CA's, by its ID from `pkiaas acme account list`: its account
+URL, status, ACME policy, contacts, when it registered and was last used, its client, initial IP address, the
+EAB or provisioning URL it registered with, its key, and how many orders it made and certificates it got
+(`pkiaas acme order list --acme-account ID` lists its orders).
+
+An ACME account is an ACME client (certbot, win-acme, Certify The Web, Traefik, ...) registered under an ACME
+policy with its own key, which signs its requests. The ID is the number at the end of its account URL (certbot
+show_account prints it), not a certificate serial. lastUsedAt, client and registeredWith are null for accounts
+not used since 2026-10-27, when ACME v2 started recording them. Contacts and client are text the ACME client
+chose: the text output escapes control characters in them; `--json` gives them as stored.
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+
+Examples:
+
+```sh
+pkiaas acme account show 1204
+pkiaas acme account show 1204 --ca a1B2c3D4e5 --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `ca` | object | the CA the account's policy belongs to |
+| `ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
+| `ca.name` | string or null | the CA's name (its certificate's common name) |
+| `id` | integer | the account's ID: the number at the end of its account URL, which the 'acme account' commands take (not a certificate serial) |
+| `url` | string | the account URL its ACME client knows (certbot show_account prints it) |
+| `status` | string | valid: it can order certificates; deactivated: its client ended it; revoked: a CA member revoked it (`pkiaas acme account revoke`). Neither can be undone |
+| `policy` | object | the ACME policy the account gets certificates under |
+| `policy.id` | integer | the policy's ID |
+| `policy.name` | string | the policy's name |
+| `contacts` | string[] | the contacts its client gave, as stored (usually mailto: URLs); may be empty. Text the client chose |
+| `createdAt` | string or null | when it registered (ISO 8601, UTC); null for some very old accounts |
+| `lastUsedAt` | string or null | when its client last sent a request (ISO 8601, UTC); null when not used since ACME v2 (2026-10-27) recorded it |
+| `client` | string or null | the User-Agent of its last request, as the client sent it; null when not recorded (before 2026-10-27). Text the client chose |
+| `initialIp` | string | the IP address it registered from |
+| `registeredWith` | object or null | the external account binding or provisioning URL it registered with; null when not recorded (accounts made before 2026-10-27) |
+| `registeredWith.kind` | string | eab (an external account binding) or provisioningUrl |
+| `registeredWith.id` | integer | the EAB's or provisioning URL's ID |
+| `registeredWith.name` | string or null | its name; null when it is deleted or belongs to a policy of another CA |
+| `registeredWith.policyId` | integer or null | its own ACME policy, which may differ from the account's after a move; null as for name |
+| `key` | object or null | the account's public key; null if the stored key can't be read |
+| `key.algorithm` | string | the JWS algorithm of the account's key, e.g. ES256 or RS256 |
+| `key.thumbprint` | string | the RFC 7638 SHA-256 thumbprint of the account's public key |
+| `orderCount` | integer | orders of the account, in any status (`pkiaas acme order list --acme-account ID` lists them); orders that got no certificate are deleted some time after they expire |
+| `certificateCount` | integer | orders of the account that got a certificate; revoking the account leaves them valid |
+| `lastOrderAt` | string or null | when it last created an order (ISO 8601, UTC); null if none |
+| `inactiveSince` | string or null | when it was deactivated or revoked (ISO 8601, UTC); null while valid |
 
 ## pkiaas acme eab
 
@@ -461,6 +708,128 @@ Side effects:
 - changes the EAB's settings on the server, only those given; nothing when the EAB already has them, or with `--dry-run`
 - accounts registered with it keep working whatever it is set to
 - the CA's log records the change
+
+## pkiaas acme order
+
+List a CA's ACME orders: what its ACME clients asked for, what they got, and why orders failed.
+
+```
+pkiaas acme order [flags]
+```
+
+Commands:
+
+- [`pkiaas acme order list`](reference.md#pkiaas-acme-order-list)
+
+## pkiaas acme order list
+
+List a CA's ACME orders, or one ACME account's, newest first.
+
+```
+pkiaas acme order list [--acme-account ID] [--policy NAME|ID] [--ca NAME|ID] [--status S,...] [--search TEXT] [--sort FIELD [--order asc|desc]] [--limit N] [flags]
+```
+
+List the ACME orders of a CA, by default the active CA's, newest first: those of all its ACME accounts, with
+`--acme-account` ID only those of that account (the ID from `pkiaas acme account list`), or with `--policy` NAME\|ID
+those of the accounts now under that ACME policy (`pkiaas acme policy list`). An order is an ACME account's request
+for a certificate for some identifiers: its client proves control of them, then finalizes the order with a CSR, and
+a valid order names the certificate it got. Listing changes nothing.
+
+The status is one of:
+  pending     waiting for its client to prove control of the identifiers. A legacy order stays pending after
+              that until its client reads it again, so a pending order may really be ready
+  ready       validated, waiting for its client to finalize (send its CSR). A finalize refused before signing
+              (an unreadable CSR, the subscription limit) also leaves an order ready; the CA's log says why
+              (`pkiaas log list --ca ID`)
+  processing  being signed; the server marks it invalid when signing gets stuck
+  valid       issued: certificate is the certificate it got (`pkiaas cert show SERIAL`)
+  invalid     failed: a challenge failed validation, signing refused it, or signing got stuck; error says why
+              when the server stored a reason
+  expired     a pending or ready order past expiresAt: a renewal its client never finished. Nothing failed,
+              unlike invalid, and the server stored no change
+
+expiresAt is the order's lifetime (7 days by default), not the certificate's: after it, the ACME server answers 404
+for the order URL whatever the status, and the certificate (`pkiaas cert show SERIAL`) is what remains. Orders
+without a certificate are deleted some time after they expire (a server setting, 30 days by default), so an account
+with no orders may have had only old abandoned ones, or may simply never have ordered. A certificate signed after
+the server had already marked its order invalid (stuck in processing) isn't linked to the order. An account that
+moved to a policy of another CA has its orders listed by that CA, not this one.
+
+Identifiers, contacts and error details are text the ACME client (or its DNS) chose: the text output escapes
+control characters in them; `--json` gives them as stored, except that challenge tokens in details are replaced
+with …. The text output shows an order's first two identifiers and how many more there are, `--json` all of them;
+"Why invalid:" after the table gives the reason of each invalid order shown, not of those past `--limit`.
+
+`--status` keeps the orders with one of these statuses, comma-separated or repeated. `--search` keeps those with an
+identifier that contains the text; a wildcard is stored without its *., so example.com also finds *.example.com,
+and an order ID matches its order. It lists the first `--limit` orders (default 50, at most 1000); total says how
+many match. `--sort` takes id, createdAt, account or status, in `--order` asc (the default with `--sort`) or desc;
+orders without a creation time (some very old ones) come last either way.
+
+Why did renewals fail: `--status` invalid,expired, for the whole CA or with `--acme-account` ID for one client.
+Which certificates did a client get: `--acme-account` ID `--status` valid, then `pkiaas cert show SERIAL` for each.
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--acme-account` | string | only the orders of this ACME account, by its ID (pkiaas acme account list) |
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--limit` | int | how many orders to list (1-1000). Default: `50`. |
+| `--order` | string | asc or desc (default: asc with `--sort`) |
+| `--policy` | string | only the orders of the accounts of this ACME policy, by its name or ID (pkiaas acme policy list) |
+| `--search` | string | only orders with an identifier containing this text (example.com also finds *.example.com); an ID matches its order |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+| `--sort` | string | what to sort by: id, createdAt, account, status (default: createdAt, newest first) |
+| `--status` | string, repeatable | only orders with one of these statuses: pending, ready, processing, valid, invalid, expired |
+
+Examples:
+
+```sh
+pkiaas acme order list
+pkiaas acme order list --status invalid,expired --json
+pkiaas acme order list --acme-account 1204 --status invalid,expired --json
+pkiaas acme order list --acme-account 1204 --status valid --json
+pkiaas acme order list --policy "Web servers" --search example.com --sort status --ca a1B2c3D4e5
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `ca` | object | the CA the orders' accounts belong to |
+| `ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
+| `ca.name` | string or null | the CA's name (its certificate's common name) |
+| `acmeAccountId` | integer, optional | the ACME account whose orders are listed; only with `--acme-account` |
+| `policy` | object, optional | the ACME policy whose accounts' orders are listed; only with `--policy` |
+| `policy.id` | integer | the policy's ID |
+| `policy.name` | string | the policy's name |
+| `orders` | object[] | the first `--limit` matching orders, in the `--sort` and `--order` order (newest first without `--sort`) |
+| `orders[].id` | integer | the order's ID: the number at the end of its URL |
+| `orders[].account` | object | the ACME account that made it |
+| `orders[].account.id` | integer | the ID of the ACME account that made the order, which `--acme-account` and `pkiaas acme account show ID` take |
+| `orders[].account.contact` | string or null | the account's first contact, as stored (usually a mailto: URL); null when it has none. Text the client chose |
+| `orders[].account.policy` | object | the ACME policy the account is under now |
+| `orders[].account.policy.id` | integer | the policy's ID |
+| `orders[].account.policy.name` | string | the policy's name |
+| `orders[].url` | string | the order URL its ACME client knows; the ACME server answers 404 for it after expiresAt, whatever the status |
+| `orders[].status` | string | pending, ready, processing, valid, invalid or expired: see the command's description |
+| `orders[].identifiers` | object[] | all the names the order is for (the text output shows two); empty if the stored ones can't be read |
+| `orders[].identifiers[].type` | string | the identifier's type, e.g. dns |
+| `orders[].identifiers[].value` | string | the name, as the client asked for it (a wildcard as *.example.com). Text the client chose |
+| `orders[].createdAt` | string or null | when it was created (ISO 8601, UTC); null for some very old orders |
+| `orders[].expiresAt` | string | the end of the order's lifetime (ISO 8601, UTC; 7 days after it was created by default), not the certificate's |
+| `orders[].certificate` | object or null | the certificate a valid order got; null otherwise, and for a certificate signed after the server had marked the order invalid |
+| `orders[].certificate.serial` | string | the certificate's serial, which `pkiaas cert show SERIAL` takes |
+| `orders[].certificate.name` | string or null | its common name; null when it has none |
+| `orders[].certificate.status` | string | valid, revoked or expired, as `pkiaas cert list` shows it |
+| `orders[].certificate.validTo` | string | when the certificate expires (ISO 8601, UTC) |
+| `orders[].error` | object or null | why it failed, when the server stored a problem for it; null otherwise |
+| `orders[].error.type` | string | the ACME error type, e.g. urn:ietf:params:acme:error:dns |
+| `orders[].error.detail` | string | why, as the server stored it (challenge tokens replaced with …). Text that can come from the client or its DNS |
+| `total` | integer | how many orders match; more than are listed when it exceeds `--limit` |
 
 ## pkiaas acme policy
 

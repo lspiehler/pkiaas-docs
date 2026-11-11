@@ -46,6 +46,8 @@ nav:
     - ACME Policies: cli/acme-policies.md
     - ACME EABs: cli/acme-eabs.md
     - ACME Provisioning URLs: cli/acme-provisioning-urls.md
+    - ACME Accounts: cli/acme-accounts.md
+    - ACME Orders: cli/acme-orders.md
     - AI Agents: cli/agents.md
     - Command Reference: cli/reference.md
   - ACME:
