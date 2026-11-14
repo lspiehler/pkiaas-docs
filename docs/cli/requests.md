@@ -13,7 +13,7 @@ tmplweb001  Web Server  yes
 2 templates
 ```
 
-Commands take a template by its name, in any case, or by its ID. Only enabled templates take requests. Templates are made and changed on the website (see [Create Templates](../certificate-templates/create.md)). It lists 50 templates by default; `--limit` shows up to 1000.
+Commands take a template by its name, in any case, or by its ID. Only enabled templates take requests. Templates are made on the website (see [Create Templates](../certificate-templates/create.md)); [`pkiaas template show` and `pkiaas template update`](templates.md) show and change them. It lists 50 templates by default; `--limit` shows up to 1000.
 
 ## Request a Certificate
 `pkiaas request create` sends a certificate signing request (CSR) to your CA with one of its templates, as **Submit CSR** on the website does:
