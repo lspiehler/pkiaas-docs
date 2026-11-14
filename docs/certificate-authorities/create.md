@@ -10,8 +10,17 @@ To create an intermediate/subordinate certificate authority, ensure that the "CS
 
 **Note:** If at any time you need to navigate back to the CSR page, go to **Certificate Authorities -> Manage CAs**, click on the CA and select "Download/Copy CSR" from the menu.
 
+### Sign the CSR with a CA Outside PKIaaS.io
+If a certificate authority not managed by PKIaaS.io will be used to sign the CSR, see the documentation for that CA on how to do so. The signed certificate must include a **Subject Key Identifier** extension, because every certificate PKIaaS.io issues identifies its CA by that key identifier. With OpenSSL, add this line to the extensions used to sign the CSR:
+
+```
+subjectKeyIdentifier = hash
+```
+
+When the certificate is imported (see the last step below), PKIaaS.io first signs a test certificate with it. If that fails, the certificate is not imported, a message explains what to change, and the CA's log has the details. The CA keeps its CSR, so a corrected certificate can be imported on the same page. If PKIaaS.io can't download the signing CA's certificate chain, a "Manually Import Trust Chain" dialog asks for the chain, including all intermediates and the root.
+
 ### Sign the CSR with a Root CA on PKIaaS.io
-If a certificate authority not managed by PKIaaS.io will be used to sign the CSR, see the documentation for the CA on how to do so. The following instructions will detail how this can be done on a CA managed by PKIaaS.io.
+The following instructions detail how to sign the CSR with a CA managed by PKIaaS.io.
 
 While logged into PKIaaS.io, select the signing root CA from the dropdown at the top of the page. This will switch the context of the admin page to the selected CA. If a template for creating certificate authorities has not already been created, navigate to **Certificate Templates -> Create Template**. Enter "Intermediate CA" as the template name and choose "Certificate Authority" as the starter template. The browser will be directed to a page where the template can optionally be customized. Click "Save" to finish creating the new template.
 
