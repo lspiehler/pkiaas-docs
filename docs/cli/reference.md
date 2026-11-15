@@ -67,7 +67,13 @@ pkiaas
 │   ├── list                   --ca=STRING --limit=INT --order=STRING --search=STRING --sort=STRING
 │   └── show ID                --ca=STRING
 ├── template
-│   └── list                   --ca=STRING --limit=INT
+│   ├── list                   --ca=STRING --limit=INT
+│   ├── revision
+│   │   ├── list TEMPLATE      --ca=STRING --limit=INT
+│   │   ├── restore TEMPLATE N --ca=STRING --dry-run
+│   │   └── show TEMPLATE N    --ca=STRING
+│   ├── show TEMPLATE          --ca=STRING
+│   └── update TEMPLATE        --ca=STRING --dry-run --enabled=STRING --file=STRING --force --out=STRING --policy-oid=STRING --public-requests=STRING --scep=STRING --scep-passphrase=STRING --scep-passphrase-env=STRING --scep-passphrase-file=STRING --signing-algorithm=STRING --validity-days=INT
 ├── version                    --licenses
 └── whoami
 ```
@@ -3074,7 +3080,7 @@ With `--json`, the result is an object with these fields:
 
 ## pkiaas template
 
-List a CA's certificate templates.
+Show and change a CA's certificate templates, and their revisions.
 
 ```
 pkiaas template [flags]
@@ -3083,6 +3089,9 @@ pkiaas template [flags]
 Commands:
 
 - [`pkiaas template list`](reference.md#pkiaas-template-list)
+- [`pkiaas template revision`](reference.md#pkiaas-template-revision)
+- [`pkiaas template show`](reference.md#pkiaas-template-show)
+- [`pkiaas template update`](reference.md#pkiaas-template-update)
 
 ## pkiaas template list
 
@@ -3094,7 +3103,8 @@ pkiaas template list [--ca NAME|ID] [--limit N] [flags]
 
 List the certificate templates of a CA, by default the active CA's, by name, enabled or not. A template says
 what the certificates it issues hold; `pkiaas request create --template` takes its name or ID, and only enabled
-templates take requests. Templates are made and changed on the website.
+templates take requests. `pkiaas template show` shows one's settings and `pkiaas template update` changes them;
+templates are made on the website.
 
 It lists the first `--limit` templates (default 50, at most 1000); total says how many there are.
 
@@ -3127,6 +3137,550 @@ With `--json`, the result is an object with these fields:
 | `templates[].id` | string | the template's ID; `pkiaas request create --template` takes it or the name |
 | `templates[].name` | string or null | the template's name |
 | `templates[].enabled` | boolean | whether it takes requests; a disabled template is refused (template_not_found) |
+
+## pkiaas template revision
+
+A template's saved versions: list them, show one, restore one.
+
+```
+pkiaas template revision [flags]
+```
+
+Commands:
+
+- [`pkiaas template revision list`](reference.md#pkiaas-template-revision-list)
+- [`pkiaas template revision restore`](reference.md#pkiaas-template-revision-restore)
+- [`pkiaas template revision show`](reference.md#pkiaas-template-revision-show)
+
+## pkiaas template revision list
+
+List a template's revisions, newest first.
+
+```
+pkiaas template revision list TEMPLATE [--limit N] [--ca NAME|ID] [flags]
+```
+
+List the saved versions of a template's settings, newest first: when each was saved, by whom, and what
+changed. TEMPLATE is its name in any case or its ID, in the CA `--ca` names (by default the active CA). Every
+change of settings adds a revision; secrets (the SCEP passphrase, Intune, Microsoft basic auth) add none.
+History starts with the settings as they were when the server began keeping it (revision 1).
+
+It lists the first `--limit` revisions (default 50, at most 1000); total says how many there are. `pkiaas template
+revision show TEMPLATE N` shows one's settings, and `pkiaas template revision restore TEMPLATE N` puts them back.
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--limit` | int | how many revisions to list (1-1000). Default: `50`. |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+
+Examples:
+
+```sh
+pkiaas template revision list "Web Server"
+pkiaas template revision list f5IK8ghmT0 --ca "Example CA" --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `ca` | object | the CA the template belongs to |
+| `ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
+| `ca.name` | string or null | the CA's name (its certificate's common name) |
+| `template` | object | the template |
+| `template.id` | string | the template's ID |
+| `template.name` | string or null | the template's name |
+| `total` | integer | how many revisions it has; more than are listed when it exceeds `--limit` |
+| `items` | object[] | the first `--limit` revisions, newest first |
+| `items[].revision` | integer | the revision number; certificates name the revision that issued them |
+| `items[].savedAt` | string | when it was saved, RFC 3339 UTC |
+| `items[].by` | string or null | the email of the user who saved it; null for the revisions pkiaas recorded itself (see via) |
+| `items[].via` | string | where it was saved: admin (the website's classic pages), app (the website), cli, api; migration: the settings when history started; created: as the template was made; outside: a change an older version of the server made |
+| `items[].changed` | string[] | what changed from the revision before, as the CA log names it |
+| `items[].restoredFrom` | integer or null | the revision it restored; null if it isn't a restore |
+
+## pkiaas template revision restore
+
+Put a revision's settings back, as a new revision.
+
+```
+pkiaas template revision restore TEMPLATE N [--dry-run] [--ca NAME|ID] [flags]
+```
+
+Save the settings of revision N as the template's newest revision, marked as restored from N; history is
+never rewritten. TEMPLATE is its name in any case or its ID, in the CA `--ca` names (by default the active CA). The
+SCEP passphrase, Intune, Microsoft basic auth and CES stay as they are. Restoring needs the modify privilege in
+the template's CA (error forbidden without it).
+
+The restored settings are signed on a throwaway CA first, as `pkiaas template update` does, so a revision that
+can't be signed today (e.g. because the CA's policy changed since) is refused (http_400) and nothing is saved.
+If someone changed the template since the command read it, nothing is saved and it fails with template_changed:
+run it again. Restoring settings that are current already changes nothing. `--dry-run` shows what would change,
+old → new, and saves nothing.
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--dry-run` | bool | save nothing: the server checks the restore and runs the signing trial, and shows what would change |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+
+Examples:
+
+```sh
+pkiaas template revision restore "Web Server" 7 --dry-run
+pkiaas template revision restore "Web Server" 7
+pkiaas template revision restore f5IK8ghmT0 1 --ca "Example CA" --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `ca` | object | the CA the template belongs to |
+| `ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
+| `ca.name` | string or null | the CA's name (its certificate's common name) |
+| `id` | string | the template's ID (read-only) |
+| `name` | string or null | the template's name |
+| `revision` | integer | the revision of these settings (read-only); every change of settings adds one |
+| `modifiedAt` | string | when the settings last changed, RFC 3339 UTC (read-only) |
+| `enabled` | boolean | only enabled templates take requests |
+| `publicRequests` | boolean | anyone may request a certificate on the CA's public page; approval still applies |
+| `renewal` | object | automatic renewal with a valid certificate |
+| `renewal.allowed` | boolean | a valid certificate may be renewed with itself |
+| `renewal.revokeOld` | boolean | the renewed certificate is revoked |
+| `renewal.requireWithinDays` | boolean | as stored by the website; renewal always keeps to withinDays |
+| `renewal.withinDays` | integer or null | renewal is allowed this many days before expiry |
+| `renewal.copyNames` | boolean | the new certificate gets the subject and alternative names of the old one |
+| `signingAlgorithm` | string or null | the signature hash, e.g. sha256 |
+| `validityDays` | integer or null | how many days certificates are valid |
+| `subject` | object | the certificate's subject |
+| `subject.fromRequest` | boolean | the website's Supplied by the CSR box; certificates always start from the request's subject, with attributes over it |
+| `subject.attributes` | object[] | attributes the template sets over the request's, in certificate order |
+| `subject.attributes[].type` | string | the attribute, e.g. organizationName, countryName |
+| `subject.attributes[].value` | string | its value |
+| `keyUsage` | object or null | the key usage extension (RFC 5280 names); null for none |
+| `keyUsage.critical` | boolean | the extension is critical |
+| `keyUsage.usages` | string[] | the usages |
+| `extendedKeyUsage` | object or null | the extended key usage extension: OpenSSL names (serverAuth, clientAuth …) or OIDs; null for none |
+| `extendedKeyUsage.critical` | boolean | the extension is critical |
+| `extendedKeyUsage.usages` | string[] | the usages |
+| `basicConstraints` | object or null | the basic constraints extension; null for none |
+| `basicConstraints.critical` | boolean | the extension is critical |
+| `basicConstraints.ca` | boolean | certificates are CA certificates |
+| `basicConstraints.pathLength` | integer or null | for a CA: how many CAs may follow it; null for no limit |
+| `authorityInfoAccess` | object | the authority information access extension |
+| `authorityInfoAccess.caIssuers` | boolean | certificates get the address of the CA certificate |
+| `authorityInfoAccess.caIssuersUrls` | string[] | own CA issuers addresses; empty for the platform's |
+| `authorityInfoAccess.ocsp` | boolean | certificates get the OCSP address |
+| `crlDistributionPoints` | boolean | certificates get the CA's CRL address |
+| `certificatePolicies` | object | the certificate policies extension |
+| `certificatePolicies.enabled` | boolean | certificates get the CA's policy and the template's |
+| `certificatePolicies.policyOid` | string or null | the template's own policy OID; null for none |
+| `certificatePolicies.issued` | string[] | the policies certificates really get, in order (read-only) |
+| `ctLogs` | string[] | the Certificate Transparency logs certificates are submitted to (https addresses) |
+| `scep` | object | SCEP enrollment |
+| `scep.enabled` | boolean | SCEP enrollment is on |
+| `scep.staticPassphraseSet` | boolean | a static challenge passphrase is set (read-only; `--scep-passphrase` sets it) |
+| `scep.stripRootFromGetCaCert` | boolean | GetCACert leaves out the root certificate |
+| `scep.microsoftCompatibility` | object | the Microsoft (NDES-style) endpoints |
+| `scep.microsoftCompatibility.enabled` | boolean | the Microsoft endpoints are on |
+| `scep.microsoftCompatibility.basicAuth` | object | basic authentication on them (read-only; changed on the website) |
+| `scep.microsoftCompatibility.basicAuth.enabled` | boolean | it is on |
+| `scep.ipAcl` | object | which IPv4 addresses may use SCEP |
+| `scep.ipAcl.scepRequests` | boolean | the ACL applies to SCEP requests |
+| `scep.ipAcl.microsoftUi` | boolean | the ACL applies to the Microsoft pages |
+| `scep.ipAcl.allowedIps` | string[] | the addresses allowed |
+| `scep.intune` | object | Intune (read-only; changed on the website) |
+| `scep.intune.enabled` | boolean | the template is connected to Intune |
+| `scep.intune.mode` | string or null | connector (the PKIaaS.io Intune Connector) or app (the template's own app registration); null when off |
+| `scep.intune.tenant` | string or null | the Intune tenant; null when off |
+| `rules` | object | request rules; always {} in this version |
+| `changes` | object[] | the settings that changed (or would); empty when none |
+| `changes[].field` | string | what changed, as the CA log names it: name, enabled, public requests, renewal, signing algorithm, validity, subject, key usage, extended key usage, basic constraints, authority information access, CRL distribution point, certificate policies, template policy, CT logs, SCEP, SCEP IP ACL |
+| `changes[].from` | string | its value before, as text |
+| `changes[].to` | string | its value after, as text |
+| `dryRun` | boolean, optional | true for `--dry-run`: nothing was saved, and the template is as it would be |
+| `trial` | object or null | the signing trial, which runs when a field that reaches certificates changes; null when it didn't run |
+| `trial.passed` | boolean | both signed what the settings ask for |
+| `trial.certificate` | object or null | what a certificate from these settings gets; null if the trial didn't sign |
+| `trial.certificate.subject` | string[] | the subject's attributes in order, e.g. CN=trial.example.com |
+| `trial.certificate.validity` | string | how long it is valid, e.g. 90d |
+| `trial.certificate.extensions` | object[] | its extensions, in order |
+| `trial.certificate.extensions[].name` | string | the extension, e.g. keyUsage |
+| `trial.certificate.extensions[].critical` | boolean | it is critical |
+| `trial.certificate.extensions[].value` | string | its value, as text |
+| `scepPassphrase` | string, optional | what happened to the SCEP passphrase: set, removed, or with `--dry-run` would be set or would be removed (never the passphrase) |
+| `scepPassphraseFile` | string, optional | with `--scep-passphrase` new, the `--out` file it was written to, alone on one line, readable by its owner only |
+
+Side effects:
+
+- saves the revision's settings as the template's newest revision, marked as restored; nothing when they are current already, or with `--dry-run`
+- leaves the SCEP passphrase, Intune, Microsoft basic auth and CES as they are
+- Windows clients see changed settings in their next policy answer
+- the CA's log records the restore
+
+## pkiaas template revision show
+
+Show the settings of one revision of a template.
+
+```
+pkiaas template revision show TEMPLATE N [--ca NAME|ID] [flags]
+```
+
+Show one saved version of a template's settings: what `pkiaas template revision restore TEMPLATE N` would put
+back. TEMPLATE is its name in any case or its ID, in the CA `--ca` names (by default the active CA); N is the
+revision number from `pkiaas template revision list`. Revisions keep no secrets, so the SCEP passphrase, Intune
+and Microsoft basic auth are shown as they are now.
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+
+Examples:
+
+```sh
+pkiaas template revision show "Web Server" 7
+pkiaas template revision show f5IK8ghmT0 1 --ca "Example CA" --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `ca` | object | the CA the template belongs to |
+| `ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
+| `ca.name` | string or null | the CA's name (its certificate's common name) |
+| `revision` | integer | the revision number; certificates name the revision that issued them |
+| `savedAt` | string | when it was saved, RFC 3339 UTC |
+| `by` | string or null | the email of the user who saved it; null for the revisions pkiaas recorded itself (see via) |
+| `via` | string | where it was saved: admin (the website's classic pages), app (the website), cli, api; migration: the settings when history started; created: as the template was made; outside: a change an older version of the server made |
+| `changed` | string[] | what changed from the revision before, as the CA log names it |
+| `restoredFrom` | integer or null | the revision it restored; null if it isn't a restore |
+| `template` | object | the revision's settings, as `pkiaas template show --json` has them; the SCEP passphrase, Intune and Microsoft basic auth as they are now, since revisions keep no secrets |
+| `template.id` | string | the template's ID (read-only) |
+| `template.name` | string or null | the template's name |
+| `template.revision` | integer | the revision of these settings (read-only); every change of settings adds one |
+| `template.modifiedAt` | string | when the settings last changed, RFC 3339 UTC (read-only) |
+| `template.enabled` | boolean | only enabled templates take requests |
+| `template.publicRequests` | boolean | anyone may request a certificate on the CA's public page; approval still applies |
+| `template.renewal` | object | automatic renewal with a valid certificate |
+| `template.renewal.allowed` | boolean | a valid certificate may be renewed with itself |
+| `template.renewal.revokeOld` | boolean | the renewed certificate is revoked |
+| `template.renewal.requireWithinDays` | boolean | as stored by the website; renewal always keeps to withinDays |
+| `template.renewal.withinDays` | integer or null | renewal is allowed this many days before expiry |
+| `template.renewal.copyNames` | boolean | the new certificate gets the subject and alternative names of the old one |
+| `template.signingAlgorithm` | string or null | the signature hash, e.g. sha256 |
+| `template.validityDays` | integer or null | how many days certificates are valid |
+| `template.subject` | object | the certificate's subject |
+| `template.subject.fromRequest` | boolean | the website's Supplied by the CSR box; certificates always start from the request's subject, with attributes over it |
+| `template.subject.attributes` | object[] | attributes the template sets over the request's, in certificate order |
+| `template.subject.attributes[].type` | string | the attribute, e.g. organizationName, countryName |
+| `template.subject.attributes[].value` | string | its value |
+| `template.keyUsage` | object or null | the key usage extension (RFC 5280 names); null for none |
+| `template.keyUsage.critical` | boolean | the extension is critical |
+| `template.keyUsage.usages` | string[] | the usages |
+| `template.extendedKeyUsage` | object or null | the extended key usage extension: OpenSSL names (serverAuth, clientAuth …) or OIDs; null for none |
+| `template.extendedKeyUsage.critical` | boolean | the extension is critical |
+| `template.extendedKeyUsage.usages` | string[] | the usages |
+| `template.basicConstraints` | object or null | the basic constraints extension; null for none |
+| `template.basicConstraints.critical` | boolean | the extension is critical |
+| `template.basicConstraints.ca` | boolean | certificates are CA certificates |
+| `template.basicConstraints.pathLength` | integer or null | for a CA: how many CAs may follow it; null for no limit |
+| `template.authorityInfoAccess` | object | the authority information access extension |
+| `template.authorityInfoAccess.caIssuers` | boolean | certificates get the address of the CA certificate |
+| `template.authorityInfoAccess.caIssuersUrls` | string[] | own CA issuers addresses; empty for the platform's |
+| `template.authorityInfoAccess.ocsp` | boolean | certificates get the OCSP address |
+| `template.crlDistributionPoints` | boolean | certificates get the CA's CRL address |
+| `template.certificatePolicies` | object | the certificate policies extension |
+| `template.certificatePolicies.enabled` | boolean | certificates get the CA's policy and the template's |
+| `template.certificatePolicies.policyOid` | string or null | the template's own policy OID; null for none |
+| `template.certificatePolicies.issued` | string[] | the policies certificates really get, in order (read-only) |
+| `template.ctLogs` | string[] | the Certificate Transparency logs certificates are submitted to (https addresses) |
+| `template.scep` | object | SCEP enrollment |
+| `template.scep.enabled` | boolean | SCEP enrollment is on |
+| `template.scep.staticPassphraseSet` | boolean | a static challenge passphrase is set (read-only; `--scep-passphrase` sets it) |
+| `template.scep.stripRootFromGetCaCert` | boolean | GetCACert leaves out the root certificate |
+| `template.scep.microsoftCompatibility` | object | the Microsoft (NDES-style) endpoints |
+| `template.scep.microsoftCompatibility.enabled` | boolean | the Microsoft endpoints are on |
+| `template.scep.microsoftCompatibility.basicAuth` | object | basic authentication on them (read-only; changed on the website) |
+| `template.scep.microsoftCompatibility.basicAuth.enabled` | boolean | it is on |
+| `template.scep.ipAcl` | object | which IPv4 addresses may use SCEP |
+| `template.scep.ipAcl.scepRequests` | boolean | the ACL applies to SCEP requests |
+| `template.scep.ipAcl.microsoftUi` | boolean | the ACL applies to the Microsoft pages |
+| `template.scep.ipAcl.allowedIps` | string[] | the addresses allowed |
+| `template.scep.intune` | object | Intune (read-only; changed on the website) |
+| `template.scep.intune.enabled` | boolean | the template is connected to Intune |
+| `template.scep.intune.mode` | string or null | connector (the PKIaaS.io Intune Connector) or app (the template's own app registration); null when off |
+| `template.scep.intune.tenant` | string or null | the Intune tenant; null when off |
+| `template.rules` | object | request rules; always {} in this version |
+
+## pkiaas template show
+
+Show everything a template sets.
+
+```
+pkiaas template show TEMPLATE [--ca NAME|ID] [flags]
+```
+
+Show a template's settings, as the website's Edit Template page has them: who may request with it, how
+long certificates are valid, their subject and extensions, and SCEP. TEMPLATE is its name in any case or its ID,
+in the CA `--ca` names (by default the active CA). Secrets are never shown: only whether a SCEP passphrase is set.
+
+With `--json`, the result is the template as the API has it, with the CA. Edit that JSON and send it back with
+`pkiaas template update TEMPLATE --file FILE` to change several settings at once.
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+
+Examples:
+
+```sh
+pkiaas template show "Web Server"
+pkiaas template show f5IK8ghmT0 --ca "Example CA" --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `ca` | object | the CA the template belongs to |
+| `ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
+| `ca.name` | string or null | the CA's name (its certificate's common name) |
+| `id` | string | the template's ID (read-only) |
+| `name` | string or null | the template's name |
+| `revision` | integer | the revision of these settings (read-only); every change of settings adds one |
+| `modifiedAt` | string | when the settings last changed, RFC 3339 UTC (read-only) |
+| `enabled` | boolean | only enabled templates take requests |
+| `publicRequests` | boolean | anyone may request a certificate on the CA's public page; approval still applies |
+| `renewal` | object | automatic renewal with a valid certificate |
+| `renewal.allowed` | boolean | a valid certificate may be renewed with itself |
+| `renewal.revokeOld` | boolean | the renewed certificate is revoked |
+| `renewal.requireWithinDays` | boolean | as stored by the website; renewal always keeps to withinDays |
+| `renewal.withinDays` | integer or null | renewal is allowed this many days before expiry |
+| `renewal.copyNames` | boolean | the new certificate gets the subject and alternative names of the old one |
+| `signingAlgorithm` | string or null | the signature hash, e.g. sha256 |
+| `validityDays` | integer or null | how many days certificates are valid |
+| `subject` | object | the certificate's subject |
+| `subject.fromRequest` | boolean | the website's Supplied by the CSR box; certificates always start from the request's subject, with attributes over it |
+| `subject.attributes` | object[] | attributes the template sets over the request's, in certificate order |
+| `subject.attributes[].type` | string | the attribute, e.g. organizationName, countryName |
+| `subject.attributes[].value` | string | its value |
+| `keyUsage` | object or null | the key usage extension (RFC 5280 names); null for none |
+| `keyUsage.critical` | boolean | the extension is critical |
+| `keyUsage.usages` | string[] | the usages |
+| `extendedKeyUsage` | object or null | the extended key usage extension: OpenSSL names (serverAuth, clientAuth …) or OIDs; null for none |
+| `extendedKeyUsage.critical` | boolean | the extension is critical |
+| `extendedKeyUsage.usages` | string[] | the usages |
+| `basicConstraints` | object or null | the basic constraints extension; null for none |
+| `basicConstraints.critical` | boolean | the extension is critical |
+| `basicConstraints.ca` | boolean | certificates are CA certificates |
+| `basicConstraints.pathLength` | integer or null | for a CA: how many CAs may follow it; null for no limit |
+| `authorityInfoAccess` | object | the authority information access extension |
+| `authorityInfoAccess.caIssuers` | boolean | certificates get the address of the CA certificate |
+| `authorityInfoAccess.caIssuersUrls` | string[] | own CA issuers addresses; empty for the platform's |
+| `authorityInfoAccess.ocsp` | boolean | certificates get the OCSP address |
+| `crlDistributionPoints` | boolean | certificates get the CA's CRL address |
+| `certificatePolicies` | object | the certificate policies extension |
+| `certificatePolicies.enabled` | boolean | certificates get the CA's policy and the template's |
+| `certificatePolicies.policyOid` | string or null | the template's own policy OID; null for none |
+| `certificatePolicies.issued` | string[] | the policies certificates really get, in order (read-only) |
+| `ctLogs` | string[] | the Certificate Transparency logs certificates are submitted to (https addresses) |
+| `scep` | object | SCEP enrollment |
+| `scep.enabled` | boolean | SCEP enrollment is on |
+| `scep.staticPassphraseSet` | boolean | a static challenge passphrase is set (read-only; `--scep-passphrase` sets it) |
+| `scep.stripRootFromGetCaCert` | boolean | GetCACert leaves out the root certificate |
+| `scep.microsoftCompatibility` | object | the Microsoft (NDES-style) endpoints |
+| `scep.microsoftCompatibility.enabled` | boolean | the Microsoft endpoints are on |
+| `scep.microsoftCompatibility.basicAuth` | object | basic authentication on them (read-only; changed on the website) |
+| `scep.microsoftCompatibility.basicAuth.enabled` | boolean | it is on |
+| `scep.ipAcl` | object | which IPv4 addresses may use SCEP |
+| `scep.ipAcl.scepRequests` | boolean | the ACL applies to SCEP requests |
+| `scep.ipAcl.microsoftUi` | boolean | the ACL applies to the Microsoft pages |
+| `scep.ipAcl.allowedIps` | string[] | the addresses allowed |
+| `scep.intune` | object | Intune (read-only; changed on the website) |
+| `scep.intune.enabled` | boolean | the template is connected to Intune |
+| `scep.intune.mode` | string or null | connector (the PKIaaS.io Intune Connector) or app (the template's own app registration); null when off |
+| `scep.intune.tenant` | string or null | the Intune tenant; null when off |
+| `rules` | object | request rules; always {} in this version |
+
+## pkiaas template update
+
+Change a template's settings and its SCEP passphrase.
+
+```
+pkiaas template update TEMPLATE [--file FILE] [--enabled on|off] [--public-requests on|off] [--validity-days N] [--signing-algorithm NAME] [--policy-oid OID|none] [--scep on|off] [--scep-passphrase new --out FILE | --scep-passphrase none | --scep-passphrase-env NAME | --scep-passphrase-file FILE] [--dry-run] [--ca NAME|ID] [flags]
+```
+
+Change a template's settings, as the website's Edit Template page does. TEMPLATE is its name in any case or
+its ID, in the CA `--ca` names (by default the active CA). Only what the flags give changes; the rest stays as it is.
+Changing a template needs the modify privilege in its CA (error forbidden without it).
+
+`--file` FILE (- for standard input) is the whole template as `pkiaas template show --json` writes it: edit that
+file and send it back to change several settings at once; its read-only fields (id, revision, modifiedAt,
+certificatePolicies.issued, scep.staticPassphraseSet, scep.intune, scep.microsoftCompatibility.basicAuth) and
+the ca field are ignored. The other flags change one setting each, also on top of `--file`: `--enabled` and
+`--public-requests` on\|off, `--validity-days` N, `--signing-algorithm` (sha256, sha384, sha512 or what the server
+offers), `--policy-oid` (the template's own certificate policy, or none), and `--scep` on\|off.
+
+Every change of settings is saved as a new revision (`pkiaas template revision list`). A change that reaches
+certificates (validity, signing algorithm, subject, extensions, policies, CT logs) is first signed on a throwaway
+CA with OpenSSL and natively, on the server: settings that would break signing are refused (http_400, naming
+the field) and nothing is saved. Fields left as they were are never checked again, so an old template keeps
+values the website allowed then.
+
+The SCEP passphrase is a secret, never shown, and its own flags: `--scep-passphrase` new makes one (24 letters and
+digits) and writes it to `--out` FILE, alone on one line, readable by you only (`--out` - or a terminal shows it
+instead); `--scep-passphrase-env` NAME and `--scep-passphrase-file` FILE set your own (16 to 128 printable characters,
+never as an argument); `--scep-passphrase` none removes it. Some older SCEP devices accept only letters and digits.
+It is set after the settings are saved, and changes no revision.
+
+The command reads the template, changes what the flags give, and sends it all back with the version it read. If
+someone changed the template in between, or since the `--file` was written (its revision differs), nothing is
+saved and it fails with template_changed: run it again (with `--file`, show the template again and redo the edit).
+Running it again after it succeeded changes nothing more. `--dry-run` asks the server to check the change and run
+the signing trial, and saves nothing; it shows what would change, old → new.
+
+This command calls the PKIaaS server and needs a login.
+
+Its output (the SCEP passphrase, with --scep-passphrase new) is a secret: it goes to `--out FILE`, to `--out -`, or to a terminal, never into a pipe without `--out -` or into a `--json` result (error `secret_destination`).
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--dry-run` | bool | save nothing: the server checks the change and runs the signing trial, and shows what would change |
+| `--enabled` | string | turn the template on or off: only enabled templates take requests |
+| `--file` | string | the whole template as `pkiaas template show --json` writes it, from this file (- for standard input) |
+| `--force` | bool | replace the `--out` file if it exists |
+| `-o`, `--out` | string | the file to write (default: standard output, as with -) |
+| `--policy-oid` | string | the template's certificate policy OID, in dotted form (at most 50 characters), or none |
+| `--public-requests` | string | on or off: anyone may request a certificate on the CA's public page |
+| `--scep` | string | turn SCEP enrollment on or off |
+| `--scep-passphrase` | string | new: make a SCEP passphrase (24 letters and digits) and write it to `--out`; none: remove it. Not with `--scep-passphrase-env`, `--scep-passphrase-file`. |
+| `--scep-passphrase-env` | string | read the SCEP passphrase from this environment variable. Not with `--scep-passphrase-file`, `--scep-passphrase`. |
+| `--scep-passphrase-file` | string | read the SCEP passphrase from this file's first line (- for standard input). Not with `--scep-passphrase-env`, `--scep-passphrase`. |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+| `--signing-algorithm` | string | the signature hash: sha256, sha384, sha512 (or what the server offers) |
+| `--validity-days` | int | how many days certificates are valid (1 or more). Default: `0`. |
+
+Examples:
+
+```sh
+pkiaas template update "Web Server" --validity-days 90 --dry-run
+pkiaas template update "Web Server" --validity-days 90
+pkiaas template update "Web Server" --file web-server.json --json
+pkiaas template update f5IK8ghmT0 --scep on --scep-passphrase new --out scep-passphrase.txt
+pkiaas template update "Web Server" --scep-passphrase-env SCEP_PASSPHRASE --ca "Example CA"
+pkiaas template update "Web Server" --enabled off --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `ca` | object | the CA the template belongs to |
+| `ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
+| `ca.name` | string or null | the CA's name (its certificate's common name) |
+| `id` | string | the template's ID (read-only) |
+| `name` | string or null | the template's name |
+| `revision` | integer | the revision of these settings (read-only); every change of settings adds one |
+| `modifiedAt` | string | when the settings last changed, RFC 3339 UTC (read-only) |
+| `enabled` | boolean | only enabled templates take requests |
+| `publicRequests` | boolean | anyone may request a certificate on the CA's public page; approval still applies |
+| `renewal` | object | automatic renewal with a valid certificate |
+| `renewal.allowed` | boolean | a valid certificate may be renewed with itself |
+| `renewal.revokeOld` | boolean | the renewed certificate is revoked |
+| `renewal.requireWithinDays` | boolean | as stored by the website; renewal always keeps to withinDays |
+| `renewal.withinDays` | integer or null | renewal is allowed this many days before expiry |
+| `renewal.copyNames` | boolean | the new certificate gets the subject and alternative names of the old one |
+| `signingAlgorithm` | string or null | the signature hash, e.g. sha256 |
+| `validityDays` | integer or null | how many days certificates are valid |
+| `subject` | object | the certificate's subject |
+| `subject.fromRequest` | boolean | the website's Supplied by the CSR box; certificates always start from the request's subject, with attributes over it |
+| `subject.attributes` | object[] | attributes the template sets over the request's, in certificate order |
+| `subject.attributes[].type` | string | the attribute, e.g. organizationName, countryName |
+| `subject.attributes[].value` | string | its value |
+| `keyUsage` | object or null | the key usage extension (RFC 5280 names); null for none |
+| `keyUsage.critical` | boolean | the extension is critical |
+| `keyUsage.usages` | string[] | the usages |
+| `extendedKeyUsage` | object or null | the extended key usage extension: OpenSSL names (serverAuth, clientAuth …) or OIDs; null for none |
+| `extendedKeyUsage.critical` | boolean | the extension is critical |
+| `extendedKeyUsage.usages` | string[] | the usages |
+| `basicConstraints` | object or null | the basic constraints extension; null for none |
+| `basicConstraints.critical` | boolean | the extension is critical |
+| `basicConstraints.ca` | boolean | certificates are CA certificates |
+| `basicConstraints.pathLength` | integer or null | for a CA: how many CAs may follow it; null for no limit |
+| `authorityInfoAccess` | object | the authority information access extension |
+| `authorityInfoAccess.caIssuers` | boolean | certificates get the address of the CA certificate |
+| `authorityInfoAccess.caIssuersUrls` | string[] | own CA issuers addresses; empty for the platform's |
+| `authorityInfoAccess.ocsp` | boolean | certificates get the OCSP address |
+| `crlDistributionPoints` | boolean | certificates get the CA's CRL address |
+| `certificatePolicies` | object | the certificate policies extension |
+| `certificatePolicies.enabled` | boolean | certificates get the CA's policy and the template's |
+| `certificatePolicies.policyOid` | string or null | the template's own policy OID; null for none |
+| `certificatePolicies.issued` | string[] | the policies certificates really get, in order (read-only) |
+| `ctLogs` | string[] | the Certificate Transparency logs certificates are submitted to (https addresses) |
+| `scep` | object | SCEP enrollment |
+| `scep.enabled` | boolean | SCEP enrollment is on |
+| `scep.staticPassphraseSet` | boolean | a static challenge passphrase is set (read-only; `--scep-passphrase` sets it) |
+| `scep.stripRootFromGetCaCert` | boolean | GetCACert leaves out the root certificate |
+| `scep.microsoftCompatibility` | object | the Microsoft (NDES-style) endpoints |
+| `scep.microsoftCompatibility.enabled` | boolean | the Microsoft endpoints are on |
+| `scep.microsoftCompatibility.basicAuth` | object | basic authentication on them (read-only; changed on the website) |
+| `scep.microsoftCompatibility.basicAuth.enabled` | boolean | it is on |
+| `scep.ipAcl` | object | which IPv4 addresses may use SCEP |
+| `scep.ipAcl.scepRequests` | boolean | the ACL applies to SCEP requests |
+| `scep.ipAcl.microsoftUi` | boolean | the ACL applies to the Microsoft pages |
+| `scep.ipAcl.allowedIps` | string[] | the addresses allowed |
+| `scep.intune` | object | Intune (read-only; changed on the website) |
+| `scep.intune.enabled` | boolean | the template is connected to Intune |
+| `scep.intune.mode` | string or null | connector (the PKIaaS.io Intune Connector) or app (the template's own app registration); null when off |
+| `scep.intune.tenant` | string or null | the Intune tenant; null when off |
+| `rules` | object | request rules; always {} in this version |
+| `changes` | object[] | the settings that changed (or would); empty when none |
+| `changes[].field` | string | what changed, as the CA log names it: name, enabled, public requests, renewal, signing algorithm, validity, subject, key usage, extended key usage, basic constraints, authority information access, CRL distribution point, certificate policies, template policy, CT logs, SCEP, SCEP IP ACL |
+| `changes[].from` | string | its value before, as text |
+| `changes[].to` | string | its value after, as text |
+| `dryRun` | boolean, optional | true for `--dry-run`: nothing was saved, and the template is as it would be |
+| `trial` | object or null | the signing trial, which runs when a field that reaches certificates changes; null when it didn't run |
+| `trial.passed` | boolean | both signed what the settings ask for |
+| `trial.certificate` | object or null | what a certificate from these settings gets; null if the trial didn't sign |
+| `trial.certificate.subject` | string[] | the subject's attributes in order, e.g. CN=trial.example.com |
+| `trial.certificate.validity` | string | how long it is valid, e.g. 90d |
+| `trial.certificate.extensions` | object[] | its extensions, in order |
+| `trial.certificate.extensions[].name` | string | the extension, e.g. keyUsage |
+| `trial.certificate.extensions[].critical` | boolean | it is critical |
+| `trial.certificate.extensions[].value` | string | its value, as text |
+| `scepPassphrase` | string, optional | what happened to the SCEP passphrase: set, removed, or with `--dry-run` would be set or would be removed (never the passphrase) |
+| `scepPassphraseFile` | string, optional | with `--scep-passphrase` new, the `--out` file it was written to, alone on one line, readable by its owner only |
+
+Side effects:
+
+- changes the template's settings on the server, only those given, as a new revision; nothing when it has them already, or with `--dry-run`
+- with `--scep-passphrase`, sets or removes the template's SCEP passphrase (no revision); with new, writes it to the `--out` file, readable by the owner only, or with `--out` - or to a terminal to standard output (the details then go to standard error and there is no result)
+- Windows clients see changed settings in their next policy answer
+- the CA's log records the change, never the passphrase
 
 ## pkiaas version
 

@@ -288,6 +288,31 @@ allows; declining is final.
 - `pkiaas request decline ID --yes --json` declines it for good. Declining a declined request succeeds; an issued
   one fails with `request_issued` (revoke its certificate instead, if the user wants that).
 
+## Templates
+
+A template says what the certificates it issues hold: validity, signing algorithm, subject, key usages and other
+extensions, and whether SCEP may use it. The `template` commands take `--ca NAME` (or `ID`) and the template by
+its name in any case or its `id`; a name two templates share fails with `template_ambiguous`: use the `id`.
+
+- `pkiaas template show NAME|ID --json` shows everything a template sets, never a secret (only
+  `scep.staticPassphraseSet`).
+- `pkiaas template update NAME|ID --json` changes only what its flags give: `--enabled on|off`,
+  `--public-requests on|off`, `--validity-days N`, `--signing-algorithm`, `--policy-oid OID|none`, `--scep on|off`;
+  or `--file FILE` with the whole template as `template show --json` wrote it, edited (several settings at once).
+  Change a template only when the user asks. Run it with `--dry-run --json` first: the server checks the change
+  and signs a throwaway certificate with it (`trial`), and `changes` lists old and new; show that to the user.
+  Settings that can't be signed fail with `http_400`, naming the field, and nothing is saved. If someone changed the
+  template in between (or since the `--file` was written), it fails with `template_changed`: read it again and
+  redo the change.
+- The SCEP passphrase is a secret: `--scep-passphrase new --out FILE` makes one (24 letters and digits) and writes
+  it to the file only you can read; tell the user where it is and don't read it yourself. The user's own goes in
+  with `--scep-passphrase-env NAME` or `--scep-passphrase-file FILE`, never as an argument. `--scep-passphrase none`
+  removes it.
+- Every change of settings is a revision: `pkiaas template revision list NAME|ID --json` lists them (who, when,
+  what changed), `pkiaas template revision show NAME|ID N --json` shows one's settings, and
+  `pkiaas template revision restore NAME|ID N --dry-run --json` shows what putting them back would change; run it
+  without `--dry-run` only when the user agrees. A restore leaves the SCEP passphrase, Intune and CES as they are.
+
 ## ACME policies
 
 ACME clients (certbot, acme.sh, Windows and network devices) get certificates from a CA by registering under one of
@@ -551,6 +576,8 @@ With `--json`, an error is `{"error": {"code", "message", "hint"}}`. The hint is
 | `ca_creation_failed` | 1 | creating the CA failed on the server at the step the message names; nothing was kept, unless the message says the half-made CA couldn't be removed | run the same command again once (with the same `--idempotency-key`); if it fails again, tell the user and quote the request ID from the message. Each try counts toward the limit of 20 CAs an hour |
 | `ca_changed` | 5 | someone changed the CA since the command read it (`pkiaas ca update`) or previewed its delete (`pkiaas ca delete`), so nothing was saved or deleted | someone changed the CA since it was read; run the command again (it reads the CA again and applies only its own flags); `pkiaas ca show --json` shows the CA's settings now |
 | `acme_changed` | 5 | someone changed the ACME policy since the command read it (`pkiaas acme policy update`) or previewed its delete (`pkiaas acme policy delete`), or the EAB or provisioning URL since `pkiaas acme eab update` or `pkiaas acme provisioning-url update` read it (an ACME client registering with it takes a use), so nothing was saved or deleted | run the command again: it reads the policy, EAB or provisioning URL again and applies only its own flags; `pkiaas acme policy show ID --json`, `pkiaas acme eab show ID --json` or `pkiaas acme provisioning-url show ID --json` shows it now |
+| `template_changed` | 5 | someone changed the template since the command read it (`pkiaas template update`, `pkiaas template revision restore`), or since the `--file` was written, so nothing was saved | run the command again: it reads the template again and applies only its own flags; with `--file`, run `pkiaas template show TEMPLATE --json` again and redo the edit in that file |
+| `revision_not_found` | 4 | the template has no revision with this number | run `pkiaas template revision list TEMPLATE --json` (with the same `--ca`) and use one of its revision numbers |
 | `policy_ambiguous` | 2 | a policy name (or a number) given as an ACME policy names more than one policy of the CA: two policies with that name in any case, or one policy's ID and another's name; nothing was sent | run `pkiaas acme policy list --json` (with the same `--ca`) and give the id of the policy you mean; if a policy's name is another policy's ID, rename it with `pkiaas acme policy update ID --name NEW` |
 | `policy_has_accounts` | 5 | the ACME policy has ACME accounts, so it isn't deleted without another policy of the CA to move them to; nothing was deleted | run `pkiaas acme policy list --json` (with the same `--ca`) to pick another policy, ask the user if it isn't clear which, then run the delete again with `--move-accounts-to` ID |
 | `ca_not_hsm` | 5 | the CA's key is on the platform, not on an IoT HSM, so it has no IoT HSM to show or ping | run `pkiaas hsm list --json` and use the id or name of a CA listed there; if the user meant another CA, ask which |
