@@ -40,8 +40,8 @@ Your commands and their output may be logged, so keep secrets out of both.
   `[Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(32)) | Set-Content server.key.pass`.
 - Keys are encrypted by default. Only use `--no-passphrase` when the user asks for an unencrypted key, e.g. for a
   service that loads its key at startup without a passphrase.
-- Keys, PKCS#12 files and CSRs from `cert export --csr` (a SCEP CSR holds the challenge password) are secrets:
-  `pkiaas help --json` names them in a command's `secretOutput`. Ask the user before you make one, and say where it
+- Keys, PKCS#12 files, CSRs from `cert export --csr` (a SCEP CSR holds the challenge password) and the HMAC keys
+  of ACME EABs from `acme eab create` are secrets: `pkiaas help --json` names them in a command's `secretOutput`. Ask the user before you make one, and say where it
   will go. Write it with `--out FILE` (readable by the user only), tell the user where the file is, and never read
   the file yourself. Suggest that the user add a deny rule for the folder to your settings (e.g. Claude Code's
   `permissions.deny`), so that the file stays out of your reach.
@@ -222,8 +222,9 @@ reason, and only then run the command with `--yes`. Without `--yes` and without 
 - Both need a subscription, the user's or the CA owner's; without one they fail with
   `subscription_required`. Tell the user rather than retrying.
 
-Requests that are safe to repeat (reading, revoking, unrevoking, changing a CA's or an ACME policy's settings, deleting a CA or
-an ACME policy, and requesting a certificate or creating a CA or an ACME policy with its Idempotency-Key) are tried up to 3 times in all when the connection fails or the server answers with a 5xx or 429; a notice goes to standard error. Only run a command again yourself after it has
+Requests that are safe to repeat (reading, revoking, unrevoking, changing a CA's, an ACME policy's, an EAB's or a provisioning URL's
+settings, deleting a CA, an ACME policy, an EAB or a provisioning URL, and requesting a certificate or creating a CA, an ACME policy or an EAB with its
+Idempotency-Key) are tried up to 3 times in all when the connection fails or the server answers with a 5xx or 429; a notice goes to standard error. Only run a command again yourself after it has
 failed. When the server asks to wait longer than 10 seconds, the command fails at once and its message says how long
 to wait before running it again.
 
@@ -294,31 +295,117 @@ its ACME policies with an external account binding (EAB) made for the policy. A 
 certificates are issued with (the names in them come from the order), and the domains an order may have without a
 challenge (`preApprovedDomains`: `*` matches any text, and `*.example.com` also matches example.com); other names
 need an http-01, dns-01 or tls-alpn-01 challenge. Like the other commands that work in a CA, the `acme policy`
-commands take `--ca NAME` (or `ID`) and name the CA in `ca`; a policy is named by its numeric `id`.
+commands take `--ca NAME` (or `ID`) and name the CA in `ca`. A policy is named by its name (any case) or its
+numeric `id`, wherever a command takes one (`show`, `update`, `delete`, `--move-accounts-to`, `--policy`); a value
+that names two policies (two with that name, or one's `id` and another's name) fails with `policy_ambiguous`, so
+use the `id` from `acme policy list --json` then, and always in scripts that change things.
 
 - `pkiaas acme policy list --json` lists the CA's policies by name, with how many EABs, ACME accounts and valid
   orders each has (`eabCount`, `accountCount`, `validOrderCount`). `--search TEXT` keeps those whose name,
   template or pre-approved domains contain the text; `--sort` takes name, template, preApprovedDomains, eabCount,
-  accountCount or validOrderCount, with `--order asc|desc`. `pkiaas acme policy show ID --json` shows one.
+  accountCount or validOrderCount, with `--order asc|desc`. `pkiaas acme policy show NAME|ID --json` shows one.
 - `pkiaas acme policy create --name NAME --template NAME --pre-approved "*.example.com,example.org" --json` creates
   one, when the user asks for it. The name is 1 to 50 letters, digits, spaces, hyphens and underscores; the
   template is any of the CA's templates, by name or `id` (`template_not_found`, `template_ambiguous` as for
   requests). Pass `--idempotency-key KEY` and keep the key, as for requests.
-- `pkiaas acme policy update ID --json` changes only the settings whose flags are given: `--name`, `--template`, and
+- `pkiaas acme policy update NAME|ID --json` changes only the settings whose flags are given: `--name`, `--template`, and
   `--pre-approved`, which replaces the whole list (`--pre-approved ""` clears it, so every name needs a challenge).
   Pre-approving a domain lets anyone with the policy's EAB get certificates for it without proving control, so
   only pre-approve what the user names. Add `--dry-run` to see the changes (`changes`, old and new) without sending
   anything. A policy that already has the settings is left as it is. A template that was deleted shows as
   `template` null: orders under the policy fail until `update --template` chooses another. If someone changed the
   policy between reading and saving, it fails with `acme_changed`: run it again.
-- `pkiaas acme policy delete ID --json` deletes a policy with its EABs and provisioning URLs, so ACME clients can no
+- `pkiaas acme policy delete NAME|ID --json` deletes a policy with its EABs and provisioning URLs, so ACME clients can no
   longer register with them. Its ACME accounts keep working only if they move to another policy of the CA:
-  `--move-accounts-to ID`; a policy with accounts isn't deleted without it (`policy_has_accounts`). Delete a
+  `--move-accounts-to NAME|ID`; a policy with accounts isn't deleted without it (`policy_has_accounts`). Delete a
   policy only when the user asks you to: preview it with `--dry-run --json` (`impact`: `eabs`, `provisioningUrls`,
   `accounts` and `moveAccountsTo`), show that to the user, and only if they agree run it with `--yes` (with the same
   `--move-accounts-to`). Without `--yes` and without a terminal it fails with `usage`. If the policy changed after
   the preview, it fails with `acme_changed` and deletes nothing: preview it again and ask again. A retry of a delete
   that already went through reports `deleted` as true.
+
+### External account bindings
+
+An ACME client registers an account under a policy with an external account binding (EAB): its key ID (`keyId`)
+and its HMAC key. The `acme eab` commands take `--ca` as the others do; an EAB is named by its numeric `id`.
+
+- `pkiaas acme eab list --json` lists the CA's EABs by name, never their HMAC keys: `--policy NAME|ID` keeps those of one
+  policy, `--status enabled,disabled,expired,used` those in these states (`enabled`: it can register an account
+  now), `--search TEXT` those whose name contains the text. `pkiaas acme eab show ID --json` shows one, with
+  `usesRemaining`, `expiresAt` and `createdAccounts`.
+- `pkiaas acme eab create --policy NAME|ID --name NAME --out FILE --json` creates one. **Ask the user before you create an
+  EAB**, and say where its HMAC key will go: the server shows the key only once, to this command, and anyone with
+  the key ID and the key can get certificates under the policy until the EAB is used up, expires or is disabled.
+  `--uses N` (default 10) and `--expires TIME` (RFC 3339, a date, or from now: `24h`, `7d`; default 7 days) limit
+  it; prefer the fewest uses and the shortest time the user needs. The key goes to `--out FILE` alone on one line,
+  readable by the user only; without `--out` the command fails with `secret_destination` before it creates
+  anything. The result never holds the key: it gives `hmacKeyFile`, `keyId` and `directoryUrl`. Never read the
+  file, print it or copy the key into a command you run. The ACME client reads it from the file, e.g. for the user
+  to run: `certbot register --server DIRECTORY_URL --eab-kid KEY_ID --eab-hmac-key "$(cat FILE)" --email EMAIL
+  --agree-tos`.
+- Pass `--idempotency-key KEY` as for policies; with a rerun of the same key, give `--expires` as an RFC 3339 time
+  (a time from now differs on each run) or leave it out. A rerun never shows the key again: if the first run wrote
+  the file, the command fails with `file_exists`, and the file is the result. Otherwise it fails with
+  `secret_shown` and writes nothing, as when the server's first answer was lost: disable the EAB it names with
+  `pkiaas acme eab update ID --enabled off --json`, tell the user, and create a new one without that key. A user
+  can create 60 EABs an hour (`http_429`).
+- `pkiaas acme eab update ID --json` changes only the settings whose flags are given: `--name`, `--uses`,
+  `--expires` (a time in the past ends it now) and `--enabled on|off` (off stops it registering accounts until on).
+  Add `--dry-run` to see the changes without sending anything. An EAB that already has the settings is left as it
+  is. If it changed between reading and saving (a registration takes a use, too), it fails with `acme_changed`: run
+  it again.
+- `pkiaas acme eab delete ID --json` deletes an EAB: clients can no longer register with it; accounts registered
+  with it keep working. Delete one only when the user asks you to (disabling it can be undone, deleting can't):
+  show it to the user (`acme eab show ID --json`), and only if they agree run it with `--yes`. Without `--yes` and
+  without a terminal it fails with `usage`. A retry of a delete that already went through reports `deleted` as
+  true.
+
+### Provisioning URLs (deprecated)
+
+A provisioning URL is an older way to register ACME accounts under a policy: a directory URL with a secret in its
+path. They are deprecated and **can't be created**; when the user wants a new way for a client to register, create an
+EAB with `pkiaas acme eab create`. Those that exist keep working until they are disabled, used up or expired. Their
+secret is never shown, since the server stores only its hash. The `acme provisioning-url` commands take `--ca` as
+the others do; a provisioning URL is named by its numeric `id`.
+
+- `pkiaas acme provisioning-url list --json` lists them by name, with the same `--policy`, `--status` and `--search`
+  as `acme eab list`; `pkiaas acme provisioning-url show ID --json` shows one.
+- `pkiaas acme provisioning-url update ID --enabled on|off --json` enables or disables one; `--enabled` is needed, as
+  the only setting that can change. On only restores it with the uses and expiration it has, which can't be raised
+  or extended: one that is used up or expired stays so (`status`). `--dry-run`, an unchanged setting and
+  `acme_changed` work as for EABs.
+- `pkiaas acme provisioning-url delete ID --json` deletes one, which can't be undone: ask the user first, as for
+  EABs, and run it with `--yes` only if they agree. Accounts registered with a provisioning URL keep working when it
+  is disabled or deleted.
+
+## IoT HSMs
+
+Some CAs keep their key on the user's IoT HSM: their own appliance, which holds the key on a token (e.g. a YubiKey)
+and signs for the platform through the iot-hsm agent, over PubNub. The `hsm` commands show what the platform last heard from each
+agent and check that one answers. There is no live status: an idle agent and one that is off look the same until
+the CA is pinged or asked to sign.
+
+- `pkiaas hsm list --json` lists the user's IoT HSM CAs by name (`hsms`, each with its `ca`). It doesn't use the
+  active CA. CAs on the same agent share `agent.id`.
+- `pkiaas hsm show --ca NAME --json` shows one: `agent` (its `version`, null with `olderAgent` true for an agent from
+  before 1.0.0, and `updateAvailable` with `latestVersion` and `releaseUrl`), `token` (`type` and `pinState`),
+  `capabilities`, `busy`, `dormant`, when it last answered, signed and started (`lastAnswerAt`, `lastSignatureAt`,
+  `lastAgentStartAt`), and `lastPing`. `agent` is null until the agent answers once after the platform began
+  recording it: ping it. A CA whose key is on the platform fails with `ca_not_hsm`.
+- `pkiaas hsm ping --ca NAME --json` asks the agent to answer now, without signing anything; it takes up to 10
+  seconds. It succeeds (exit 0) whenever the ping ran: read `ping.outcome`. `answered` means the agent can sign;
+  `busy` that it is too busy right now; `pinRejected` that the token refused the agent's PIN, so it signs nothing
+  until the user corrects the PIN on the appliance; `noAnswer` that nothing answered in 10 seconds (ask the user to
+  check that the appliance is on, online and running its agent); `unreachable` that the platform couldn't reach
+  PubNub, which says nothing about the HSM (try again later); `failed` anything else (`ping.message`). Within a
+  minute of the last ping, the result is that ping (`cached` true, sent at `ping.at`).
+
+Each ping costs PubNub messages on the platform's budget, and one HSM signature when the agent's channel certificate
+has expired (`channelCertificateExpires`). Ping once when the user asks, or once when a request failed with
+`signing_failed` and the CA's log points at the HSM; don't ping on a schedule or in a loop. A CA can be pinged 60
+times a day (beyond that, `http_429` says when to try again), and pinging needs the sign privilege in the CA
+(`forbidden`). When `updateAvailable` is true, tell the user; the agent is updated on the appliance, not with
+`pkiaas`.
 
 ## Troubleshooting with the logs
 
@@ -437,7 +524,8 @@ With `--json`, an error is `{"error": {"code", "message", "hint"}}`. The hint is
 | `error` | 1 | an error without a more specific code; the message says what failed | read the message: fix the cause if it is clear (e.g. a wrong file path), otherwise tell the user |
 | `usage` | 2 | the command line is wrong, or a needed option (such as a passphrase without a terminal to prompt on) is missing | fix the command line; run the command with `--help` (or `pkiaas help --json <command>`) for its flags |
 | `file_exists` | 5 | an output file exists, and files are never replaced without `--force` | if an earlier run of yours wrote the file, it is the result: use it; otherwise choose another output file, or add `--force` if the user wants the file replaced |
-| `secret_destination` | 2 | the output is a secret (a key, a PKCS#12 file or a stored CSR), so it isn't sent into a pipe, captured output or a `--json` result without `--out` | save it with `--out` FILE, tell the user where the file is, and don't read it yourself; use `--out` - only to pipe it straight into another command, since your output may be logged |
+| `secret_destination` | 2 | the output is a secret (a key, a PKCS#12 file, a stored CSR or an EAB's HMAC key), so it isn't sent into a pipe, captured output or a `--json` result without `--out`; nothing was made or created | save it with `--out` FILE, tell the user where the file is, and don't read it yourself; use `--out` - only to pipe it straight into another command, since your output may be logged |
+| `secret_shown` | 5 | the server created the EAB, but showed its HMAC key to an earlier run with the same `--idempotency-key`, or its answer was lost and the CLI's retry got the EAB without the key; the key can't be shown again, and nothing was written | if an earlier run of yours wrote the key to a file, that file is the result: use it. Otherwise disable the EAB the message names with `pkiaas acme eab update ID --enabled off` and create a new one without that `--idempotency-key`, telling the user why |
 | `wrong_passphrase` | 1 | the key's passphrase is wrong, or the key file is damaged | ask the user for the right passphrase, given the same way (environment variable or file) |
 | `not_logged_in` | 3 | there is no login for the server, and `PKIAAS_TOKEN` isn't set | ask the user to run `pkiaas login` (or `pkiaas login --device` where no browser can open); see `pkiaas help agents` |
 | `invalid_token` | 3 | the server refused the token: the login expired, was revoked, or the account was removed | ask the user to run `pkiaas login` (or `pkiaas login --device` where no browser can open); see `pkiaas help agents` |
@@ -462,8 +550,10 @@ With `--json`, an error is `{"error": {"code", "message", "hint"}}`. The hint is
 | `signing_failed` | 1 | the CA couldn't sign the request, e.g. its IoT HSM didn't answer or the template doesn't fit the CSR; the CA's log says why | tell the user, who can read the CA's log on the website; the request waits for approval again (or stays processing if the certificate was signed), so approve it again once the cause is fixed |
 | `ca_creation_failed` | 1 | creating the CA failed on the server at the step the message names; nothing was kept, unless the message says the half-made CA couldn't be removed | run the same command again once (with the same `--idempotency-key`); if it fails again, tell the user and quote the request ID from the message. Each try counts toward the limit of 20 CAs an hour |
 | `ca_changed` | 5 | someone changed the CA since the command read it (`pkiaas ca update`) or previewed its delete (`pkiaas ca delete`), so nothing was saved or deleted | someone changed the CA since it was read; run the command again (it reads the CA again and applies only its own flags); `pkiaas ca show --json` shows the CA's settings now |
-| `acme_changed` | 5 | someone changed the ACME policy since the command read it (`pkiaas acme policy update`) or previewed its delete (`pkiaas acme policy delete`), so nothing was saved or deleted | run the command again: it reads the policy again and applies only its own flags; `pkiaas acme policy show ID --json` shows the policy now |
+| `acme_changed` | 5 | someone changed the ACME policy since the command read it (`pkiaas acme policy update`) or previewed its delete (`pkiaas acme policy delete`), or the EAB or provisioning URL since `pkiaas acme eab update` or `pkiaas acme provisioning-url update` read it (an ACME client registering with it takes a use), so nothing was saved or deleted | run the command again: it reads the policy, EAB or provisioning URL again and applies only its own flags; `pkiaas acme policy show ID --json`, `pkiaas acme eab show ID --json` or `pkiaas acme provisioning-url show ID --json` shows it now |
+| `policy_ambiguous` | 2 | a policy name (or a number) given as an ACME policy names more than one policy of the CA: two policies with that name in any case, or one policy's ID and another's name; nothing was sent | run `pkiaas acme policy list --json` (with the same `--ca`) and give the id of the policy you mean; if a policy's name is another policy's ID, rename it with `pkiaas acme policy update ID --name NEW` |
 | `policy_has_accounts` | 5 | the ACME policy has ACME accounts, so it isn't deleted without another policy of the CA to move them to; nothing was deleted | run `pkiaas acme policy list --json` (with the same `--ca`) to pick another policy, ask the user if it isn't clear which, then run the delete again with `--move-accounts-to` ID |
+| `ca_not_hsm` | 5 | the CA's key is on the platform, not on an IoT HSM, so it has no IoT HSM to show or ping | run `pkiaas hsm list --json` and use the id or name of a CA listed there; if the user meant another CA, ask which |
 | `cli_outdated` | 1 | the server needs a newer pkiaas | update pkiaas with the install command in the message, then run the command again |
 | `connection_failed` | 1 | the server couldn't be reached | check the server address (`--server` or `PKIAAS_SERVER`) and the network, then try again |
 | `http_<status>` | 1 | the server answered with an unexpected HTTP status, e.g. http_500; the message has the request ID to quote | try again later; if it persists, report the request ID |

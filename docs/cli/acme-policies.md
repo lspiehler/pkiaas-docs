@@ -5,7 +5,7 @@ description: "List, show, create, change and delete a CA's ACME policies with th
 ## Overview
 ACME clients such as certbot get certificates from a CA by registering under one of its ACME policies, with EAB credentials made for that policy. A policy names the template certificates are issued with, and the domains an order may have without a challenge (pre-approved domains). See the [ACME overview](../acme/overview.md) for how ACME works in PKIaaS.io.
 
-The `pkiaas acme policy` commands work in the active CA, or the one `--ca` names (see [Choose Your CA](certificate-authorities.md#choose-your-ca)). A policy is named by its numeric ID, which `pkiaas acme policy list` shows.
+The `pkiaas acme policy` commands work in the active CA, or the one `--ca` names (see [Choose Your CA](certificate-authorities.md#choose-your-ca)). A policy is named by its name (any case) or its numeric ID, which `pkiaas acme policy list` shows, e.g. `pkiaas acme policy show "web servers"`. If two policies have that name, or a number is one policy's ID and another's name, the command fails with `policy_ambiguous` and lists their IDs: give the ID then. Scripts that change things should always use the ID.
 
 ## List and Show Policies
 `pkiaas acme policy list` lists the CA's policies by name, with their template, pre-approved domains and how many EABs, ACME accounts and issued orders each has:
@@ -37,7 +37,7 @@ This does the same as the website's [Create an ACME Policy](../acme/create-acme-
 
 Anyone with the policy's EAB credentials can get certificates for its pre-approved domains without proving they control them. Pre-approve only domains you trust every holder of those credentials with.
 
-Next, [generate EAB credentials](../acme/generate-eab-credentials.md) for the policy on the website.
+Next, [create an EAB](acme-eabs.md) for the policy with `pkiaas acme eab create`, or [generate EAB credentials](../acme/generate-eab-credentials.md) on the website.
 
 ## Change a Policy
 `pkiaas acme policy update 205` changes only the settings whose flags you give:
@@ -51,14 +51,14 @@ Accounts, EABs and earlier orders stay as they are; the new settings apply to th
 If the policy's template was deleted, the policy shows no template, and its orders fail until you choose another with `--template`.
 
 ## Delete a Policy
-`pkiaas acme policy delete 205` deletes a policy with its EAB credentials and provisioning URLs, so ACME clients can no longer register with them. **It can't be undone.**
+`pkiaas acme policy delete 205` deletes a policy with its [EABs](acme-eabs.md) and [provisioning URLs](acme-provisioning-urls.md), so ACME clients can no longer register with them. **It can't be undone.**
 
 The command first shows what the delete takes with it, then asks you to confirm. Add `--dry-run` to see that and delete nothing.
 
 A policy with ACME accounts isn't deleted on its own. Move its accounts to another policy of the same CA, where they keep working:
 
 ```sh
-pkiaas acme policy delete 205 --move-accounts-to 206
+pkiaas acme policy delete 205 --move-accounts-to "Intranet servers"
 ```
 
 Without `--move-accounts-to`, the command fails with `policy_has_accounts` (exit code 5) and deletes nothing.

@@ -1,6 +1,6 @@
 ---
 title: "pkiaas CLI"
-description: "Install the pkiaas CLI on Linux, macOS or Windows, log in, find, export and revoke your certificates, request new ones and approve them, manage ACME policies, and create keys, CSRs and PKCS#12 files on your own computer. Built for AI agents as well as people."
+description: "Install the pkiaas CLI on Linux, macOS or Windows, log in, find, export and revoke your certificates, request new ones and approve them, manage ACME policies and EABs, and create keys, CSRs and PKCS#12 files on your own computer. Built for AI agents as well as people."
 ---
 ## Overview
 `pkiaas` is the PKIaaS.io command-line tool (CLI). It runs on Linux, macOS and Windows, and is built to be used by AI agents (Claude Code, Codex, Copilot and others) as well as by people. Today it covers:
@@ -10,6 +10,7 @@ description: "Install the pkiaas CLI on Linux, macOS or Windows, log in, find, e
 - **[Request Certificates](requests.md):** list a CA's templates and request a certificate with a CSR, safely repeatable with an idempotency key, and have it issued and saved in the same command.
 - **[Approve Requests](pending-requests.md):** list a CA's pending requests, check what each asks for, and approve or decline them.
 - **[ACME Policies](acme-policies.md):** list, create, change and delete a CA's ACME policies, and move their ACME accounts to another policy before a delete.
+- **[ACME EABs](acme-eabs.md):** create external account bindings (EABs) that ACME clients such as certbot register with, list them, change, disable and delete them. The deprecated [provisioning URLs](acme-provisioning-urls.md) can be listed, disabled, enabled and deleted.
 - **[Keys, CSRs and PKCS#12](keys-csrs-pkcs12.md):** create private keys of every type PKIaaS.io supports, including the post-quantum [ML-DSA](../post-quantum-cryptography/ml-dsa.md) and [SLH-DSA](../post-quantum-cryptography/slh-dsa.md) types, certificate signing requests (CSRs), and PKCS#12 (.pfx/.p12) files that combine a key, its certificate and the CA chain.
 
 Keys, CSRs and PKCS#12 files are made on your computer, and private keys never leave it.

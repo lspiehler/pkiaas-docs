@@ -13,12 +13,23 @@ Every command with its arguments and flags, apart from the global flags below an
 ```text
 pkiaas
 ├── acme
-│   └── policy
-│       ├── create             --ca=STRING --idempotency-key=STRING --name=STRING --pre-approved=STRING --template=STRING
-│       ├── delete ID          --ca=STRING --dry-run --move-accounts-to=STRING --yes
-│       ├── list               --ca=STRING --limit=INT --order=STRING --search=STRING --sort=STRING
+│   ├── eab
+│   │   ├── create             --ca=STRING --expires=STRING --force --idempotency-key=STRING --name=STRING --out=STRING --policy=STRING --uses=INT
+│   │   ├── delete ID          --ca=STRING --yes
+│   │   ├── list               --ca=STRING --limit=INT --order=STRING --policy=STRING --search=STRING --sort=STRING --status=STRING
+│   │   ├── show ID            --ca=STRING
+│   │   └── update ID          --ca=STRING --dry-run --enabled=STRING --expires=STRING --name=STRING --uses=INT
+│   ├── policy
+│   │   ├── create             --ca=STRING --idempotency-key=STRING --name=STRING --pre-approved=STRING --template=STRING
+│   │   ├── delete NAME|ID     --ca=STRING --dry-run --move-accounts-to=STRING --yes
+│   │   ├── list               --ca=STRING --limit=INT --order=STRING --search=STRING --sort=STRING
+│   │   ├── show NAME|ID       --ca=STRING
+│   │   └── update NAME|ID     --ca=STRING --dry-run --name=STRING --pre-approved=STRING --template=STRING
+│   └── provisioning-url
+│       ├── delete ID          --ca=STRING --yes
+│       ├── list               --ca=STRING --limit=INT --order=STRING --policy=STRING --search=STRING --sort=STRING --status=STRING
 │       ├── show ID            --ca=STRING
-│       └── update ID          --ca=STRING --dry-run --name=STRING --pre-approved=STRING --template=STRING
+│       └── update ID          --ca=STRING --dry-run --enabled=STRING
 ├── ca
 │   ├── create                 --csr-only --days=INT --extended-key-usage=STRING --idempotency-key=STRING --key-type=STRING --key-usage=STRING --name=STRING --path-length=INT --set --signature-algorithm=STRING --subject=STRING --yes
 │   ├── delete NAME|ID         --dry-run --yes
@@ -36,6 +47,10 @@ pkiaas
 ├── csr
 │   └── create                 --cn=STRING --force --format=STRING --key=STRING --key-passphrase-env=STRING --key-passphrase-file=STRING --out=STRING --san=STRING --subject=STRING
 ├── help
+├── hsm
+│   ├── list                   --limit=INT
+│   ├── ping                   --ca=STRING
+│   └── show                   --ca=STRING
 ├── key
 │   ├── create                 --force --format=STRING --no-passphrase --out=STRING --passphrase-env=STRING --passphrase-file=STRING --type=STRING
 │   └── types
@@ -76,7 +91,7 @@ Exit codes and error codes are listed in the [agent guide](agents.md#exit-codes)
 
 ## pkiaas acme
 
-Manage a CA's ACME policies.
+Manage a CA's ACME policies, external account bindings (EABs) and provisioning URLs.
 
 ```
 pkiaas acme [flags]
@@ -84,7 +99,362 @@ pkiaas acme [flags]
 
 Commands:
 
+- [`pkiaas acme eab`](reference.md#pkiaas-acme-eab)
 - [`pkiaas acme policy`](reference.md#pkiaas-acme-policy)
+- [`pkiaas acme provisioning-url`](reference.md#pkiaas-acme-provisioning-url)
+
+## pkiaas acme eab
+
+List a CA's ACME external account bindings (EABs), show one, create, update or delete one.
+
+```
+pkiaas acme eab [flags]
+```
+
+Commands:
+
+- [`pkiaas acme eab create`](reference.md#pkiaas-acme-eab-create)
+- [`pkiaas acme eab delete`](reference.md#pkiaas-acme-eab-delete)
+- [`pkiaas acme eab list`](reference.md#pkiaas-acme-eab-list)
+- [`pkiaas acme eab show`](reference.md#pkiaas-acme-eab-show)
+- [`pkiaas acme eab update`](reference.md#pkiaas-acme-eab-update)
+
+## pkiaas acme eab create
+
+Create an ACME external account binding (EAB), and save its HMAC key.
+
+```
+pkiaas acme eab create --policy NAME|ID --name NAME [--uses N] [--expires TIME] --out FILE|- [--force] [--ca NAME|ID] [--idempotency-key KEY] [flags]
+```
+
+Create an external account binding (EAB) for an ACME policy of a CA, by default the active CA, as the website's
+External Account Bindings page does. An ACME client (certbot, acme.sh, Windows and network devices) registers an
+account under the policy with the EAB's key ID and HMAC key, and then gets certificates as the policy says.
+
+`--policy` is the name or ID of one of the CA's ACME policies (`pkiaas acme policy list`). `--name` is the EAB's name: 1 to 50
+letters, digits, spaces, hyphens and underscores. `--uses` is how many ACME accounts it may register (0 to 65535,
+default 10). `--expires` is when it stops registering accounts: an RFC 3339 time (e.g. 2026-11-08T15:00:00Z), a
+date (midnight in this computer's time zone), or how long from now (12h, 7d); it must be in the future, and it is
+7 days from now without the flag. `pkiaas acme eab update` changes these later.
+
+The HMAC key is a secret that the server shows only once, to this command: save it with `--out` FILE, which writes
+the key alone on one line, readable by you only (an existing file is replaced only with `--force`). Without `--out`
+it goes to standard output only when that is a terminal, followed by a notice that it wasn't saved; in a pipe or
+captured output, or with `--json`, the command fails with secret_destination before it creates anything. `--out` -
+sends it to standard output anyway, to pipe to another command. When the key goes to standard output, the EAB's
+key ID and the directory URL go to standard error, and there is no result. The result never holds the key: it
+says where the key went (hmacKeyFile), with the key ID (keyId) and the ACME directory (directoryUrl). Give the key
+to the ACME client from the file, so that it never passes through a transcript, e.g.:
+
+  certbot register `--server` DIRECTORY_URL `--eab-kid` KEY_ID `--eab-hmac-key` "$(cat FILE)" `--email` EMAIL `--agree-tos`
+
+Each run is a new EAB, unless it has the `--idempotency-key` of an earlier run (any text, e.g. a UUID) and the same
+flags: within 24 hours that gives the same EAB instead of a second one, but never its HMAC key again, so the
+command fails with secret_shown and writes nothing. That also happens when the server's first answer was lost and
+the CLI's own retry got the EAB without its key. Disable that EAB then (`pkiaas acme eab update ID --enabled
+off`), and create a new one. A time from now (7d) is another time on each run, so a rerun with the same
+`--idempotency-key` needs `--expires` as an RFC 3339 time, or none. Without `--idempotency-key`, the CLI makes a key and
+reports it (idempotencyKey), and uses it when it retries by itself. A key used for different flags is refused
+(error idempotency_key_reused). A user can create 60 EABs an hour.
+
+This command calls the PKIaaS server and needs a login.
+
+Its output (the EAB HMAC key) is a secret: it goes to `--out FILE`, to `--out -`, or to a terminal, never into a pipe without `--out -` or into a `--json` result (error `secret_destination`).
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--expires` | string | when it stops registering accounts: RFC 3339, a date (midnight in this computer's time zone), or how long from now (12h, 7d) (default: 7 days from now) |
+| `--force` | bool | replace the `--out` file if it exists |
+| `--idempotency-key` | string | repeat an earlier run with this key instead of creating a second EAB (default: a new random key) |
+| `--name` | string | the EAB's name: 1 to 50 letters, digits, spaces, hyphens and underscores |
+| `-o`, `--out` | string | the file to write (default: standard output, as with -) |
+| `--policy` | string | the name or ID of the CA's ACME policy to register accounts under (pkiaas acme policy list) |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+| `--uses` | int | how many ACME accounts it may register (0-65535). Default: `10`. |
+
+Examples:
+
+```sh
+pkiaas acme eab create --policy 205 --name web01 --out web01.eab
+pkiaas acme eab create --policy "Web servers" --name web02 --out web02.eab
+pkiaas acme eab create --policy 205 --name web01 --uses 1 --expires 24h --out web01.eab --json
+pkiaas acme eab create --policy 205 --name lab --expires 2026-12-31T23:59:59Z --out lab.eab --ca a1B2c3D4e5 --idempotency-key 8e03978e-40d5-43e8-bc93-6894a57f9324 --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `ca` | object | the CA the EAB belongs to |
+| `ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
+| `ca.name` | string or null | the CA's name (its certificate's common name) |
+| `id` | integer | the EAB's ID, which the 'acme eab' commands take to name it in its CA |
+| `keyId` | string | the EAB key ID (KID) an ACME client sends with the HMAC key, e.g. certbot `--eab-kid` |
+| `name` | string | the EAB's name |
+| `policy` | object | the ACME policy that accounts registered with the EAB belong to |
+| `policy.id` | integer | the policy's ID |
+| `policy.name` | string | the policy's name |
+| `enabled` | boolean | whether it may register accounts; `pkiaas acme eab update ID --enabled on\|off` changes it |
+| `usesRemaining` | integer | how many more ACME accounts it may register; each registration takes one |
+| `expiresAt` | string | when it stops registering accounts (ISO 8601, UTC) |
+| `status` | string | whether it can register an account now: enabled if it is enabled, unexpired and has uses left; otherwise the first of disabled, expired and used that applies |
+| `createdAccounts` | integer | ACME accounts registered with it since ACME v2 (2026-10-27); earlier ones aren't counted. Accounts keep working when the EAB is disabled or deleted |
+| `directoryUrl` | string | the ACME directory to register at with the EAB, e.g. certbot `--server` |
+| `hmacKeyFile` | string | the `--out` file the EAB's HMAC key was written to, alone on one line, readable by its owner only; it is shown only this once. Give it to the ACME client without reading it, e.g. certbot `--eab-hmac-key` "$(cat FILE)" |
+| `idempotencyKey` | string | the Idempotency-Key it was sent with: the same command with `--idempotency-key` and this key, within 24 hours, creates no second EAB, but fails with secret_shown, since the HMAC key is shown only once |
+
+Side effects:
+
+- creates an EAB in the ACME policy on the server; with the `--idempotency-key` of an earlier run (within 24 hours), nothing new
+- with `--out` FILE, writes the EAB's HMAC key to the file, readable by the owner only; with `--out` - or to a terminal, writes it to standard output, the EAB's details to standard error, and no result
+- the CA's log records it
+
+## pkiaas acme eab delete
+
+Delete an ACME external account binding (EAB).
+
+```
+pkiaas acme eab delete ID [--ca NAME|ID] [--yes] [flags]
+```
+
+Delete an external account binding (EAB) of a CA, by default the active CA's, by its ID from `pkiaas acme eab
+list`. ACME clients can no longer register accounts with it; the accounts registered with it keep working. It
+can't be undone. To stop an EAB for now, disable it instead: `pkiaas acme eab update ID --enabled off`.
+
+The command first reads the EAB and prints what is deleted. On a terminal, it then asks for confirmation; without
+a terminal, give `--yes`, which deletes without asking; without it, the command stops with a usage error.
+
+Running it again after it succeeded fails with not_found, as for an EAB that never existed; if a retry of the same
+delete finds the EAB gone, the result says it is deleted.
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+| `--yes` | bool | delete without asking; only after the person saw the EAB and agreed |
+
+Examples:
+
+```sh
+pkiaas acme eab delete 12
+pkiaas acme eab delete 12 --yes --json
+pkiaas acme eab delete 12 --ca a1B2c3D4e5 --yes --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `ca` | object | the CA the EAB belonged to |
+| `ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
+| `ca.name` | string or null | the CA's name (its certificate's common name) |
+| `eab` | object | the EAB |
+| `eab.id` | integer | the EAB's ID |
+| `eab.keyId` | string | its key ID (KID) |
+| `eab.name` | string | its name |
+| `eab.createdAccounts` | integer | ACME accounts registered with it (since ACME v2), which keep working |
+| `policy` | object | the ACME policy the EAB belonged to |
+| `policy.id` | integer | the policy's ID |
+| `policy.name` | string | the policy's name |
+| `deleted` | boolean | true: the EAB is deleted, also when an earlier try of the same delete did it |
+
+Side effects:
+
+- deletes the EAB on the server: ACME clients can no longer register with it; accounts registered with it keep working
+- it can't be undone; the CA's log records it
+
+## pkiaas acme eab list
+
+List a CA's ACME external account bindings (EABs), by name.
+
+```
+pkiaas acme eab list [--ca NAME|ID] [--policy NAME|ID] [--status S,...] [--search TEXT] [--sort FIELD [--order asc|desc]] [--limit N] [flags]
+```
+
+List the external account bindings (EABs) of a CA, by default the active CA's, by name: those of all its ACME
+policies, or with `--policy` NAME\|ID only those of that policy (`pkiaas acme policy list`). An ACME client registers an
+account under a policy with an EAB's key ID and HMAC key; the HMAC key is shown only once, by `pkiaas acme eab
+create`, and never listed. The ID is what the other 'acme eab' commands take to name an EAB.
+
+`--status` keeps the EABs with one of these statuses, comma-separated or repeated: enabled (it can register an
+account now), disabled, expired or used (no uses left). It lists the first `--limit` EABs (default 50, at most
+1000); total says how many match. `--search` keeps the EABs whose name contains the text, in any case. `--sort` takes
+name, keyId, policy, enabled, usesRemaining or expiresAt, in `--order` asc (the default with `--sort`) or desc.
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--limit` | int | how many EABs to list (1-1000). Default: `50`. |
+| `--order` | string | asc or desc (default: asc with `--sort`) |
+| `--policy` | string | only the EABs of this ACME policy, by its name or ID (pkiaas acme policy list) |
+| `--search` | string | only EABs with this text in the name |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+| `--sort` | string | what to sort by: name, keyId, policy, enabled, usesRemaining, expiresAt (default: name) |
+| `--status` | string, repeatable | only EABs with one of these statuses: enabled, disabled, expired, used |
+
+Examples:
+
+```sh
+pkiaas acme eab list
+pkiaas acme eab list --policy 205 --status enabled --json
+pkiaas acme eab list --policy "Web servers"
+pkiaas acme eab list --status expired,used --sort expiresAt --order desc --ca a1B2c3D4e5 --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `ca` | object | the CA the EABs belong to |
+| `ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
+| `ca.name` | string or null | the CA's name (its certificate's common name) |
+| `total` | integer | how many EABs match; more than are listed when it exceeds `--limit` |
+| `eabs` | object[] | the first `--limit` matching EABs, in the `--sort` and `--order` order (by name without `--sort`); never their HMAC keys |
+| `eabs[].id` | integer | the EAB's ID, which the 'acme eab' commands take to name it in its CA |
+| `eabs[].keyId` | string | the EAB key ID (KID) an ACME client sends with the HMAC key, e.g. certbot `--eab-kid` |
+| `eabs[].name` | string | the EAB's name |
+| `eabs[].policy` | object | the ACME policy that accounts registered with the EAB belong to |
+| `eabs[].policy.id` | integer | the policy's ID |
+| `eabs[].policy.name` | string | the policy's name |
+| `eabs[].enabled` | boolean | whether it may register accounts; `pkiaas acme eab update ID --enabled on\|off` changes it |
+| `eabs[].usesRemaining` | integer | how many more ACME accounts it may register; each registration takes one |
+| `eabs[].expiresAt` | string | when it stops registering accounts (ISO 8601, UTC) |
+| `eabs[].status` | string | whether it can register an account now: enabled if it is enabled, unexpired and has uses left; otherwise the first of disabled, expired and used that applies |
+| `eabs[].createdAccounts` | integer | ACME accounts registered with it since ACME v2 (2026-10-27); earlier ones aren't counted. Accounts keep working when the EAB is disabled or deleted |
+
+## pkiaas acme eab show
+
+Show an ACME external account binding (EAB), without its HMAC key.
+
+```
+pkiaas acme eab show ID [--ca NAME|ID] [flags]
+```
+
+Show an external account binding (EAB) of a CA, by default the active CA's, by its ID from `pkiaas acme eab
+list`: its key ID, ACME policy, status, uses remaining, expiration and how many ACME accounts were registered with
+it. Never its HMAC key, which only `pkiaas acme eab create` showed, once.
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+
+Examples:
+
+```sh
+pkiaas acme eab show 12
+pkiaas acme eab show 12 --ca a1B2c3D4e5 --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `ca` | object | the CA the EAB belongs to |
+| `ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
+| `ca.name` | string or null | the CA's name (its certificate's common name) |
+| `id` | integer | the EAB's ID, which the 'acme eab' commands take to name it in its CA |
+| `keyId` | string | the EAB key ID (KID) an ACME client sends with the HMAC key, e.g. certbot `--eab-kid` |
+| `name` | string | the EAB's name |
+| `policy` | object | the ACME policy that accounts registered with the EAB belong to |
+| `policy.id` | integer | the policy's ID |
+| `policy.name` | string | the policy's name |
+| `enabled` | boolean | whether it may register accounts; `pkiaas acme eab update ID --enabled on\|off` changes it |
+| `usesRemaining` | integer | how many more ACME accounts it may register; each registration takes one |
+| `expiresAt` | string | when it stops registering accounts (ISO 8601, UTC) |
+| `status` | string | whether it can register an account now: enabled if it is enabled, unexpired and has uses left; otherwise the first of disabled, expired and used that applies |
+| `createdAccounts` | integer | ACME accounts registered with it since ACME v2 (2026-10-27); earlier ones aren't counted. Accounts keep working when the EAB is disabled or deleted |
+
+## pkiaas acme eab update
+
+Change an ACME external account binding's (EAB's) name, uses or expiration, or turn it on or off.
+
+```
+pkiaas acme eab update ID [--name NAME] [--uses N] [--expires TIME] [--enabled on|off] [--ca NAME|ID] [--dry-run] [flags]
+```
+
+Change the settings of an external account binding (EAB) of a CA, by default the active CA's, by its ID from
+`pkiaas acme eab list`, as the website's Edit, Enable and Disable buttons do. Only the settings whose flags are
+given change; the others stay as they are. The key ID and HMAC key never change. Accounts registered with it keep
+working whatever it is set to.
+
+`--name` is the new name: 1 to 50 letters, digits, spaces, hyphens and underscores. `--uses` is how many more ACME
+accounts it may register (0 to 65535). `--expires` is when it stops registering accounts: an RFC 3339 time (e.g.
+2026-11-08T15:00:00Z), a date (midnight in this computer's time zone), or how long from now (12h, 7d); a time in
+the past ends it now. `--enabled` off disables it, so that it registers no accounts until `--enabled` on.
+
+The command reads the EAB, changes the settings given, and sends them all back with the version it read. If the
+EAB changed in between (an ACME client registering with it takes a use, too), nothing is saved and it fails with
+acme_changed: run it again. When the EAB already has the settings given, nothing is sent and the result is the EAB
+as it is, so the command is safe to run again. `--dry-run` sends nothing and shows what would change, each setting
+old → new; with `--json`, the EAB as it is now with dryRun true and changes.
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--dry-run` | bool | send nothing; show what would change |
+| `--enabled` | string | on lets it register accounts; off disables it |
+| `--expires` | string | when it stops registering accounts: RFC 3339, a date (midnight in this computer's time zone), or how long from now (12h, 7d); a time in the past ends it now |
+| `--name` | string | the EAB's new name: 1 to 50 letters, digits, spaces, hyphens and underscores |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+| `--uses` | int | how many more ACME accounts it may register (0-65535). Default: `0`. |
+
+Examples:
+
+```sh
+pkiaas acme eab update 12 --enabled off
+pkiaas acme eab update 12 --uses 5 --expires 30d --dry-run
+pkiaas acme eab update 12 --name web02 --expires 2026-12-31T23:59:59Z --enabled on --ca a1B2c3D4e5 --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `ca` | object | the CA the EAB belongs to |
+| `ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
+| `ca.name` | string or null | the CA's name (its certificate's common name) |
+| `id` | integer | the EAB's ID, which the 'acme eab' commands take to name it in its CA |
+| `keyId` | string | the EAB key ID (KID) an ACME client sends with the HMAC key, e.g. certbot `--eab-kid` |
+| `name` | string | the EAB's name |
+| `policy` | object | the ACME policy that accounts registered with the EAB belong to |
+| `policy.id` | integer | the policy's ID |
+| `policy.name` | string | the policy's name |
+| `enabled` | boolean | whether it may register accounts; `pkiaas acme eab update ID --enabled on\|off` changes it |
+| `usesRemaining` | integer | how many more ACME accounts it may register; each registration takes one |
+| `expiresAt` | string | when it stops registering accounts (ISO 8601, UTC) |
+| `status` | string | whether it can register an account now: enabled if it is enabled, unexpired and has uses left; otherwise the first of disabled, expired and used that applies |
+| `createdAccounts` | integer | ACME accounts registered with it since ACME v2 (2026-10-27); earlier ones aren't counted. Accounts keep working when the EAB is disabled or deleted |
+| `dryRun` | boolean, optional | true for `--dry-run`: nothing was sent, and the EAB is as it is now |
+| `changes` | object[], optional | `--dry-run` only: the settings that would change; empty if none would |
+| `changes[].field` | string | the setting: name, usesRemaining, expiresAt or enabled |
+| `changes[].from` | string | its value now, as text: usesRemaining a number, expiresAt ISO 8601 in UTC, enabled on or off |
+| `changes[].to` | string | its new value, as from |
+
+Side effects:
+
+- changes the EAB's settings on the server, only those given; nothing when the EAB already has them, or with `--dry-run`
+- accounts registered with it keep working whatever it is set to
+- the CA's log records the change
 
 ## pkiaas acme policy
 
@@ -177,10 +547,10 @@ Side effects:
 Delete an ACME policy, with its EABs, moving its accounts to another policy.
 
 ```
-pkiaas acme policy delete ID [--move-accounts-to ID] [--ca NAME|ID] [--dry-run] [--yes] [flags]
+pkiaas acme policy delete NAME|ID [--move-accounts-to NAME|ID] [--ca NAME|ID] [--dry-run] [--yes] [flags]
 ```
 
-Delete an ACME policy of a CA, by default the active CA's, by its ID from `pkiaas acme policy list`. Its external
+Delete an ACME policy of a CA, by default the active CA's, by its name or ID from `pkiaas acme policy list`. Its external
 account bindings (EABs) and provisioning URLs are deleted with it, so ACME clients can no longer register with
 them. Its ACME accounts move to the policy `--move-accounts-to` names, another policy of the same CA, and keep
 working there; a policy with accounts isn't deleted without it (error policy_has_accounts). It can't be undone.
@@ -203,7 +573,7 @@ Flags:
 |---|---|---|
 | `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
 | `--dry-run` | bool | show what the delete would take with it, and delete nothing |
-| `--move-accounts-to` | string | the ID of another policy of the CA, which gets this policy's ACME accounts |
+| `--move-accounts-to` | string | the name or ID of another policy of the CA, which gets this policy's ACME accounts |
 | `--server` | string | the PKIaaS server (default: the last one you logged in to) |
 | `--yes` | bool | delete without asking; only after the person saw what the delete takes with it and agreed |
 
@@ -211,6 +581,7 @@ Examples:
 
 ```sh
 pkiaas acme policy delete 205 --dry-run
+pkiaas acme policy delete "Old servers" --move-accounts-to "Web servers" --dry-run
 pkiaas acme policy delete 205 --move-accounts-to 206 --dry-run --json
 pkiaas acme policy delete 205 --move-accounts-to 206
 pkiaas acme policy delete 205 --yes --json
@@ -306,10 +677,10 @@ With `--json`, the result is an object with these fields:
 Show an ACME policy's settings and counts.
 
 ```
-pkiaas acme policy show ID [--ca NAME|ID] [flags]
+pkiaas acme policy show NAME|ID [--ca NAME|ID] [flags]
 ```
 
-Show an ACME policy of a CA, by default the active CA's, by its ID from `pkiaas acme policy list`: its template,
+Show an ACME policy of a CA, by default the active CA's, by its name or ID from `pkiaas acme policy list`: its template,
 its pre-approved domains, and how many EABs, provisioning URLs, ACME accounts and valid orders it has.
 
 This command calls the PKIaaS server and needs a login.
@@ -325,6 +696,7 @@ Examples:
 
 ```sh
 pkiaas acme policy show 205
+pkiaas acme policy show "Web servers"
 pkiaas acme policy show 205 --ca a1B2c3D4e5 --json
 ```
 
@@ -351,10 +723,10 @@ With `--json`, the result is an object with these fields:
 Change an ACME policy's name, template or pre-approved domains.
 
 ```
-pkiaas acme policy update ID [--name NAME] [--template NAME|ID] [--pre-approved DOMAIN,...] [--ca NAME|ID] [--dry-run] [flags]
+pkiaas acme policy update NAME|ID [--name NAME] [--template NAME|ID] [--pre-approved DOMAIN,...] [--ca NAME|ID] [--dry-run] [flags]
 ```
 
-Change the settings of an ACME policy of a CA, by default the active CA's, by its ID from `pkiaas acme policy
+Change the settings of an ACME policy of a CA, by default the active CA's, by its name or ID from `pkiaas acme policy
 list`, as the website's Edit button does. Only the settings whose flags are given change; the others stay as they
 are. Accounts, EABs and orders stay as they are; a new template and new pre-approved domains apply to the orders
 that follow.
@@ -388,6 +760,7 @@ Examples:
 ```sh
 pkiaas acme policy update 205 --pre-approved "*.example.com,example.org" --dry-run
 pkiaas acme policy update 205 --name "Web servers 2" --template "Web Server" --json
+pkiaas acme policy update "Web servers" --pre-approved "*.example.com"
 pkiaas acme policy update 205 --pre-approved "" --ca a1B2c3D4e5 --json
 ```
 
@@ -418,6 +791,272 @@ Side effects:
 
 - changes the policy's settings on the server, only those given; nothing when the policy already has them, or with `--dry-run`
 - a new template and new pre-approved domains apply to the orders that follow; accounts, EABs and orders stay as they are
+- the CA's log records the change
+
+## pkiaas acme provisioning-url
+
+List a CA's ACME provisioning URLs (deprecated: use EABs), show one, enable, disable or delete one.
+
+```
+pkiaas acme provisioning-url [flags]
+```
+
+Commands:
+
+- [`pkiaas acme provisioning-url delete`](reference.md#pkiaas-acme-provisioning-url-delete)
+- [`pkiaas acme provisioning-url list`](reference.md#pkiaas-acme-provisioning-url-list)
+- [`pkiaas acme provisioning-url show`](reference.md#pkiaas-acme-provisioning-url-show)
+- [`pkiaas acme provisioning-url update`](reference.md#pkiaas-acme-provisioning-url-update)
+
+## pkiaas acme provisioning-url delete
+
+Delete an ACME provisioning URL (deprecated).
+
+```
+pkiaas acme provisioning-url delete ID [--ca NAME|ID] [--yes] [flags]
+```
+
+Delete an ACME provisioning URL of a CA, by default the active CA's, by its ID from `pkiaas acme provisioning-url
+list`. ACME clients can no longer register accounts with it; the accounts registered with it keep working. It
+can't be undone, and provisioning URLs can't be created any more. To stop one for now, disable it instead:
+`pkiaas acme provisioning-url update ID --enabled off`.
+
+The command first reads the provisioning URL and prints what is deleted. On a terminal, it then asks for
+confirmation; without a terminal, give `--yes`, which deletes without asking; without it, the command stops with a
+usage error.
+
+Running it again after it succeeded fails with not_found, as for a provisioning URL that never existed; if a retry
+of the same delete finds the provisioning URL gone, the result says it is deleted.
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+| `--yes` | bool | delete without asking; only after the person saw the provisioning URL and agreed |
+
+Examples:
+
+```sh
+pkiaas acme provisioning-url delete 295
+pkiaas acme provisioning-url delete 295 --yes --json
+pkiaas acme provisioning-url delete 295 --ca a1B2c3D4e5 --yes --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `ca` | object | the CA the provisioning URL belonged to |
+| `ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
+| `ca.name` | string or null | the CA's name (its certificate's common name) |
+| `provisioningUrl` | object | the provisioning URL |
+| `provisioningUrl.id` | integer | the provisioning URL's ID |
+| `provisioningUrl.name` | string | its name |
+| `provisioningUrl.createdAccounts` | integer | ACME accounts registered with it (since ACME v2), which keep working |
+| `policy` | object | the ACME policy the provisioning URL belonged to |
+| `policy.id` | integer | the policy's ID |
+| `policy.name` | string | the policy's name |
+| `deleted` | boolean | true: the provisioning URL is deleted, also when an earlier try of the same delete did it |
+
+Side effects:
+
+- deletes the provisioning URL on the server: ACME clients can no longer register with it; accounts registered with it keep working
+- it can't be undone, and provisioning URLs can't be created any more; the CA's log records it
+
+## pkiaas acme provisioning-url list
+
+List a CA's ACME provisioning URLs (deprecated), by name.
+
+```
+pkiaas acme provisioning-url list [--ca NAME|ID] [--policy NAME|ID] [--status S,...] [--search TEXT] [--sort FIELD [--order asc|desc]] [--limit N] [flags]
+```
+
+List the ACME provisioning URLs of a CA, by default the active CA's, by name: those of all its ACME policies, or
+with `--policy` NAME\|ID only those of that policy (`pkiaas acme policy list`). The ID is what the other
+'acme provisioning-url' commands take to name a provisioning URL.
+
+A provisioning URL is an ACME directory URL with a secret in its path that lets an ACME client register an
+account under an ACME policy. Provisioning URLs are deprecated: none can be created, so use an external account
+binding instead (`pkiaas acme eab create`). Those that exist keep working until they are disabled, used up or
+expired. Their secret is never shown, since the server stores only its hash.
+
+`--status` keeps the provisioning URLs with one of these statuses, comma-separated or repeated: enabled (it can
+register an account now), disabled, expired or used (no uses left). It lists the first `--limit` provisioning URLs
+(default 50, at most 1000); total says how many match. `--search` keeps those whose name contains the text, in any
+case. `--sort` takes name, policy, enabled, usesRemaining or expiresAt, in `--order` asc (the default with `--sort`) or
+desc.
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--limit` | int | how many provisioning URLs to list (1-1000). Default: `50`. |
+| `--order` | string | asc or desc (default: asc with `--sort`) |
+| `--policy` | string | only the provisioning URLs of this ACME policy, by its name or ID (pkiaas acme policy list) |
+| `--search` | string | only provisioning URLs with this text in the name |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+| `--sort` | string | what to sort by: name, policy, enabled, usesRemaining, expiresAt (default: name) |
+| `--status` | string, repeatable | only provisioning URLs with one of these statuses: enabled, disabled, expired, used |
+
+Examples:
+
+```sh
+pkiaas acme provisioning-url list
+pkiaas acme provisioning-url list --policy 205 --status enabled --json
+pkiaas acme provisioning-url list --policy "Web servers"
+pkiaas acme provisioning-url list --status expired,used --sort expiresAt --order desc --ca a1B2c3D4e5 --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `ca` | object | the CA the provisioning URLs belong to |
+| `ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
+| `ca.name` | string or null | the CA's name (its certificate's common name) |
+| `total` | integer | how many provisioning URLs match; more than are listed when it exceeds `--limit` |
+| `provisioningUrls` | object[] | the first `--limit` matching provisioning URLs, in the `--sort` and `--order` order (by name without `--sort`); never their secrets |
+| `provisioningUrls[].id` | integer | the provisioning URL's ID, which the 'acme provisioning-url' commands take to name it in its CA |
+| `provisioningUrls[].name` | string | the provisioning URL's name |
+| `provisioningUrls[].policy` | object | the ACME policy that accounts registered with the provisioning URL belong to |
+| `provisioningUrls[].policy.id` | integer | the policy's ID |
+| `provisioningUrls[].policy.name` | string | the policy's name |
+| `provisioningUrls[].enabled` | boolean | whether it may register accounts; `pkiaas acme provisioning-url update ID --enabled on\|off` changes it |
+| `provisioningUrls[].usesRemaining` | integer | how many more ACME accounts it may register; each registration takes one. It can't be raised |
+| `provisioningUrls[].expiresAt` | string | when it stops registering accounts (ISO 8601, UTC). It can't be extended |
+| `provisioningUrls[].status` | string | whether it can register an account now: enabled if it is enabled, unexpired and has uses left; otherwise the first of disabled, expired and used that applies |
+| `provisioningUrls[].createdAccounts` | integer | ACME accounts registered with it since ACME v2 (2026-10-27); earlier ones aren't counted. Accounts keep working when the provisioning URL is disabled or deleted |
+
+## pkiaas acme provisioning-url show
+
+Show an ACME provisioning URL (deprecated), without its secret.
+
+```
+pkiaas acme provisioning-url show ID [--ca NAME|ID] [flags]
+```
+
+Show an ACME provisioning URL of a CA, by default the active CA's, by its ID from `pkiaas acme provisioning-url
+list`: its ACME policy, status, uses remaining, expiration and how many ACME accounts were registered with it.
+Never its secret, which the server stores only as a hash, so the URL itself can't be shown.
+
+A provisioning URL is an ACME directory URL with a secret in its path that lets an ACME client register an
+account under an ACME policy. Provisioning URLs are deprecated: none can be created, so use an external account
+binding instead (`pkiaas acme eab create`). Those that exist keep working until they are disabled, used up or
+expired. Their secret is never shown, since the server stores only its hash.
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+
+Examples:
+
+```sh
+pkiaas acme provisioning-url show 295
+pkiaas acme provisioning-url show 295 --ca a1B2c3D4e5 --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `ca` | object | the CA the provisioning URL belongs to |
+| `ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
+| `ca.name` | string or null | the CA's name (its certificate's common name) |
+| `id` | integer | the provisioning URL's ID, which the 'acme provisioning-url' commands take to name it in its CA |
+| `name` | string | the provisioning URL's name |
+| `policy` | object | the ACME policy that accounts registered with the provisioning URL belong to |
+| `policy.id` | integer | the policy's ID |
+| `policy.name` | string | the policy's name |
+| `enabled` | boolean | whether it may register accounts; `pkiaas acme provisioning-url update ID --enabled on\|off` changes it |
+| `usesRemaining` | integer | how many more ACME accounts it may register; each registration takes one. It can't be raised |
+| `expiresAt` | string | when it stops registering accounts (ISO 8601, UTC). It can't be extended |
+| `status` | string | whether it can register an account now: enabled if it is enabled, unexpired and has uses left; otherwise the first of disabled, expired and used that applies |
+| `createdAccounts` | integer | ACME accounts registered with it since ACME v2 (2026-10-27); earlier ones aren't counted. Accounts keep working when the provisioning URL is disabled or deleted |
+
+## pkiaas acme provisioning-url update
+
+Turn an ACME provisioning URL (deprecated) on or off.
+
+```
+pkiaas acme provisioning-url update ID --enabled on|off [--ca NAME|ID] [--dry-run] [flags]
+```
+
+Enable or disable an ACME provisioning URL of a CA, by default the active CA's, by its ID from `pkiaas acme
+provisioning-url list`, as the website's Enable and Disable buttons do. `--enabled` is the only setting that can
+change, so it is needed: off disables the provisioning URL, so that it registers no accounts until `--enabled` on.
+On only restores it, with the uses and expiration it has: they can't be raised or extended, so one that is used
+up or expired stays so (its status says why it can't register accounts). Accounts registered with it keep working
+either way.
+
+A provisioning URL is an ACME directory URL with a secret in its path that lets an ACME client register an
+account under an ACME policy. Provisioning URLs are deprecated: none can be created, so use an external account
+binding instead (`pkiaas acme eab create`). Those that exist keep working until they are disabled, used up or
+expired. Their secret is never shown, since the server stores only its hash.
+
+The command reads the provisioning URL and sends the setting back with the version it read. If the provisioning
+URL changed in between (an ACME client registering with it takes a use, too), nothing is saved and it fails with
+acme_changed: run it again. When it already has the setting, nothing is sent and the result is the provisioning
+URL as it is, so the command is safe to run again. `--dry-run` sends nothing and shows what would change, old →
+new; with `--json`, the provisioning URL as it is now with dryRun true and changes.
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--dry-run` | bool | send nothing; show what would change |
+| `--enabled` | string | on enables it again, with the uses and expiration it has; off disables it (needed) |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+
+Examples:
+
+```sh
+pkiaas acme provisioning-url update 295 --enabled off
+pkiaas acme provisioning-url update 295 --enabled on --dry-run
+pkiaas acme provisioning-url update 295 --enabled off --ca a1B2c3D4e5 --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `ca` | object | the CA the provisioning URL belongs to |
+| `ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
+| `ca.name` | string or null | the CA's name (its certificate's common name) |
+| `id` | integer | the provisioning URL's ID, which the 'acme provisioning-url' commands take to name it in its CA |
+| `name` | string | the provisioning URL's name |
+| `policy` | object | the ACME policy that accounts registered with the provisioning URL belong to |
+| `policy.id` | integer | the policy's ID |
+| `policy.name` | string | the policy's name |
+| `enabled` | boolean | whether it may register accounts; `pkiaas acme provisioning-url update ID --enabled on\|off` changes it |
+| `usesRemaining` | integer | how many more ACME accounts it may register; each registration takes one. It can't be raised |
+| `expiresAt` | string | when it stops registering accounts (ISO 8601, UTC). It can't be extended |
+| `status` | string | whether it can register an account now: enabled if it is enabled, unexpired and has uses left; otherwise the first of disabled, expired and used that applies |
+| `createdAccounts` | integer | ACME accounts registered with it since ACME v2 (2026-10-27); earlier ones aren't counted. Accounts keep working when the provisioning URL is disabled or deleted |
+| `dryRun` | boolean, optional | true for `--dry-run`: nothing was sent, and the provisioning URL is as it is now |
+| `changes` | object[], optional | `--dry-run` only: the settings that would change; empty if none would |
+| `changes[].field` | string | the setting: enabled, the only one that can change |
+| `changes[].from` | string | its value now: on or off |
+| `changes[].to` | string | its new value: on or off |
+
+Side effects:
+
+- enables or disables the provisioning URL on the server; nothing when it already has the setting, or with `--dry-run`
+- accounts registered with it keep working either way
 - the CA's log records the change
 
 ## pkiaas ca
@@ -1418,6 +2057,277 @@ pkiaas help agents
 pkiaas help --json
 pkiaas help --json key create
 ```
+
+## pkiaas hsm
+
+List the CAs whose keys are on IoT HSMs, show what the platform last heard from one, ping it.
+
+```
+pkiaas hsm [flags]
+```
+
+Commands:
+
+- [`pkiaas hsm list`](reference.md#pkiaas-hsm-list)
+- [`pkiaas hsm ping`](reference.md#pkiaas-hsm-ping)
+- [`pkiaas hsm show`](reference.md#pkiaas-hsm-show)
+
+## pkiaas hsm list
+
+List the CAs whose keys are on IoT HSMs, with what the platform last heard from each.
+
+```
+pkiaas hsm list [--limit N] [flags]
+```
+
+List the account's CAs whose keys are on an IoT HSM (the user's own appliance, which signs through the iot-hsm
+agent), by name. Each row shows what the platform last heard from the CA's agent: its version (and whether a newer
+release exists), the token that holds the key and its PIN state, when it last answered, the outcome of the last
+ping, and whether it is dormant or busy. CAs on the same agent share agent.id.
+
+There is no live status: an idle agent and one that is off look the same until the CA is pinged (`pkiaas hsm
+ping`) or asked to sign. Listing sends nothing to the agents.
+
+It lists the first `--limit` CAs (default 50, at most 1000); total says how many there are.
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--limit` | int | how many CAs to list (1-1000). Default: `50`. |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+
+Examples:
+
+```sh
+pkiaas hsm list
+pkiaas hsm list --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `total` | integer | how many of the account's CAs have their keys on IoT HSMs; more than are listed when it exceeds `--limit` |
+| `hsms` | object[] | the first `--limit` of them, by CA name |
+| `hsms[].ca` | object | the CA whose key is on the IoT HSM; `--ca` takes its id or name |
+| `hsms[].ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
+| `hsms[].ca.name` | string or null | the CA's name (its certificate's common name) |
+| `hsms[].agent` | object or null | what the agent said about itself in its last answer, plus what the platform knows of its releases; null until the agent answers a request for the CA (a signature or a ping) after the platform began recording it |
+| `hsms[].agent.id` | string or null | identifies the agent: CAs with the same ID are on the same agent; null if it gave none |
+| `hsms[].agent.version` | string or null | the agent's version (iot-hsm), or null for an agent from before 1.0.0, which doesn't say |
+| `hsms[].agent.olderAgent` | boolean | the agent is from before 1.0.0: it answers and signs, but says nothing about itself |
+| `hsms[].agent.commit` | string or null | the git commit the agent runs, when it has one |
+| `hsms[].agent.versions` | object | what the agent runs on, name to version: node, nodeOpenssl (built into Node), openssl (the command it runs), pubnub, nodePkiSigner, nodeOpensslCert2; only those it reported |
+| `hsms[].agent.clockOffsetSeconds` | integer or null | how far the agent's clock was ahead of the platform's (negative: behind) when it last answered, including the time its answer took to arrive |
+| `hsms[].agent.latestVersion` | string or null | the agent's latest release, as the platform last read it; null if it hasn't read one |
+| `hsms[].agent.releaseUrl` | string or null | the latest release's notes |
+| `hsms[].agent.updateAvailable` | boolean or null | a newer release than the agent exists (always for an agent from before 1.0.0); null when the platform doesn't know the latest release |
+| `hsms[].token` | object or null | the token that holds the CA key, as the agent described it; null if it didn't |
+| `hsms[].token.type` | string or null | the token that holds the CA key: yubikey, google, softhsm or unknown |
+| `hsms[].token.pinState` | string or null | the token's PIN: ok; countLow, finalTry or locked as the token's flags say (they don't say how many tries are left); rejected: the token refused the PIN the agent has, so it signs nothing until its PIN is corrected and its slots reloaded. Null if the token or agent does not say |
+| `hsms[].token.pinStateRead` | string or null | when the agent last read the PIN state from the token (ISO 8601, UTC) |
+| `hsms[].capabilities` | object or null | what the agent can sign with the CA key; null until the agent answers |
+| `hsms[].capabilities.nativeSigning` | boolean or null | the agent signs with node-pki-signer rather than OpenSSL; null if it doesn't say |
+| `hsms[].capabilities.signTypes` | string[] | what it can sign, e.g. csr, cms, crl |
+| `hsms[].capabilities.keyType` | string or null | the CA key's algorithm, e.g. rsa |
+| `hsms[].capabilities.keyBits` | integer or null | the CA key's size in bits, e.g. 2048 |
+| `hsms[].capabilities.curve` | string or null | the CA key's curve, for an EC key, e.g. prime256v1 |
+| `hsms[].capabilities.certificateHash` | string or null | the hash the agent signs certificates with for this key, e.g. sha256 |
+| `hsms[].capabilities.subjectEscaping` | boolean | the agent signs subjects with "/", "+" or "\" in them; older agents refuse such requests |
+| `hsms[].busy` | boolean | its last answer said it was too busy to sign, or that its PIN was rejected |
+| `hsms[].channelCertificateExpires` | string or null | when the certificate the agent signs its messages with expires (ISO 8601, UTC); the agent renews it with the CA key, so a ping after that costs one HSM signature |
+| `hsms[].lastAnswerAt` | string or null | when the agent last answered anything: an offer, busy, a signature or a ping (ISO 8601, UTC) |
+| `hsms[].lastOfferAt` | string or null | when the agent last offered to sign or said it was busy, which updates agent, token and capabilities (ISO 8601, UTC) |
+| `hsms[].lastSignatureAt` | string or null | when it last signed (ISO 8601, UTC) |
+| `hsms[].lastAgentStartAt` | string or null | when its agent last started, fetching its connection data (ISO 8601, UTC) |
+| `hsms[].dormant` | boolean | the agent hasn't answered for days and missed a request, so requests fail at once except one every few minutes; an answer (a ping too) or an agent start ends it |
+| `hsms[].dormantSince` | string or null | when it became dormant (ISO 8601, UTC) |
+| `hsms[].lastPing` | object or null | the CA's last ping (`pkiaas hsm ping`); null if it was never pinged |
+| `hsms[].lastPing.at` | string | when the ping was sent (ISO 8601, UTC) |
+| `hsms[].lastPing.outcome` | string | answered: the agent offered to sign; busy: it is too busy to sign in time; pinRejected: the token refused the agent's PIN; noAnswer: the ping reached the agent's channel and nothing answered in 10 seconds; unreachable: the platform's own connection to PubNub didn't work, so it says nothing about the agent; failed: anything else (message says what) |
+| `hsms[].lastPing.seconds` | number | how long the answer took, in seconds |
+| `hsms[].lastPing.message` | string or null | why it did not answer, for noAnswer, unreachable and failed; null otherwise |
+
+## pkiaas hsm ping
+
+Check that a CA's IoT HSM answers, without signing anything.
+
+```
+pkiaas hsm ping [--ca NAME|ID] [flags]
+```
+
+Ping the IoT HSM of a CA, by default the active CA: the platform asks the CA's agent to offer to sign, as every
+signature starts, and stops at its signed answer, so nothing is signed. It takes up to 10 seconds. The answer
+updates what `pkiaas hsm show` shows, and ends dormancy.
+
+ping.outcome says how the agent answered: answered, busy (too busy to sign in time), pinRejected (the token
+refused the agent's PIN), noAnswer (nothing answered in 10 seconds: the appliance or its agent may be off),
+unreachable (the platform couldn't reach PubNub, so this says nothing about the IoT HSM) or failed (message
+says why). The command succeeds (exit 0) whenever the ping ran, whatever the outcome: read ping.outcome.
+
+A ping costs about 3 PubNub messages, and one HSM signature if the agent's channel certificate has expired
+(channelCertificateExpires in `pkiaas hsm show`). Within a minute of the last ping, the CA gets that ping back
+(cached is true; ping.at says when it was sent) and nothing is sent. Each CA can be pinged 60 times a day; beyond
+that, or while a ping of the CA is running, the server refuses with http_429 and says when to try again. Pinging
+needs the sign privilege in the CA (forbidden without it). Safe to run again.
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+
+Examples:
+
+```sh
+pkiaas hsm ping
+pkiaas hsm ping --ca "Example Root CA"
+pkiaas hsm ping --ca a1B2c3D4e5 --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `ca` | object | the CA whose IoT HSM was pinged |
+| `ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
+| `ca.name` | string or null | the CA's name (its certificate's common name) |
+| `ping` | object | the ping: how the agent answered |
+| `ping.at` | string | when the ping was sent (ISO 8601, UTC) |
+| `ping.outcome` | string | answered: the agent offered to sign; busy: it is too busy to sign in time; pinRejected: the token refused the agent's PIN; noAnswer: the ping reached the agent's channel and nothing answered in 10 seconds; unreachable: the platform's own connection to PubNub didn't work, so it says nothing about the agent; failed: anything else (message says what) |
+| `ping.seconds` | number | how long the answer took, in seconds |
+| `ping.message` | string or null | why it did not answer, for noAnswer, unreachable and failed; null otherwise |
+| `cached` | boolean | the CA was pinged moments ago, so this is that ping, not a new one; ping.at says when it was sent |
+| `hsm` | object | what the platform knows of the CA's IoT HSM now, as `pkiaas hsm show` shows it |
+| `hsm.ca` | object | the CA whose key is on the IoT HSM; `--ca` takes its id or name |
+| `hsm.ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
+| `hsm.ca.name` | string or null | the CA's name (its certificate's common name) |
+| `hsm.agent` | object or null | what the agent said about itself in its last answer, plus what the platform knows of its releases; null until the agent answers a request for the CA (a signature or a ping) after the platform began recording it |
+| `hsm.agent.id` | string or null | identifies the agent: CAs with the same ID are on the same agent; null if it gave none |
+| `hsm.agent.version` | string or null | the agent's version (iot-hsm), or null for an agent from before 1.0.0, which doesn't say |
+| `hsm.agent.olderAgent` | boolean | the agent is from before 1.0.0: it answers and signs, but says nothing about itself |
+| `hsm.agent.commit` | string or null | the git commit the agent runs, when it has one |
+| `hsm.agent.versions` | object | what the agent runs on, name to version: node, nodeOpenssl (built into Node), openssl (the command it runs), pubnub, nodePkiSigner, nodeOpensslCert2; only those it reported |
+| `hsm.agent.clockOffsetSeconds` | integer or null | how far the agent's clock was ahead of the platform's (negative: behind) when it last answered, including the time its answer took to arrive |
+| `hsm.agent.latestVersion` | string or null | the agent's latest release, as the platform last read it; null if it hasn't read one |
+| `hsm.agent.releaseUrl` | string or null | the latest release's notes |
+| `hsm.agent.updateAvailable` | boolean or null | a newer release than the agent exists (always for an agent from before 1.0.0); null when the platform doesn't know the latest release |
+| `hsm.token` | object or null | the token that holds the CA key, as the agent described it; null if it didn't |
+| `hsm.token.type` | string or null | the token that holds the CA key: yubikey, google, softhsm or unknown |
+| `hsm.token.pinState` | string or null | the token's PIN: ok; countLow, finalTry or locked as the token's flags say (they don't say how many tries are left); rejected: the token refused the PIN the agent has, so it signs nothing until its PIN is corrected and its slots reloaded. Null if the token or agent does not say |
+| `hsm.token.pinStateRead` | string or null | when the agent last read the PIN state from the token (ISO 8601, UTC) |
+| `hsm.capabilities` | object or null | what the agent can sign with the CA key; null until the agent answers |
+| `hsm.capabilities.nativeSigning` | boolean or null | the agent signs with node-pki-signer rather than OpenSSL; null if it doesn't say |
+| `hsm.capabilities.signTypes` | string[] | what it can sign, e.g. csr, cms, crl |
+| `hsm.capabilities.keyType` | string or null | the CA key's algorithm, e.g. rsa |
+| `hsm.capabilities.keyBits` | integer or null | the CA key's size in bits, e.g. 2048 |
+| `hsm.capabilities.curve` | string or null | the CA key's curve, for an EC key, e.g. prime256v1 |
+| `hsm.capabilities.certificateHash` | string or null | the hash the agent signs certificates with for this key, e.g. sha256 |
+| `hsm.capabilities.subjectEscaping` | boolean | the agent signs subjects with "/", "+" or "\" in them; older agents refuse such requests |
+| `hsm.busy` | boolean | its last answer said it was too busy to sign, or that its PIN was rejected |
+| `hsm.channelCertificateExpires` | string or null | when the certificate the agent signs its messages with expires (ISO 8601, UTC); the agent renews it with the CA key, so a ping after that costs one HSM signature |
+| `hsm.lastAnswerAt` | string or null | when the agent last answered anything: an offer, busy, a signature or a ping (ISO 8601, UTC) |
+| `hsm.lastOfferAt` | string or null | when the agent last offered to sign or said it was busy, which updates agent, token and capabilities (ISO 8601, UTC) |
+| `hsm.lastSignatureAt` | string or null | when it last signed (ISO 8601, UTC) |
+| `hsm.lastAgentStartAt` | string or null | when its agent last started, fetching its connection data (ISO 8601, UTC) |
+| `hsm.dormant` | boolean | the agent hasn't answered for days and missed a request, so requests fail at once except one every few minutes; an answer (a ping too) or an agent start ends it |
+| `hsm.dormantSince` | string or null | when it became dormant (ISO 8601, UTC) |
+| `hsm.lastPing` | object or null | the CA's last ping (`pkiaas hsm ping`); null if it was never pinged |
+| `hsm.lastPing.at` | string | when the ping was sent (ISO 8601, UTC) |
+| `hsm.lastPing.outcome` | string | answered: the agent offered to sign; busy: it is too busy to sign in time; pinRejected: the token refused the agent's PIN; noAnswer: the ping reached the agent's channel and nothing answered in 10 seconds; unreachable: the platform's own connection to PubNub didn't work, so it says nothing about the agent; failed: anything else (message says what) |
+| `hsm.lastPing.seconds` | number | how long the answer took, in seconds |
+| `hsm.lastPing.message` | string or null | why it did not answer, for noAnswer, unreachable and failed; null otherwise |
+
+Side effects:
+
+- sends a ping to the CA's IoT HSM agent through PubNub (about 3 PubNub messages; one HSM signature if the agent's channel certificate has expired); within a minute of the last ping, nothing (cached)
+- the agent's answer updates what the platform knows of it (`pkiaas hsm show`) and ends its dormancy
+- the CA's log records the ping and its outcome
+- a ping that is sent (not a cached one) counts toward the CA's 60 pings a day
+
+## pkiaas hsm show
+
+Show what the platform last heard from a CA's IoT HSM.
+
+```
+pkiaas hsm show [--ca NAME|ID] [flags]
+```
+
+Show what the platform last heard from the IoT HSM of a CA, by default the active CA: the agent's version and
+what it runs on, whether a newer release exists, the token that holds the key and its PIN state, what the agent
+can sign, whether it is busy or dormant, when it last answered, signed and started, when its channel certificate
+expires, and the last ping.
+
+There is no live status: these are the details of the agent's last answer, and an idle agent and one that is off
+look the same. `pkiaas hsm ping` asks the agent to answer now. Showing sends nothing to the agent.
+
+A CA whose key is on the platform has no IoT HSM (error ca_not_hsm); `pkiaas hsm list` lists those that have one.
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+
+Examples:
+
+```sh
+pkiaas hsm show
+pkiaas hsm show --ca "Example Root CA"
+pkiaas hsm show --ca a1B2c3D4e5 --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `ca` | object | the CA whose key is on the IoT HSM; `--ca` takes its id or name |
+| `ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
+| `ca.name` | string or null | the CA's name (its certificate's common name) |
+| `agent` | object or null | what the agent said about itself in its last answer, plus what the platform knows of its releases; null until the agent answers a request for the CA (a signature or a ping) after the platform began recording it |
+| `agent.id` | string or null | identifies the agent: CAs with the same ID are on the same agent; null if it gave none |
+| `agent.version` | string or null | the agent's version (iot-hsm), or null for an agent from before 1.0.0, which doesn't say |
+| `agent.olderAgent` | boolean | the agent is from before 1.0.0: it answers and signs, but says nothing about itself |
+| `agent.commit` | string or null | the git commit the agent runs, when it has one |
+| `agent.versions` | object | what the agent runs on, name to version: node, nodeOpenssl (built into Node), openssl (the command it runs), pubnub, nodePkiSigner, nodeOpensslCert2; only those it reported |
+| `agent.clockOffsetSeconds` | integer or null | how far the agent's clock was ahead of the platform's (negative: behind) when it last answered, including the time its answer took to arrive |
+| `agent.latestVersion` | string or null | the agent's latest release, as the platform last read it; null if it hasn't read one |
+| `agent.releaseUrl` | string or null | the latest release's notes |
+| `agent.updateAvailable` | boolean or null | a newer release than the agent exists (always for an agent from before 1.0.0); null when the platform doesn't know the latest release |
+| `token` | object or null | the token that holds the CA key, as the agent described it; null if it didn't |
+| `token.type` | string or null | the token that holds the CA key: yubikey, google, softhsm or unknown |
+| `token.pinState` | string or null | the token's PIN: ok; countLow, finalTry or locked as the token's flags say (they don't say how many tries are left); rejected: the token refused the PIN the agent has, so it signs nothing until its PIN is corrected and its slots reloaded. Null if the token or agent does not say |
+| `token.pinStateRead` | string or null | when the agent last read the PIN state from the token (ISO 8601, UTC) |
+| `capabilities` | object or null | what the agent can sign with the CA key; null until the agent answers |
+| `capabilities.nativeSigning` | boolean or null | the agent signs with node-pki-signer rather than OpenSSL; null if it doesn't say |
+| `capabilities.signTypes` | string[] | what it can sign, e.g. csr, cms, crl |
+| `capabilities.keyType` | string or null | the CA key's algorithm, e.g. rsa |
+| `capabilities.keyBits` | integer or null | the CA key's size in bits, e.g. 2048 |
+| `capabilities.curve` | string or null | the CA key's curve, for an EC key, e.g. prime256v1 |
+| `capabilities.certificateHash` | string or null | the hash the agent signs certificates with for this key, e.g. sha256 |
+| `capabilities.subjectEscaping` | boolean | the agent signs subjects with "/", "+" or "\" in them; older agents refuse such requests |
+| `busy` | boolean | its last answer said it was too busy to sign, or that its PIN was rejected |
+| `channelCertificateExpires` | string or null | when the certificate the agent signs its messages with expires (ISO 8601, UTC); the agent renews it with the CA key, so a ping after that costs one HSM signature |
+| `lastAnswerAt` | string or null | when the agent last answered anything: an offer, busy, a signature or a ping (ISO 8601, UTC) |
+| `lastOfferAt` | string or null | when the agent last offered to sign or said it was busy, which updates agent, token and capabilities (ISO 8601, UTC) |
+| `lastSignatureAt` | string or null | when it last signed (ISO 8601, UTC) |
+| `lastAgentStartAt` | string or null | when its agent last started, fetching its connection data (ISO 8601, UTC) |
+| `dormant` | boolean | the agent hasn't answered for days and missed a request, so requests fail at once except one every few minutes; an answer (a ping too) or an agent start ends it |
+| `dormantSince` | string or null | when it became dormant (ISO 8601, UTC) |
+| `lastPing` | object or null | the CA's last ping (`pkiaas hsm ping`); null if it was never pinged |
+| `lastPing.at` | string | when the ping was sent (ISO 8601, UTC) |
+| `lastPing.outcome` | string | answered: the agent offered to sign; busy: it is too busy to sign in time; pinRejected: the token refused the agent's PIN; noAnswer: the ping reached the agent's channel and nothing answered in 10 seconds; unreachable: the platform's own connection to PubNub didn't work, so it says nothing about the agent; failed: anything else (message says what) |
+| `lastPing.seconds` | number | how long the answer took, in seconds |
+| `lastPing.message` | string or null | why it did not answer, for noAnswer, unreachable and failed; null otherwise |
 
 ## pkiaas key
 
