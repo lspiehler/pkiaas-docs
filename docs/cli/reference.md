@@ -29,6 +29,10 @@ pkiaas
 │   │   ├── create             --ca=STRING --idempotency-key=STRING --name=STRING --pre-approved=STRING --template=STRING
 │   │   ├── delete NAME|ID     --ca=STRING --dry-run --move-accounts-to=STRING --yes
 │   │   ├── list               --ca=STRING --limit=INT --order=STRING --search=STRING --sort=STRING
+│   │   ├── revision
+│   │   │   ├── list POLICY    --ca=STRING --limit=INT
+│   │   │   ├── restore POLICY N --ca=STRING --dry-run
+│   │   │   └── show POLICY N  --ca=STRING
 │   │   ├── show NAME|ID       --ca=STRING
 │   │   └── update NAME|ID     --ca=STRING --dry-run --name=STRING --pre-approved=STRING --template=STRING
 │   └── provisioning-url
@@ -54,6 +58,7 @@ pkiaas
 │   └── create                 --cn=STRING --force --format=STRING --key=STRING --key-passphrase-env=STRING --key-passphrase-file=STRING --out=STRING --san=STRING --subject=STRING
 ├── help
 ├── hsm
+│   ├── forget                 --appliance=STRING
 │   ├── list                   --limit=INT
 │   ├── ping                   --ca=STRING
 │   └── show                   --ca=STRING
@@ -833,7 +838,7 @@ With `--json`, the result is an object with these fields:
 
 ## pkiaas acme policy
 
-List a CA's ACME policies, show one, create, update or delete one.
+List a CA's ACME policies, show one, create, update or delete one, and see or restore its revisions.
 
 ```
 pkiaas acme policy [flags]
@@ -844,6 +849,7 @@ Commands:
 - [`pkiaas acme policy create`](reference.md#pkiaas-acme-policy-create)
 - [`pkiaas acme policy delete`](reference.md#pkiaas-acme-policy-delete)
 - [`pkiaas acme policy list`](reference.md#pkiaas-acme-policy-list)
+- [`pkiaas acme policy revision`](reference.md#pkiaas-acme-policy-revision)
 - [`pkiaas acme policy show`](reference.md#pkiaas-acme-policy-show)
 - [`pkiaas acme policy update`](reference.md#pkiaas-acme-policy-update)
 
@@ -1046,6 +1052,189 @@ With `--json`, the result is an object with these fields:
 | `policies[].provisioningUrlCount` | integer | provisioning URLs of the policy (deprecated: no new ones can be made) |
 | `policies[].accountCount` | integer | ACME accounts registered under the policy |
 | `policies[].validOrderCount` | integer | orders of the policy's accounts that were issued a certificate |
+
+## pkiaas acme policy revision
+
+An ACME policy's saved versions: list them, show one, restore one.
+
+```
+pkiaas acme policy revision [flags]
+```
+
+Commands:
+
+- [`pkiaas acme policy revision list`](reference.md#pkiaas-acme-policy-revision-list)
+- [`pkiaas acme policy revision restore`](reference.md#pkiaas-acme-policy-revision-restore)
+- [`pkiaas acme policy revision show`](reference.md#pkiaas-acme-policy-revision-show)
+
+## pkiaas acme policy revision list
+
+List an ACME policy's revisions, newest first.
+
+```
+pkiaas acme policy revision list POLICY [--limit N] [--ca NAME|ID] [flags]
+```
+
+List the saved versions of an ACME policy, newest first: when each was saved, by whom, from where, and what
+changed. POLICY is its name in any case or its ID, in the CA `--ca` names (by default the active CA). Creating the
+policy and every change of its name, template or pre-approved domains adds one revision, from the website, the
+CLI or the API. A policy saved before its history started has none until its next change, which first records it
+as it was (via found).
+
+It lists the first `--limit` revisions (default 50, at most 1000); total says how many there are. `pkiaas acme
+policy revision show POLICY N` shows one, and `pkiaas acme policy revision restore POLICY N` puts it back.
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--limit` | int | how many revisions to list (1-1000). Default: `50`. |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+
+Examples:
+
+```sh
+pkiaas acme policy revision list "Web servers"
+pkiaas acme policy revision list 205 --ca "Example CA" --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `ca` | object | the CA the policy belongs to |
+| `ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
+| `ca.name` | string or null | the CA's name (its certificate's common name) |
+| `policy` | object | the policy |
+| `policy.id` | integer | the policy's ID |
+| `policy.name` | string | the policy's name |
+| `total` | integer | how many revisions it has; more than are listed when it exceeds `--limit` |
+| `items` | object[] | the first `--limit` revisions, newest first |
+| `items[].revision` | integer | the revision number, counting from 1 per policy |
+| `items[].savedAt` | string | when it was saved, RFC 3339 UTC |
+| `items[].by` | string or null | the email of the user who saved it; null for the revisions pkiaas recorded itself (found, outside) |
+| `items[].via` | string | where it was saved: app (the website), admin (the website's classic page), cli, api (another API client); found: the policy as it was when its history started, recorded at its first change; outside: a change made without a revision (such as by an older release of the server), recorded at the next change |
+| `items[].changed` | string[] | added for the first revision, else the settings that changed from the revision before: name, template, preApprovedDomains |
+| `items[].restoredFrom` | integer or null | the revision it restored; null if it isn't a restore |
+
+## pkiaas acme policy revision restore
+
+Put a revision of an ACME policy back, as a new revision.
+
+```
+pkiaas acme policy revision restore POLICY N [--dry-run] [--ca NAME|ID] [flags]
+```
+
+Save revision N of an ACME policy as its newest revision, marked as restored from N; history is never rewritten.
+POLICY is its name in any case or its ID, in the CA `--ca` names (by default the active CA). The revision's name,
+template and pre-approved domains come back; accounts, EABs and orders stay as they are, and the template and
+domains apply to the orders that follow. A revision whose template was deleted since is refused
+(template_not_found), and nothing is saved.
+
+If someone changed the policy since the command read it, nothing is saved and it fails with acme_changed: run it
+again. Restoring what is current changes nothing. `--dry-run` sends nothing and shows what would change, old → new.
+A revision a later release of the server saved is refused (acme_revision_unreadable).
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--dry-run` | bool | send nothing; show what would change |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+
+Examples:
+
+```sh
+pkiaas acme policy revision restore "Web servers" 2 --dry-run
+pkiaas acme policy revision restore 205 2 --ca "Example CA" --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `ca` | object | the CA the policy belongs to |
+| `ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
+| `ca.name` | string or null | the CA's name (its certificate's common name) |
+| `id` | integer | the policy's ID, which the 'acme policy' commands take to name it in its CA |
+| `name` | string | the policy's name |
+| `template` | object or null | the template certificates are issued with (the names in them come from the order); null if the template was deleted: orders then fail until another is chosen with `pkiaas acme policy update --template` |
+| `template.id` | string | the template's ID, which `--template` takes |
+| `template.name` | string or null | the template's name |
+| `preApprovedDomains` | string[] | names an order may have without a challenge: * matches any text, dots included, and *.example.com also matches example.com; other names need an http-01, dns-01 or tls-alpn-01 challenge |
+| `eabCount` | integer | external account bindings (EABs) of the policy, which ACME clients register with |
+| `provisioningUrlCount` | integer | provisioning URLs of the policy (deprecated: no new ones can be made) |
+| `accountCount` | integer | ACME accounts registered under the policy |
+| `validOrderCount` | integer | orders of the policy's accounts that were issued a certificate |
+| `dryRun` | boolean, optional | true for `--dry-run`: nothing was sent, and the policy is as it is now |
+| `changes` | object[], optional | `--dry-run` only: the settings that would change; empty if none would |
+| `changes[].field` | string | the setting: name, template or preApprovedDomains |
+| `changes[].from` | string or null | its value now, as text: for template the template's ID, for preApprovedDomains the domains separated by commas; null if none |
+| `changes[].to` | string or null | its new value, as from |
+
+Side effects:
+
+- saves the revision's name, template and pre-approved domains as the policy's newest revision, marked as restored; nothing when they are current already, or with `--dry-run`
+- the template and pre-approved domains apply to the orders that follow; accounts, EABs and orders stay as they are
+- the CA's log records the restore
+
+## pkiaas acme policy revision show
+
+Show one revision of an ACME policy.
+
+```
+pkiaas acme policy revision show POLICY N [--ca NAME|ID] [flags]
+```
+
+Show one saved version of an ACME policy: what `pkiaas acme policy revision restore POLICY N` would put back.
+POLICY is its name in any case or its ID, in the CA `--ca` names (by default the active CA); N is the revision
+number from `pkiaas acme policy revision list`.
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+
+Examples:
+
+```sh
+pkiaas acme policy revision show "Web servers" 2
+pkiaas acme policy revision show 205 1 --ca "Example CA" --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `ca` | object | the CA the policy belongs to |
+| `ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
+| `ca.name` | string or null | the CA's name (its certificate's common name) |
+| `policy` | object | the policy, as it is named now |
+| `policy.id` | integer | the policy's ID |
+| `policy.name` | string | the policy's name |
+| `revision` | integer | the revision number, counting from 1 per policy |
+| `savedAt` | string | when it was saved, RFC 3339 UTC |
+| `by` | string or null | the email of the user who saved it; null for the revisions pkiaas recorded itself (found, outside) |
+| `via` | string | where it was saved: app (the website), admin (the website's classic page), cli, api (another API client); found: the policy as it was when its history started, recorded at its first change; outside: a change made without a revision (such as by an older release of the server), recorded at the next change |
+| `changed` | string[] | added for the first revision, else the settings that changed from the revision before: name, template, preApprovedDomains |
+| `restoredFrom` | integer or null | the revision it restored; null if it isn't a restore |
+| `readable` | boolean | false when a later release of the server saved the revision, which this one can't read; settings is null then |
+| `settings` | object or null | the policy as the revision saved it: what `pkiaas acme policy revision restore` would put back |
+| `settings.name` | string | the policy's name |
+| `settings.template` | object or null | the template it issued with, with its name now; name is null if the template was deleted since, and template is null if it was deleted before the save: a restore of such a revision is refused |
+| `settings.template.id` | string | the template's ID, which `--template` takes |
+| `settings.template.name` | string or null | the template's name |
+| `settings.preApprovedDomains` | string[] | the names that needed no challenge |
 
 ## pkiaas acme policy show
 
@@ -2435,7 +2624,7 @@ pkiaas help --json key create
 
 ## pkiaas hsm
 
-List the CAs whose keys are on IoT HSMs, show what the platform last heard from one, ping it.
+List the CAs whose keys are on IoT HSMs, show what the platform last heard from one, ping it, forget a replaced appliance.
 
 ```
 pkiaas hsm [flags]
@@ -2443,9 +2632,60 @@ pkiaas hsm [flags]
 
 Commands:
 
+- [`pkiaas hsm forget`](reference.md#pkiaas-hsm-forget)
 - [`pkiaas hsm list`](reference.md#pkiaas-hsm-list)
 - [`pkiaas hsm ping`](reference.md#pkiaas-hsm-ping)
 - [`pkiaas hsm show`](reference.md#pkiaas-hsm-show)
+
+## pkiaas hsm forget
+
+Forget an IoT-HSM appliance that was replaced, so CAs no longer list it.
+
+```
+pkiaas hsm forget --appliance ID [flags]
+```
+
+Forget an appliance (an iot-hsm agent, 1.0.0 or later) for every CA of the account that may be modified, so
+they no longer list it in agents (`pkiaas hsm show`). Use it for an appliance that was replaced or switched off
+for good. It signs nothing, sends nothing to the appliance and changes nothing on it: if it answers for a CA again
+(a signature or a ping), the CA lists it again.
+
+You rarely need it: once another appliance answers for a CA and this one has been silent for 7 days, it is hidden
+(agents[].hidden), and deleted once silent for 90 days. A CA's only appliance is never hidden. A standby that is
+never chosen to sign is heard only when the CA is pinged, so run `pkiaas hsm ping` before forgetting one.
+
+`--appliance` takes agents[].id: 16 lowercase hexadecimal characters. forgotten counts the CAs it was forgotten for,
+kept those that still list it because the account lacks the modify privilege in them. Safe to run again.
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--appliance` | string | the appliance's ID (agents[].id) |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+
+Examples:
+
+```sh
+pkiaas hsm forget --appliance 3f9a1c0be27d4a85
+pkiaas hsm forget --appliance 3f9a1c0be27d4a85 --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `appliance` | string | the appliance's agent ID |
+| `forgotten` | integer | how many of the account's CAs no longer list it in agents; 0 when there was nothing to forget |
+| `kept` | integer | how many of the account's CAs still list it, because the account may not modify them |
+
+Side effects:
+
+- removes the appliance from the agents of each of the account's IoT HSM CAs it may modify, until it answers for one again
+- each of those CAs' logs records it
+- sends nothing to the appliance and signs nothing
 
 ## pkiaas hsm list
 
@@ -2458,7 +2698,8 @@ pkiaas hsm list [--limit N] [flags]
 List the account's CAs whose keys are on an IoT HSM (the user's own appliance, which signs through the iot-hsm
 agent), by name. Each row shows what the platform last heard from the CA's agent: its version (and whether a newer
 release exists), the token that holds the key and its PIN state, when it last answered, the outcome of the last
-ping, and whether it is dormant or busy. CAs on the same agent share agent.id.
+ping, and whether it is dormant or busy. CAs on the same agent share agent.id. APPLIANCES counts the appliances
+(iot-hsm 1.0.0 or later) known to have the CA key, for high availability; agents lists them.
 
 There is no live status: an idle agent and one that is off look the same until the CA is pinged (`pkiaas hsm
 ping`) or asked to sign. Listing sends nothing to the agents.
@@ -2490,7 +2731,7 @@ With `--json`, the result is an object with these fields:
 | `hsms[].ca` | object | the CA whose key is on the IoT HSM; `--ca` takes its id or name |
 | `hsms[].ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
 | `hsms[].ca.name` | string or null | the CA's name (its certificate's common name) |
-| `hsms[].agent` | object or null | what the agent said about itself in its last answer, plus what the platform knows of its releases; null until the agent answers a request for the CA (a signature or a ping) after the platform began recording it |
+| `hsms[].agent` | object or null | what the agent that last answered first or signed for the CA said about itself, plus what the platform knows of its releases; null until an agent answers a request for the CA (a signature or a ping) after the platform began recording it |
 | `hsms[].agent.id` | string or null | identifies the agent: CAs with the same ID are on the same agent; null if it gave none |
 | `hsms[].agent.version` | string or null | the agent's version (iot-hsm), or null for an agent from before 1.0.0, which doesn't say |
 | `hsms[].agent.olderAgent` | boolean | the agent is from before 1.0.0: it answers and signs, but says nothing about itself |
@@ -2500,6 +2741,34 @@ With `--json`, the result is an object with these fields:
 | `hsms[].agent.latestVersion` | string or null | the agent's latest release, as the platform last read it; null if it hasn't read one |
 | `hsms[].agent.releaseUrl` | string or null | the latest release's notes |
 | `hsms[].agent.updateAvailable` | boolean or null | a newer release than the agent exists (always for an agent from before 1.0.0); null when the platform doesn't know the latest release |
+| `hsms[].agents` | object[] | every appliance (iot-hsm 1.0.0 or later) known to have the CA key, most recent answer first, hidden ones included; a ping hears all of them. Agents before 1.0.0 are never listed here, only in agent |
+| `hsms[].agents[].id` | string | the appliance's agent ID (as agent.id); `pkiaas hsm forget --appliance` takes it |
+| `hsms[].agents[].version` | string or null | the agent's version (iot-hsm) |
+| `hsms[].agents[].commit` | string or null | the git commit the agent runs, when it has one |
+| `hsms[].agents[].versions` | object | what the agent runs on, name to version, as agent.versions |
+| `hsms[].agents[].clockOffsetSeconds` | integer or null | how far the agent's clock was ahead of the platform's (negative: behind) when it last answered |
+| `hsms[].agents[].latestVersion` | string or null | the agent's latest release, as the platform last read it; null if it hasn't read one |
+| `hsms[].agents[].releaseUrl` | string or null | the latest release's notes |
+| `hsms[].agents[].updateAvailable` | boolean or null | a newer release than the agent exists; null when the platform doesn't know the latest release |
+| `hsms[].agents[].token` | object or null | the token on this appliance that holds the CA key; null if it didn't say |
+| `hsms[].agents[].token.type` | string or null | the token that holds the CA key: yubikey, google, softhsm or unknown |
+| `hsms[].agents[].token.pinState` | string or null | the token's PIN: ok; countLow, finalTry or locked as the token's flags say (they don't say how many tries are left); rejected: the token refused the PIN the agent has, so it signs nothing until its PIN is corrected and its slots reloaded. Null if the token or agent does not say |
+| `hsms[].agents[].token.pinStateRead` | string or null | when the agent last read the PIN state from the token (ISO 8601, UTC) |
+| `hsms[].agents[].capabilities` | object or null | what this appliance can sign with the CA key; null if it didn't say |
+| `hsms[].agents[].capabilities.nativeSigning` | boolean or null | the agent signs with node-pki-signer rather than OpenSSL; null if it doesn't say |
+| `hsms[].agents[].capabilities.signTypes` | string[] | what it can sign, e.g. csr, cms, crl |
+| `hsms[].agents[].capabilities.keyType` | string or null | the CA key's algorithm, e.g. rsa |
+| `hsms[].agents[].capabilities.keyBits` | integer or null | the CA key's size in bits, e.g. 2048 |
+| `hsms[].agents[].capabilities.curve` | string or null | the CA key's curve, for an EC key, e.g. prime256v1 |
+| `hsms[].agents[].capabilities.certificateHash` | string or null | the hash the agent signs certificates with for this key, e.g. sha256 |
+| `hsms[].agents[].capabilities.subjectEscaping` | boolean | the agent signs subjects with "/", "+" or "\" in them; older agents refuse such requests |
+| `hsms[].agents[].busy` | boolean | its last answer for the CA said it was too busy to sign, or that its PIN was rejected |
+| `hsms[].agents[].channelCertificateExpires` | string or null | when the certificate this appliance signs its messages for the CA with expires (ISO 8601, UTC) |
+| `hsms[].agents[].firstSeenAt` | string | when it first answered for the CA (ISO 8601, UTC) |
+| `hsms[].agents[].lastAnswerAt` | string | when it last answered for the CA: an offer, busy, a signature or a ping (ISO 8601, UTC) |
+| `hsms[].agents[].lastOfferAt` | string or null | when it last offered to sign or said it was busy (ISO 8601, UTC) |
+| `hsms[].agents[].lastSignatureAt` | string or null | when it last signed for the CA (ISO 8601, UTC) |
+| `hsms[].agents[].hidden` | boolean | another appliance answered for the CA since, and this one has been silent for 7 days: the IoT-HSM page doesn't show the CA under it, and the platform deletes it once silent for 90 days; a standby that is never chosen to sign is heard only when the CA is pinged, so ping before taking it for replaced; a CA's only appliance is never hidden; answering again unhides it |
 | `hsms[].token` | object or null | the token that holds the CA key, as the agent described it; null if it didn't |
 | `hsms[].token.type` | string or null | the token that holds the CA key: yubikey, google, softhsm or unknown |
 | `hsms[].token.pinState` | string or null | the token's PIN: ok; countLow, finalTry or locked as the token's flags say (they don't say how many tries are left); rejected: the token refused the PIN the agent has, so it signs nothing until its PIN is corrected and its slots reloaded. Null if the token or agent does not say |
@@ -2523,7 +2792,7 @@ With `--json`, the result is an object with these fields:
 | `hsms[].lastPing` | object or null | the CA's last ping (`pkiaas hsm ping`); null if it was never pinged |
 | `hsms[].lastPing.at` | string | when the ping was sent (ISO 8601, UTC) |
 | `hsms[].lastPing.outcome` | string | answered: the agent offered to sign; busy: it is too busy to sign in time; pinRejected: the token refused the agent's PIN; noAnswer: the ping reached the agent's channel and nothing answered in 10 seconds; unreachable: the platform's own connection to PubNub didn't work, so it says nothing about the agent; failed: anything else (message says what) |
-| `hsms[].lastPing.seconds` | number | how long the answer took, in seconds |
+| `hsms[].lastPing.seconds` | number | how long the (first) answer took, in seconds |
 | `hsms[].lastPing.message` | string or null | why it did not answer, for noAnswer, unreachable and failed; null otherwise |
 
 ## pkiaas hsm ping
@@ -2535,15 +2804,16 @@ pkiaas hsm ping [--ca NAME|ID] [flags]
 ```
 
 Ping the IoT HSM of a CA, by default the active CA: the platform asks the CA's agent to offer to sign, as every
-signature starts, and stops at its signed answer, so nothing is signed. It takes up to 10 seconds. The answer
-updates what `pkiaas hsm show` shows, and ends dormancy.
+signature starts, and stops at its signed answer, so nothing is signed. After the first answer it listens 2
+seconds more, so it hears every appliance that has the CA key, and takes up to 12 seconds. The answers update what
+`pkiaas hsm show` shows (agent and agents), and end dormancy.
 
 ping.outcome says how the agent answered: answered, busy (too busy to sign in time), pinRejected (the token
 refused the agent's PIN), noAnswer (nothing answered in 10 seconds: the appliance or its agent may be off),
 unreachable (the platform couldn't reach PubNub, so this says nothing about the IoT HSM) or failed (message
 says why). The command succeeds (exit 0) whenever the ping ran, whatever the outcome: read ping.outcome.
 
-A ping costs about 3 PubNub messages, and one HSM signature if the agent's channel certificate has expired
+A ping costs about 3 PubNub messages per appliance, and one HSM signature if the agent's channel certificate has expired
 (channelCertificateExpires in `pkiaas hsm show`). Within a minute of the last ping, the CA gets that ping back
 (cached is true; ping.at says when it was sent) and nothing is sent. Each CA can be pinged 60 times a day; beyond
 that, or while a ping of the CA is running, the server refuses with http_429 and says when to try again. Pinging
@@ -2576,14 +2846,14 @@ With `--json`, the result is an object with these fields:
 | `ping` | object | the ping: how the agent answered |
 | `ping.at` | string | when the ping was sent (ISO 8601, UTC) |
 | `ping.outcome` | string | answered: the agent offered to sign; busy: it is too busy to sign in time; pinRejected: the token refused the agent's PIN; noAnswer: the ping reached the agent's channel and nothing answered in 10 seconds; unreachable: the platform's own connection to PubNub didn't work, so it says nothing about the agent; failed: anything else (message says what) |
-| `ping.seconds` | number | how long the answer took, in seconds |
+| `ping.seconds` | number | how long the (first) answer took, in seconds |
 | `ping.message` | string or null | why it did not answer, for noAnswer, unreachable and failed; null otherwise |
 | `cached` | boolean | the CA was pinged moments ago, so this is that ping, not a new one; ping.at says when it was sent |
 | `hsm` | object | what the platform knows of the CA's IoT HSM now, as `pkiaas hsm show` shows it |
 | `hsm.ca` | object | the CA whose key is on the IoT HSM; `--ca` takes its id or name |
 | `hsm.ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
 | `hsm.ca.name` | string or null | the CA's name (its certificate's common name) |
-| `hsm.agent` | object or null | what the agent said about itself in its last answer, plus what the platform knows of its releases; null until the agent answers a request for the CA (a signature or a ping) after the platform began recording it |
+| `hsm.agent` | object or null | what the agent that last answered first or signed for the CA said about itself, plus what the platform knows of its releases; null until an agent answers a request for the CA (a signature or a ping) after the platform began recording it |
 | `hsm.agent.id` | string or null | identifies the agent: CAs with the same ID are on the same agent; null if it gave none |
 | `hsm.agent.version` | string or null | the agent's version (iot-hsm), or null for an agent from before 1.0.0, which doesn't say |
 | `hsm.agent.olderAgent` | boolean | the agent is from before 1.0.0: it answers and signs, but says nothing about itself |
@@ -2593,6 +2863,34 @@ With `--json`, the result is an object with these fields:
 | `hsm.agent.latestVersion` | string or null | the agent's latest release, as the platform last read it; null if it hasn't read one |
 | `hsm.agent.releaseUrl` | string or null | the latest release's notes |
 | `hsm.agent.updateAvailable` | boolean or null | a newer release than the agent exists (always for an agent from before 1.0.0); null when the platform doesn't know the latest release |
+| `hsm.agents` | object[] | every appliance (iot-hsm 1.0.0 or later) known to have the CA key, most recent answer first, hidden ones included; a ping hears all of them. Agents before 1.0.0 are never listed here, only in agent |
+| `hsm.agents[].id` | string | the appliance's agent ID (as agent.id); `pkiaas hsm forget --appliance` takes it |
+| `hsm.agents[].version` | string or null | the agent's version (iot-hsm) |
+| `hsm.agents[].commit` | string or null | the git commit the agent runs, when it has one |
+| `hsm.agents[].versions` | object | what the agent runs on, name to version, as agent.versions |
+| `hsm.agents[].clockOffsetSeconds` | integer or null | how far the agent's clock was ahead of the platform's (negative: behind) when it last answered |
+| `hsm.agents[].latestVersion` | string or null | the agent's latest release, as the platform last read it; null if it hasn't read one |
+| `hsm.agents[].releaseUrl` | string or null | the latest release's notes |
+| `hsm.agents[].updateAvailable` | boolean or null | a newer release than the agent exists; null when the platform doesn't know the latest release |
+| `hsm.agents[].token` | object or null | the token on this appliance that holds the CA key; null if it didn't say |
+| `hsm.agents[].token.type` | string or null | the token that holds the CA key: yubikey, google, softhsm or unknown |
+| `hsm.agents[].token.pinState` | string or null | the token's PIN: ok; countLow, finalTry or locked as the token's flags say (they don't say how many tries are left); rejected: the token refused the PIN the agent has, so it signs nothing until its PIN is corrected and its slots reloaded. Null if the token or agent does not say |
+| `hsm.agents[].token.pinStateRead` | string or null | when the agent last read the PIN state from the token (ISO 8601, UTC) |
+| `hsm.agents[].capabilities` | object or null | what this appliance can sign with the CA key; null if it didn't say |
+| `hsm.agents[].capabilities.nativeSigning` | boolean or null | the agent signs with node-pki-signer rather than OpenSSL; null if it doesn't say |
+| `hsm.agents[].capabilities.signTypes` | string[] | what it can sign, e.g. csr, cms, crl |
+| `hsm.agents[].capabilities.keyType` | string or null | the CA key's algorithm, e.g. rsa |
+| `hsm.agents[].capabilities.keyBits` | integer or null | the CA key's size in bits, e.g. 2048 |
+| `hsm.agents[].capabilities.curve` | string or null | the CA key's curve, for an EC key, e.g. prime256v1 |
+| `hsm.agents[].capabilities.certificateHash` | string or null | the hash the agent signs certificates with for this key, e.g. sha256 |
+| `hsm.agents[].capabilities.subjectEscaping` | boolean | the agent signs subjects with "/", "+" or "\" in them; older agents refuse such requests |
+| `hsm.agents[].busy` | boolean | its last answer for the CA said it was too busy to sign, or that its PIN was rejected |
+| `hsm.agents[].channelCertificateExpires` | string or null | when the certificate this appliance signs its messages for the CA with expires (ISO 8601, UTC) |
+| `hsm.agents[].firstSeenAt` | string | when it first answered for the CA (ISO 8601, UTC) |
+| `hsm.agents[].lastAnswerAt` | string | when it last answered for the CA: an offer, busy, a signature or a ping (ISO 8601, UTC) |
+| `hsm.agents[].lastOfferAt` | string or null | when it last offered to sign or said it was busy (ISO 8601, UTC) |
+| `hsm.agents[].lastSignatureAt` | string or null | when it last signed for the CA (ISO 8601, UTC) |
+| `hsm.agents[].hidden` | boolean | another appliance answered for the CA since, and this one has been silent for 7 days: the IoT-HSM page doesn't show the CA under it, and the platform deletes it once silent for 90 days; a standby that is never chosen to sign is heard only when the CA is pinged, so ping before taking it for replaced; a CA's only appliance is never hidden; answering again unhides it |
 | `hsm.token` | object or null | the token that holds the CA key, as the agent described it; null if it didn't |
 | `hsm.token.type` | string or null | the token that holds the CA key: yubikey, google, softhsm or unknown |
 | `hsm.token.pinState` | string or null | the token's PIN: ok; countLow, finalTry or locked as the token's flags say (they don't say how many tries are left); rejected: the token refused the PIN the agent has, so it signs nothing until its PIN is corrected and its slots reloaded. Null if the token or agent does not say |
@@ -2616,13 +2914,13 @@ With `--json`, the result is an object with these fields:
 | `hsm.lastPing` | object or null | the CA's last ping (`pkiaas hsm ping`); null if it was never pinged |
 | `hsm.lastPing.at` | string | when the ping was sent (ISO 8601, UTC) |
 | `hsm.lastPing.outcome` | string | answered: the agent offered to sign; busy: it is too busy to sign in time; pinRejected: the token refused the agent's PIN; noAnswer: the ping reached the agent's channel and nothing answered in 10 seconds; unreachable: the platform's own connection to PubNub didn't work, so it says nothing about the agent; failed: anything else (message says what) |
-| `hsm.lastPing.seconds` | number | how long the answer took, in seconds |
+| `hsm.lastPing.seconds` | number | how long the (first) answer took, in seconds |
 | `hsm.lastPing.message` | string or null | why it did not answer, for noAnswer, unreachable and failed; null otherwise |
 
 Side effects:
 
-- sends a ping to the CA's IoT HSM agent through PubNub (about 3 PubNub messages; one HSM signature if the agent's channel certificate has expired); within a minute of the last ping, nothing (cached)
-- the agent's answer updates what the platform knows of it (`pkiaas hsm show`) and ends its dormancy
+- sends a ping to the CA's IoT HSM agents through PubNub (about 3 PubNub messages per appliance; one HSM signature if an agent's channel certificate has expired); within a minute of the last ping, nothing (cached)
+- the agents' answers update what the platform knows of them (`pkiaas hsm show`, agent and agents) and end its dormancy
 - the CA's log records the ping and its outcome
 - a ping that is sent (not a cached one) counts toward the CA's 60 pings a day
 
@@ -2637,7 +2935,8 @@ pkiaas hsm show [--ca NAME|ID] [flags]
 Show what the platform last heard from the IoT HSM of a CA, by default the active CA: the agent's version and
 what it runs on, whether a newer release exists, the token that holds the key and its PIN state, what the agent
 can sign, whether it is busy or dormant, when it last answered, signed and started, when its channel certificate
-expires, and the last ping.
+expires, and the last ping. Below them, every appliance (iot-hsm 1.0.0 or later) known to have the CA key, for
+high availability; `pkiaas hsm forget` forgets one that was replaced.
 
 There is no live status: these are the details of the agent's last answer, and an idle agent and one that is off
 look the same. `pkiaas hsm ping` asks the agent to answer now. Showing sends nothing to the agent.
@@ -2668,7 +2967,7 @@ With `--json`, the result is an object with these fields:
 | `ca` | object | the CA whose key is on the IoT HSM; `--ca` takes its id or name |
 | `ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
 | `ca.name` | string or null | the CA's name (its certificate's common name) |
-| `agent` | object or null | what the agent said about itself in its last answer, plus what the platform knows of its releases; null until the agent answers a request for the CA (a signature or a ping) after the platform began recording it |
+| `agent` | object or null | what the agent that last answered first or signed for the CA said about itself, plus what the platform knows of its releases; null until an agent answers a request for the CA (a signature or a ping) after the platform began recording it |
 | `agent.id` | string or null | identifies the agent: CAs with the same ID are on the same agent; null if it gave none |
 | `agent.version` | string or null | the agent's version (iot-hsm), or null for an agent from before 1.0.0, which doesn't say |
 | `agent.olderAgent` | boolean | the agent is from before 1.0.0: it answers and signs, but says nothing about itself |
@@ -2678,6 +2977,34 @@ With `--json`, the result is an object with these fields:
 | `agent.latestVersion` | string or null | the agent's latest release, as the platform last read it; null if it hasn't read one |
 | `agent.releaseUrl` | string or null | the latest release's notes |
 | `agent.updateAvailable` | boolean or null | a newer release than the agent exists (always for an agent from before 1.0.0); null when the platform doesn't know the latest release |
+| `agents` | object[] | every appliance (iot-hsm 1.0.0 or later) known to have the CA key, most recent answer first, hidden ones included; a ping hears all of them. Agents before 1.0.0 are never listed here, only in agent |
+| `agents[].id` | string | the appliance's agent ID (as agent.id); `pkiaas hsm forget --appliance` takes it |
+| `agents[].version` | string or null | the agent's version (iot-hsm) |
+| `agents[].commit` | string or null | the git commit the agent runs, when it has one |
+| `agents[].versions` | object | what the agent runs on, name to version, as agent.versions |
+| `agents[].clockOffsetSeconds` | integer or null | how far the agent's clock was ahead of the platform's (negative: behind) when it last answered |
+| `agents[].latestVersion` | string or null | the agent's latest release, as the platform last read it; null if it hasn't read one |
+| `agents[].releaseUrl` | string or null | the latest release's notes |
+| `agents[].updateAvailable` | boolean or null | a newer release than the agent exists; null when the platform doesn't know the latest release |
+| `agents[].token` | object or null | the token on this appliance that holds the CA key; null if it didn't say |
+| `agents[].token.type` | string or null | the token that holds the CA key: yubikey, google, softhsm or unknown |
+| `agents[].token.pinState` | string or null | the token's PIN: ok; countLow, finalTry or locked as the token's flags say (they don't say how many tries are left); rejected: the token refused the PIN the agent has, so it signs nothing until its PIN is corrected and its slots reloaded. Null if the token or agent does not say |
+| `agents[].token.pinStateRead` | string or null | when the agent last read the PIN state from the token (ISO 8601, UTC) |
+| `agents[].capabilities` | object or null | what this appliance can sign with the CA key; null if it didn't say |
+| `agents[].capabilities.nativeSigning` | boolean or null | the agent signs with node-pki-signer rather than OpenSSL; null if it doesn't say |
+| `agents[].capabilities.signTypes` | string[] | what it can sign, e.g. csr, cms, crl |
+| `agents[].capabilities.keyType` | string or null | the CA key's algorithm, e.g. rsa |
+| `agents[].capabilities.keyBits` | integer or null | the CA key's size in bits, e.g. 2048 |
+| `agents[].capabilities.curve` | string or null | the CA key's curve, for an EC key, e.g. prime256v1 |
+| `agents[].capabilities.certificateHash` | string or null | the hash the agent signs certificates with for this key, e.g. sha256 |
+| `agents[].capabilities.subjectEscaping` | boolean | the agent signs subjects with "/", "+" or "\" in them; older agents refuse such requests |
+| `agents[].busy` | boolean | its last answer for the CA said it was too busy to sign, or that its PIN was rejected |
+| `agents[].channelCertificateExpires` | string or null | when the certificate this appliance signs its messages for the CA with expires (ISO 8601, UTC) |
+| `agents[].firstSeenAt` | string | when it first answered for the CA (ISO 8601, UTC) |
+| `agents[].lastAnswerAt` | string | when it last answered for the CA: an offer, busy, a signature or a ping (ISO 8601, UTC) |
+| `agents[].lastOfferAt` | string or null | when it last offered to sign or said it was busy (ISO 8601, UTC) |
+| `agents[].lastSignatureAt` | string or null | when it last signed for the CA (ISO 8601, UTC) |
+| `agents[].hidden` | boolean | another appliance answered for the CA since, and this one has been silent for 7 days: the IoT-HSM page doesn't show the CA under it, and the platform deletes it once silent for 90 days; a standby that is never chosen to sign is heard only when the CA is pinged, so ping before taking it for replaced; a CA's only appliance is never hidden; answering again unhides it |
 | `token` | object or null | the token that holds the CA key, as the agent described it; null if it didn't |
 | `token.type` | string or null | the token that holds the CA key: yubikey, google, softhsm or unknown |
 | `token.pinState` | string or null | the token's PIN: ok; countLow, finalTry or locked as the token's flags say (they don't say how many tries are left); rejected: the token refused the PIN the agent has, so it signs nothing until its PIN is corrected and its slots reloaded. Null if the token or agent does not say |
@@ -2701,7 +3028,7 @@ With `--json`, the result is an object with these fields:
 | `lastPing` | object or null | the CA's last ping (`pkiaas hsm ping`); null if it was never pinged |
 | `lastPing.at` | string | when the ping was sent (ISO 8601, UTC) |
 | `lastPing.outcome` | string | answered: the agent offered to sign; busy: it is too busy to sign in time; pinRejected: the token refused the agent's PIN; noAnswer: the ping reached the agent's channel and nothing answered in 10 seconds; unreachable: the platform's own connection to PubNub didn't work, so it says nothing about the agent; failed: anything else (message says what) |
-| `lastPing.seconds` | number | how long the answer took, in seconds |
+| `lastPing.seconds` | number | how long the (first) answer took, in seconds |
 | `lastPing.message` | string or null | why it did not answer, for noAnswer, unreachable and failed; null otherwise |
 
 ## pkiaas key
@@ -3689,6 +4016,11 @@ With `--json`, the result is an object with these fields:
 | `trial.certificate.extensions[].value` | string | its value, as text |
 | `scepPassphrase` | string, optional | what happened to the SCEP passphrase: set, removed, or with `--dry-run` would be set or would be removed (never the passphrase) |
 | `scepPassphraseFile` | string, optional | with `--scep-passphrase` new, the `--out` file it was written to, alone on one line, readable by its owner only |
+| `compatibility` | object[], optional | the uses of the template (today Windows enrollment, on a server with it) that the change makes it incompatible with, or compatible with again: its key usage, validity or certificate policies no longer suit what they ask, or suit it again; left out when there are none, or when the check couldn't run (a notice on standard error says so) |
+| `compatibility[].use` | string | what uses the template: Windows enrollment |
+| `compatibility[].compatible` | boolean | whether the template is compatible with it after the change (or would be, with `--dry-run`) |
+| `compatibility[].wasCompatible` | boolean | whether it was compatible before the change |
+| `compatibility[].problems` | string[] | why the template is incompatible, one sentence each; empty when compatible |
 
 Side effects:
 
@@ -4043,6 +4375,11 @@ With `--json`, the result is an object with these fields:
 | `trial.certificate.extensions[].value` | string | its value, as text |
 | `scepPassphrase` | string, optional | what happened to the SCEP passphrase: set, removed, or with `--dry-run` would be set or would be removed (never the passphrase) |
 | `scepPassphraseFile` | string, optional | with `--scep-passphrase` new, the `--out` file it was written to, alone on one line, readable by its owner only |
+| `compatibility` | object[], optional | the uses of the template (today Windows enrollment, on a server with it) that the change makes it incompatible with, or compatible with again: its key usage, validity or certificate policies no longer suit what they ask, or suit it again; left out when there are none, or when the check couldn't run (a notice on standard error says so) |
+| `compatibility[].use` | string | what uses the template: Windows enrollment |
+| `compatibility[].compatible` | boolean | whether the template is compatible with it after the change (or would be, with `--dry-run`) |
+| `compatibility[].wasCompatible` | boolean | whether it was compatible before the change |
+| `compatibility[].problems` | string[] | why the template is incompatible, one sentence each; empty when compatible |
 
 Side effects:
 
