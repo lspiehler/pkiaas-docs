@@ -10,7 +10,7 @@ description: "Install the pkiaas CLI on Linux, macOS or Windows, log in, find, e
 - **[Request Certificates](requests.md):** list a CA's templates and request a certificate with a CSR, safely repeatable with an idempotency key, and have it issued and saved in the same command.
 - **[Approve Requests](pending-requests.md):** list a CA's pending requests, check what each asks for, and approve or decline them.
 - **[Certificate Templates](templates.md):** show and change a CA's templates, try a change on a throwaway certificate before saving it, set the SCEP passphrase, and list, show and restore a template's revisions.
-- **[ACME Policies](acme-policies.md):** list, create, change and delete a CA's ACME policies, and move their ACME accounts to another policy before a delete.
+- **[ACME Policies](acme-policies.md):** list, create, change and delete a CA's ACME policies, move their ACME accounts to another policy before a delete, and list, show and restore a policy's revisions.
 - **[ACME EABs](acme-eabs.md):** create external account bindings (EABs) that ACME clients such as certbot register with, list them, change, disable and delete them. The deprecated [provisioning URLs](acme-provisioning-urls.md) can be listed, disabled, enabled and deleted.
 - **[ACME Accounts](acme-accounts.md):** list and show the ACME clients registered with a CA, and revoke one so it can't get certificates.
 - **[ACME Orders](acme-orders.md):** list a CA's or one account's ACME orders, see which certificates they got, and find out why renewals failed.
