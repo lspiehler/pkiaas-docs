@@ -10,7 +10,7 @@ apt update
 apt -y install curl
 curl -sL https://raw.githubusercontent.com/lspiehler/iot-hsm/master/scripts/setup_ubuntu.sh | bash -
 ```
-The script first asks for a name for the appliance, which PKIaaS.io shows instead of the appliance's ID (for example on the IoT-HSM page). Press Enter to use the hostname. To skip the question, for example in automation, set the name before running the script: `curl -sL ... | AGENT_NAME="Rack 4 HSM" bash -`. A name is 1 to 64 letters, digits, spaces and `. _ - ( ) # : / @`. To change it later, edit `AGENT_NAME` in `/var/node/iot-hsm/.env` and run `sudo -u iothsm pm2 restart iot-hsm`.
+Once IoT-HSM is installed, the script asks for a name for the appliance, which PKIaaS.io shows instead of the appliance's ID (for example on the IoT-HSM page). Press Enter to use the hostname (offered only when it is a valid name). Without a terminal, for example in automation, the appliance gets no name unless you set it before running the script: `curl -sL ... | AGENT_NAME="Rack 4 HSM" bash -`. Run that as root rather than through `sudo`, which drops `AGENT_NAME`. A name is 1 to 64 letters, digits, spaces and `. _ - ( ) # : / @`; one PKIaaS.io wouldn't accept is not saved. To change it later, edit `AGENT_NAME` in `/var/node/iot-hsm/.env` and run `sudo -u iothsm pm2 restart iot-hsm`.
 
 After the script completes, it will prompt to set a new password twice. This password will be used for the admin account on the IoT-HSM web interface. Once configured, open a browser and navigate to the IP address of the Ubuntu endpoint, prefixed with `https://`. For example: `https://192.168.1.5`.
 
