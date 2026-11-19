@@ -2733,6 +2733,7 @@ With `--json`, the result is an object with these fields:
 | `hsms[].ca.name` | string or null | the CA's name (its certificate's common name) |
 | `hsms[].agent` | object or null | what the agent that last answered first or signed for the CA said about itself, plus what the platform knows of its releases; null until an agent answers a request for the CA (a signature or a ping) after the platform began recording it |
 | `hsms[].agent.id` | string or null | identifies the agent: CAs with the same ID are on the same agent; null if it gave none |
+| `hsms[].agent.name` | string or null | the name its owner gave the appliance (iot-hsm 1.2.0 or later, setting AGENT_NAME); null when it has none |
 | `hsms[].agent.version` | string or null | the agent's version (iot-hsm), or null for an agent from before 1.0.0, which doesn't say |
 | `hsms[].agent.olderAgent` | boolean | the agent is from before 1.0.0: it answers and signs, but says nothing about itself |
 | `hsms[].agent.commit` | string or null | the git commit the agent runs, when it has one |
@@ -2743,6 +2744,7 @@ With `--json`, the result is an object with these fields:
 | `hsms[].agent.updateAvailable` | boolean or null | a newer release than the agent exists (always for an agent from before 1.0.0); null when the platform doesn't know the latest release |
 | `hsms[].agents` | object[] | every appliance (iot-hsm 1.0.0 or later) known to have the CA key, most recent answer first, hidden ones included; a ping hears all of them. Agents before 1.0.0 are never listed here, only in agent |
 | `hsms[].agents[].id` | string | the appliance's agent ID (as agent.id); `pkiaas hsm forget --appliance` takes it |
+| `hsms[].agents[].name` | string or null | the name its owner gave the appliance (iot-hsm 1.2.0 or later, setting AGENT_NAME); null when it has none |
 | `hsms[].agents[].version` | string or null | the agent's version (iot-hsm) |
 | `hsms[].agents[].commit` | string or null | the git commit the agent runs, when it has one |
 | `hsms[].agents[].versions` | object | what the agent runs on, name to version, as agent.versions |
@@ -2855,6 +2857,7 @@ With `--json`, the result is an object with these fields:
 | `hsm.ca.name` | string or null | the CA's name (its certificate's common name) |
 | `hsm.agent` | object or null | what the agent that last answered first or signed for the CA said about itself, plus what the platform knows of its releases; null until an agent answers a request for the CA (a signature or a ping) after the platform began recording it |
 | `hsm.agent.id` | string or null | identifies the agent: CAs with the same ID are on the same agent; null if it gave none |
+| `hsm.agent.name` | string or null | the name its owner gave the appliance (iot-hsm 1.2.0 or later, setting AGENT_NAME); null when it has none |
 | `hsm.agent.version` | string or null | the agent's version (iot-hsm), or null for an agent from before 1.0.0, which doesn't say |
 | `hsm.agent.olderAgent` | boolean | the agent is from before 1.0.0: it answers and signs, but says nothing about itself |
 | `hsm.agent.commit` | string or null | the git commit the agent runs, when it has one |
@@ -2865,6 +2868,7 @@ With `--json`, the result is an object with these fields:
 | `hsm.agent.updateAvailable` | boolean or null | a newer release than the agent exists (always for an agent from before 1.0.0); null when the platform doesn't know the latest release |
 | `hsm.agents` | object[] | every appliance (iot-hsm 1.0.0 or later) known to have the CA key, most recent answer first, hidden ones included; a ping hears all of them. Agents before 1.0.0 are never listed here, only in agent |
 | `hsm.agents[].id` | string | the appliance's agent ID (as agent.id); `pkiaas hsm forget --appliance` takes it |
+| `hsm.agents[].name` | string or null | the name its owner gave the appliance (iot-hsm 1.2.0 or later, setting AGENT_NAME); null when it has none |
 | `hsm.agents[].version` | string or null | the agent's version (iot-hsm) |
 | `hsm.agents[].commit` | string or null | the git commit the agent runs, when it has one |
 | `hsm.agents[].versions` | object | what the agent runs on, name to version, as agent.versions |
@@ -2932,11 +2936,12 @@ Show what the platform last heard from a CA's IoT HSM.
 pkiaas hsm show [--ca NAME|ID] [flags]
 ```
 
-Show what the platform last heard from the IoT HSM of a CA, by default the active CA: the agent's version and
-what it runs on, whether a newer release exists, the token that holds the key and its PIN state, what the agent
-can sign, whether it is busy or dormant, when it last answered, signed and started, when its channel certificate
-expires, and the last ping. Below them, every appliance (iot-hsm 1.0.0 or later) known to have the CA key, for
-high availability; `pkiaas hsm forget` forgets one that was replaced.
+Show what the platform last heard from the IoT HSM of a CA, by default the active CA: the name its owner
+gave the appliance (AGENT_NAME, iot-hsm 1.2.0 or later), the agent's version and what it runs on, whether a newer
+release exists, the token that holds the key and its PIN state, what the agent can sign, whether it is busy or
+dormant, when it last answered, signed and started, when its channel certificate expires, and the last ping. Below
+them, every appliance (iot-hsm 1.0.0 or later) known to have the CA key, for high availability; `pkiaas hsm forget`
+forgets one that was replaced.
 
 There is no live status: these are the details of the agent's last answer, and an idle agent and one that is off
 look the same. `pkiaas hsm ping` asks the agent to answer now. Showing sends nothing to the agent.
@@ -2969,6 +2974,7 @@ With `--json`, the result is an object with these fields:
 | `ca.name` | string or null | the CA's name (its certificate's common name) |
 | `agent` | object or null | what the agent that last answered first or signed for the CA said about itself, plus what the platform knows of its releases; null until an agent answers a request for the CA (a signature or a ping) after the platform began recording it |
 | `agent.id` | string or null | identifies the agent: CAs with the same ID are on the same agent; null if it gave none |
+| `agent.name` | string or null | the name its owner gave the appliance (iot-hsm 1.2.0 or later, setting AGENT_NAME); null when it has none |
 | `agent.version` | string or null | the agent's version (iot-hsm), or null for an agent from before 1.0.0, which doesn't say |
 | `agent.olderAgent` | boolean | the agent is from before 1.0.0: it answers and signs, but says nothing about itself |
 | `agent.commit` | string or null | the git commit the agent runs, when it has one |
@@ -2979,6 +2985,7 @@ With `--json`, the result is an object with these fields:
 | `agent.updateAvailable` | boolean or null | a newer release than the agent exists (always for an agent from before 1.0.0); null when the platform doesn't know the latest release |
 | `agents` | object[] | every appliance (iot-hsm 1.0.0 or later) known to have the CA key, most recent answer first, hidden ones included; a ping hears all of them. Agents before 1.0.0 are never listed here, only in agent |
 | `agents[].id` | string | the appliance's agent ID (as agent.id); `pkiaas hsm forget --appliance` takes it |
+| `agents[].name` | string or null | the name its owner gave the appliance (iot-hsm 1.2.0 or later, setting AGENT_NAME); null when it has none |
 | `agents[].version` | string or null | the agent's version (iot-hsm) |
 | `agents[].commit` | string or null | the git commit the agent runs, when it has one |
 | `agents[].versions` | object | what the agent runs on, name to version, as agent.versions |
