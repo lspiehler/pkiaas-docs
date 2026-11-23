@@ -1,6 +1,6 @@
 ---
 title: "Certificate Authorities in the pkiaas CLI"
-description: "Create certificate authorities with the pkiaas CLI, list them, show their details, export their certificates, chains, CSRs and CPS, change their settings, delete them, and choose the CA to work in."
+description: "Create certificate authorities with the pkiaas CLI, including CAs whose key is on an IoT HSM, list them, show their details, import their signed certificates, export their certificates, chains, CSRs, provisioning certificates and CPS, change their settings, delete them, and choose the CA to work in."
 ---
 ## Choose Your CA
 Commands that work in a certificate authority use the active CA unless you tell them otherwise. When you log in, the active CA is the one you last worked in on the website, and `pkiaas login` shows it:
@@ -25,10 +25,60 @@ Names work in any case. Two of your CAs can have the same name: a name that more
 `pkiaas ca create --name "Example Root CA"` creates a certificate authority owned by you, as the website's [Create a Managed CA](../certificate-authorities/create.md) form does. PKIaaS.io makes the CA's key, which never leaves the platform, and self-signs its certificate. The new CA also gets its OCSP certificate and a copy of the "Web Server" template, so it can issue certificates at once. The command shows the new CA as `pkiaas ca show` does; it doesn't become the active CA unless you add `--set`.
 
 - **What its certificate holds:** `--subject "O=Example,OU=IT,C=US"` adds the other subject fields (C, ST, L, O and OU), `--key-type` chooses the key (e.g. `ec-p384` or the post-quantum `ml-dsa-65`), `--days` sets how long it is valid (3650 by default), and `--path-length 0` lets it issue only end-entity certificates. `--key-usage` and `--extended-key-usage` add usages; a CA usually needs none.
-- **A CA another CA signs:** with `--csr-only`, the CA waits for its signed certificate. Export its CSR with `pkiaas ca export --csr --out ca.csr`, have the other CA sign it, then import the signed certificate on the website.
+- **A CA another CA signs:** with `--csr-only`, the CA waits for its signed certificate. Export its CSR with `pkiaas ca export --csr --out ca.csr`, have the other CA sign it, then import the signed certificate with `pkiaas ca import` (see [Import a Signed Certificate](#import-a-signed-certificate)).
+- **A CA whose key is on your HSM:** with `--iot-hsm`, the key is made on your HSM by the IoT-HSM agent, not on the platform (see [Create a CA on an IoT HSM](#create-a-ca-on-an-iot-hsm)).
 - **Safe to repeat:** give `--idempotency-key` with any text, e.g. a UUID. Running the same command again with the same key within 24 hours returns the CA it created instead of a second one.
 
 You can create 20 CAs an hour. SHA-1 (`--signature-algorithm sha1`) is for testing only and asks for confirmation.
+
+For a CA that isn't signed yet, the result says what to do next. With `--json`, `nextStep` holds the command that exports what the CA waits on: its CSR (`--csr-only`) or its provisioning certificate (`--iot-hsm`). It is null for a signed CA.
+
+## Create a CA on an IoT HSM
+`pkiaas ca create --iot-hsm` creates a CA whose private key is made and kept on your own HSM by the [IoT-HSM](../iot-hsm/overview.md) agent, as choosing "HSM" as the key type on the website's Create new CA page does. `--key-type` and `--csr-only` don't go with it.
+
+```sh
+pkiaas ca create --name "Example HSM Root CA" --subject "O=Example,C=US" --iot-hsm
+```
+
+```text
+Created the CA Example HSM Root CA (a1B2c3D4e5) (IoT-HSM, waiting for the HSM's certificate)
+...
+Export its provisioning certificate for the IoT-HSM agent's provisioning wizard with: pkiaas ca export --provisioning-certificate --ca a1B2c3D4e5 --out provisioning.crt
+```
+
+- **What the platform makes:** only the CA's provisioning certificate: a certificate with the CA's subject and extensions, self-signed with a throwaway key. It contacts no HSM and makes no OCSP certificate, which needs the HSM. It does copy the "Web Server" template to the CA.
+- **Checked first:** the platform signs test certificates with the CA's subject and extensions, never with an HSM. If they can't be signed, for example because of the `--key-usage`, `--extended-key-usage` or `--path-length` given, the CA is removed and the command fails with `ca_settings_unusable` (exit code 1). Change the settings the message names and run it again; each try counts toward the 20 CAs an hour.
+- **Until it's provisioned:** the CA waits for the HSM's certificate (`signed` is false and `hsm` is true in `pkiaas ca show --json`) and can't issue certificates.
+
+Then provision the HSM:
+
+1. Export the provisioning certificate: run the command in the result (`nextStep` with `--json`), for example `pkiaas ca export --provisioning-certificate --ca "Example HSM Root CA" --out provisioning.crt`. `--format der` saves it as DER instead of PEM.
+2. Give the file to the IoT-HSM agent's provisioning wizard, which takes it as the template for the HSM's own certificate (see [IoT-HSM Configuration](../iot-hsm/configuration.md)).
+3. Import the HSM's certificate on the website ("Import Signed Certificate" on the Manage CAs page), as [IoT-HSM Configuration](../iot-hsm/configuration.md) describes. `pkiaas ca import` doesn't take it yet: for a CA whose key is on an IoT HSM it fails with `ca_on_hsm`.
+
+The HSM's certificate is imported twice, with an agent restart between. After the first import and until the second, `--provisioning-certificate` exports the HSM's certificate instead. Once the CA is signed, it has no provisioning certificate to export and the command fails with `conflict` (exit code 5). A CA whose key is on the platform has none either (`ca_not_hsm`, exit code 5), and an IoT HSM CA has no CSR (`ca export --csr` fails with `ca_on_hsm`, exit code 5).
+
+## Import a Signed Certificate
+`pkiaas ca import` imports the certificate another CA signed for a CA made with `--csr-only`, as the website's Import Signed Certificate page does. Once it's imported, the CA is signed and can issue certificates.
+
+```sh
+pkiaas ca export --csr --ca "Example Issuing CA" --out ca.csr
+# have the signing CA sign ca.csr, then:
+pkiaas ca import --ca "Example Issuing CA" --cert signed.pem --chain-file chain.pem
+```
+
+```text
+Imported the signed certificate of CA Example Issuing CA (a1B2c3D4e5): the CA is signed and can issue certificates.
+```
+
+- **The files:** `--cert` is the signed certificate as PEM, DER or PKCS#7, or `-` for standard input. If it holds more than one certificate, the first is the CA's and the others are its chain, so a full chain file works on its own. `--chain-file` holds the certificates that issued it, up to the root.
+- **Missing issuers:** an issuer that neither file holds is fetched by the server from the address in the certificate it issued (Authority Information Access, "CA Issuers"). If it can't be fetched, the command fails with `chain_not_found` (exit code 1): give the signing CA's certificate and those above it, up to the root, with `--chain-file`.
+- **Checked before anything changes:** the certificate must be a CA certificate (basicConstraints CA:TRUE) for the CA's key, valid now, and usable to sign certificates, and its chain must lead to a self-signed root. A certificate that isn't fails with `ca_certificate_refused` (exit code 1), and the message says what to change; usually the signing CA has to sign the CSR again. If the server can't run the check right now, the command fails with `ca_check_unavailable` (exit code 1): run it again in a minute.
+- **What changes:** the certificate becomes the CA's, with its chain; the CA gets its OCSP certificate; the CA's name becomes the certificate's common name; and the CA's log records the import, or why the certificate was refused.
+- **Safe to repeat:** running the command again with the same certificate changes nothing on a signed CA. If an import stopped after the certificate was stored (`ca_import_unfinished`, exit code 1), running it again finishes it. If another import of the same CA ran at the same time (`ca_import_conflict`, exit code 5), check the CA with `pkiaas ca show`. A signed CA's certificate is never replaced (`conflict`).
+- **Who can:** importing needs the modify privilege in the CA. You can import 20 CA certificates an hour, refused ones included; beyond that the command fails with `http_429` and says when to try again.
+
+With `--json`, the result is the CA as `pkiaas ca show --json` shows it, with `signed` true.
 
 ## Change a CA's Settings
 `pkiaas ca update` changes the settings of the active CA (or the one `--ca` names), as the website's [Edit CA](../certificate-authorities/edit.md) page does. Only the settings whose flags you give change, and you need the modify privilege in the CA. `pkiaas ca show` lists the settings as they are now.

@@ -64,7 +64,7 @@ The CA's next CRL and OCSP responses list the certificate as revoked, and client
 - **Final reasons:** every reason other than `certificateHold` is final. The revocation can't be undone, and its reason can't be changed (error `revocation_final`).
 - **Certificate hold:** `certificateHold` suspends a certificate for now. Take it off hold with `pkiaas cert unrevoke <SERIAL>`, and the certificate is valid again. Or make the revocation final by revoking it again with another reason. The revocation date stays the time it was put on hold.
 - **Safe to repeat:** revoking a certificate again with the same reason, or unrevoking one that isn't revoked, changes nothing and succeeds.
-- **Subscription:** revoking and unrevoking need a subscription, yours or the CA owner's. Without one, they fail with `subscription_required`.
+- **Subscription:** revoking and unrevoking need an active subscription that covers the CA: its owner's. Your own subscription doesn't count for a CA someone else owns and shared with you. Without one, they fail with `subscription_required` (exit code 3); the CA's owner can subscribe, or link a subscription they already have, on the website's profile page.
 
 ```sh
 pkiaas cert revoke 25ab765c7238b3d28d2bab03271f5fa8f2fccf86 --reason certificateHold --yes

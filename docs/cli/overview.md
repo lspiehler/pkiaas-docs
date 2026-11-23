@@ -5,10 +5,10 @@ description: "Install the pkiaas CLI on Linux, macOS or Windows, log in, find, e
 ## Overview
 `pkiaas` is the PKIaaS.io command-line tool (CLI). It runs on Linux, macOS and Windows, and is built to be used by AI agents (Claude Code, Codex, Copilot and others) as well as by people. Today it covers:
 
-- **[Certificate Authorities](certificate-authorities.md):** create CAs, list them, show their details, export their certificates, chains, CSRs and CPS, change their settings, delete them, choose the one to work in, and read their logs.
+- **[Certificate Authorities](certificate-authorities.md):** create CAs, including CAs whose key is on an IoT HSM, list them, show their details, import their signed certificates, export their certificates, chains, CSRs, provisioning certificates and CPS, change their settings, delete them, choose the one to work in, and read their logs.
 - **[Certificates](certificates.md):** list the certificates a CA issued, show their details and status, export them with their chain or CSR as PEM or DER, and revoke them or put them on hold.
-- **[Request Certificates](requests.md):** list a CA's templates and request a certificate with a CSR, safely repeatable with an idempotency key, and have it issued and saved in the same command.
-- **[Approve Requests](pending-requests.md):** list a CA's pending requests, check what each asks for, and approve or decline them.
+- **[Request Certificates](requests.md):** list a CA's templates and request a certificate with a CSR, safely repeatable with an idempotency key, and have it issued and saved in the same command, or make a pre-approved request that a person, a SCEP device or an Apple device picks up.
+- **[Approve Requests](pending-requests.md):** list a CA's pending requests, check what each asks for, approve them (requests without a CSR get an approved voucher by email), resend the requester's email, or decline them.
 - **[Certificate Templates](templates.md):** show and change a CA's templates, try a change on a throwaway certificate before saving it, set the SCEP passphrase, and list, show and restore a template's revisions.
 - **[ACME Policies](acme-policies.md):** list, create, change and delete a CA's ACME policies, move their ACME accounts to another policy before a delete, and list, show and restore a policy's revisions.
 - **[ACME EABs](acme-eabs.md):** create external account bindings (EABs) that ACME clients such as certbot register with, list them, change, disable and delete them. The deprecated [provisioning URLs](acme-provisioning-urls.md) can be listed, disabled, enabled and deleted.
