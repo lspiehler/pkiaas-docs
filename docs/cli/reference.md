@@ -41,9 +41,10 @@ pkiaas
 │       ├── show ID            --ca=STRING
 │       └── update ID          --ca=STRING --dry-run --enabled=STRING
 ├── ca
-│   ├── create                 --csr-only --days=INT --extended-key-usage=STRING --idempotency-key=STRING --key-type=STRING --key-usage=STRING --name=STRING --path-length=INT --set --signature-algorithm=STRING --subject=STRING --yes
+│   ├── create                 --csr-only --days=INT --extended-key-usage=STRING --idempotency-key=STRING --iot-hsm --key-type=STRING --key-usage=STRING --name=STRING --path-length=INT --set --signature-algorithm=STRING --subject=STRING --yes
 │   ├── delete NAME|ID         --dry-run --yes
-│   ├── export                 --ca=STRING --chain --cps --csr --force --format=STRING --out=STRING
+│   ├── export                 --ca=STRING --chain --cps --csr --force --format=STRING --out=STRING --provisioning-certificate
+│   ├── import                 --ca=STRING --cert=STRING --chain-file=STRING
 │   ├── list
 │   ├── set NAME|ID
 │   ├── show                   --ca=STRING
@@ -73,9 +74,10 @@ pkiaas
 │   └── create                 --cert=STRING --chain-file=STRING --force --key=STRING --key-passphrase-env=STRING --key-passphrase-file=STRING --legacy --no-passphrase --out=STRING --passphrase-env=STRING --passphrase-file=STRING
 ├── request
 │   ├── approve ID             --ca=STRING --chain --force --format=STRING --not-after=STRING --not-before=STRING --out=STRING --san=STRING --subject=STRING
-│   ├── create                 --approve --ca=STRING --chain --csr=STRING --force --format=STRING --idempotency-key=STRING --not-after=STRING --not-before=STRING --out=STRING --san=STRING --subject=STRING --template=STRING
+│   ├── create                 --approve --ca=STRING --chain --csr=STRING --days=INT --email=STRING --force --format=STRING --idempotency-key=STRING --not-after=STRING --not-before=STRING --out=STRING --pre-approved=STRING --san=STRING --subject=STRING --template=STRING
 │   ├── decline ID             --ca=STRING --yes
 │   ├── list                   --ca=STRING --limit=INT --order=STRING --search=STRING --sort=STRING
+│   ├── resend ID              --ca=STRING --idempotency-key=STRING --yes
 │   └── show ID                --ca=STRING
 ├── template
 │   ├── list                   --ca=STRING --limit=INT
@@ -1625,7 +1627,7 @@ Side effects:
 
 ## pkiaas ca
 
-Create certificate authorities, list them, show one, change its settings, export its certificate, CSR or CPS, set the active one, delete one.
+Create certificate authorities, list them, show one, change its settings, import or export its certificate, export its CSR or CPS, set the active one, delete one.
 
 ```
 pkiaas ca [flags]
@@ -1636,6 +1638,7 @@ Commands:
 - [`pkiaas ca create`](reference.md#pkiaas-ca-create)
 - [`pkiaas ca delete`](reference.md#pkiaas-ca-delete)
 - [`pkiaas ca export`](reference.md#pkiaas-ca-export)
+- [`pkiaas ca import`](reference.md#pkiaas-ca-import)
 - [`pkiaas ca list`](reference.md#pkiaas-ca-list)
 - [`pkiaas ca set`](reference.md#pkiaas-ca-set)
 - [`pkiaas ca show`](reference.md#pkiaas-ca-show)
@@ -1643,10 +1646,10 @@ Commands:
 
 ## pkiaas ca create
 
-Create a CA, self-signed or (with --csr-only) waiting for another CA to sign it.
+Create a CA: self-signed, waiting for another CA to sign it (--csr-only), or with its key on an IoT HSM (--iot-hsm).
 
 ```
-pkiaas ca create --name NAME [--subject DN] [--key-type TYPE] [--signature-algorithm sha256|sha384|sha512] [--days N] [--path-length N] [--key-usage USAGE]... [--extended-key-usage USAGE]... [--csr-only] [--set] [--idempotency-key KEY] [--yes] [flags]
+pkiaas ca create --name NAME [--subject DN] [--key-type TYPE | --iot-hsm] [--signature-algorithm sha256|sha384|sha512] [--days N] [--path-length N] [--key-usage USAGE]... [--extended-key-usage USAGE]... [--csr-only] [--set] [--idempotency-key KEY] [--yes] [flags]
 ```
 
 Create a certificate authority owned by you, as the website's "Create a Managed CA" form does. The platform
@@ -1671,7 +1674,16 @@ always include digitalSignature, keyCertSign and cRLSign. A CA usually has no ex
 limit every certificate it issues, and Windows and some other clients enforce that.
 
 With `--csr-only`, the CA isn't signed: it waits for another CA to sign its CSR, which `pkiaas ca export --csr`
-exports, and for the signed certificate to be imported on the website. Until then it can't issue certificates.
+exports, and for the signed certificate to be imported with `pkiaas ca import`. Until then it can't issue certificates.
+
+With `--iot-hsm`, the CA's key is made on your HSM by the IoT-HSM agent, not on the platform, so `--key-type` and
+`--csr-only` don't go with it. The platform makes the CA's provisioning certificate: a certificate with the CA's
+subject and extensions, self-signed with a throwaway key, which the agent copies into the HSM's own certificate.
+It then signs test certificates with that subject and those extensions (never with an HSM); if they can't be
+signed, it removes the CA and fails with ca_settings_unusable. It makes no OCSP responder certificate, which needs
+the HSM, and contacts no HSM. The CA waits for the HSM's certificate: export the provisioning certificate with
+`pkiaas ca export --provisioning-certificate` (nextStep has the command), give it to the IoT-HSM agent's
+provisioning wizard, and import the HSM's certificate on the website. Until then it can't issue certificates.
 
 Each run is a new CA, unless it has the `--idempotency-key` of an earlier run (any text, e.g. a UUID) and the same
 flags: within 24 hours that gives the earlier result instead of a second CA. Without `--idempotency-key`, the CLI
@@ -1692,6 +1704,7 @@ Flags:
 | `--days` | int | how many days the CA's certificate is valid (1-36500). Default: `3650`. |
 | `--extended-key-usage` | string, repeatable | an extended key usage (repeatable): serverAuth, clientAuth, codeSigning, emailProtection, timeStamping, OCSPSigning, msCodeInd, msCodeCom, msCTLSign, msEFS, ipsecIKE, ipsecEndSystem, ipsecTunnel, ipsecUser |
 | `--idempotency-key` | string | repeat an earlier run with this key instead of creating a second CA (default: a new random key) |
+| `--iot-hsm` | bool | make the CA's key on your HSM with the IoT-HSM agent, not on the platform; the CA waits for the HSM's certificate (`pkiaas ca export --provisioning-certificate`) |
 | `--key-type` | string | the CA's key, made on the platform: rsa-2048, rsa-4096, ec-p256, ec-p384, ec-p521, ml-dsa-44, ml-dsa-65, ml-dsa-87, slh-dsa-sha2-128s, slh-dsa-sha2-128f, slh-dsa-sha2-192s, slh-dsa-sha2-192f, slh-dsa-sha2-256s, slh-dsa-sha2-256f, slh-dsa-shake-128s, slh-dsa-shake-128f, slh-dsa-shake-192s, slh-dsa-shake-192f, slh-dsa-shake-256s, slh-dsa-shake-256f. Default: `rsa-2048`. |
 | `--key-usage` | string, repeatable | a key usage to add (repeatable): digitalSignature, keyCertSign, cRLSign, keyEncipherment, nonRepudiation, dataEncipherment, keyAgreement, encipherOnly, decipherOnly |
 | `--name` | string | the CA's name: its certificate's common name (at most 64 characters) |
@@ -1708,6 +1721,7 @@ Examples:
 pkiaas ca create --name "Example Root CA" --subject "O=Example,C=US"
 pkiaas ca create --name "Example Root CA" --key-type ec-p384 --signature-algorithm sha384 --days 7300 --set --json
 pkiaas ca create --name "Example Issuing CA" --subject "O=Example,OU=IT,C=US" --path-length 0 --csr-only --json
+pkiaas ca create --name "Example HSM Root CA" --subject "O=Example,C=US" --iot-hsm --json
 pkiaas ca create --name "Test CA $RUN" --key-type ec-p256 --days 7 --idempotency-key "$KEY" --json
 pkiaas ca create --name "SHA-1 test CA" --signature-algorithm sha1 --days 7 --yes
 ```
@@ -1731,7 +1745,7 @@ With `--json`, the result is an object with these fields:
 | `validTo` | string or null | when the CA's certificate expires (ISO 8601, UTC); null if unsigned |
 | `activeCertificates` | integer or null | how many certificates the CA issued that have neither expired nor been revoked |
 | `policyOid` | string or null | the certificate policy OID the CA puts in the certificates it issues; null if none |
-| `cep` | boolean or null | whether Windows certificate enrollment (CEP/CES) is on |
+| `cep` | boolean or null | Deprecated: whether the CA's legacy CEP setting is on. On a server with Windows enrollment policies it no longer changes, and the classic URLs answer while the CA's default Windows policy is enabled |
 | `urls` | object or null | the CA's public services; null until the CA is signed |
 | `urls.certificate` | string | the CA's certificate (DER), as the certificates it issues name it (AIA caIssuers) |
 | `urls.chain` | string | the CA's certificate and those that issued it (PKCS#7, DER) |
@@ -1739,26 +1753,29 @@ With `--json`, the result is an object with these fields:
 | `urls.ocsp` | string | the OCSP responder (AIA OCSP) |
 | `urls.timestamp` | string | the RFC 3161 time-stamping service |
 | `urls.cps` | string | the CA's public page: its certification practice statement and downloads |
-| `urls.cep` | string | Windows certificate enrollment (CEP/CES) with a user name and password; works when cep is true |
-| `urls.cepCertificate` | string | Windows certificate enrollment (CEP/CES) with a client certificate; works when cep is true |
+| `urls.cep` | string | Windows certificate enrollment (CEP/CES) with a user name and password; works when cep is true; deprecated: on a server with Windows enrollment policies, these classic URLs lead to the CA's default Windows policy while it is enabled |
+| `urls.cepCertificate` | string | Windows certificate enrollment (CEP/CES) with a client certificate; works when cep is true; deprecated: on a server with Windows enrollment policies, these classic URLs lead to the CA's default Windows policy while it is enabled |
 | `settings` | object or null | the CA's settings, which `pkiaas ca update` changes (the website's Edit CA page); null if the account has no CAs |
 | `settings.policyOid` | string or null | the certificate policy OID the CA puts in certificates from templates with policies, next to the address of its CPS page; null if none is set |
 | `settings.cps` | object | the certification practice statement on the CA's public page (urls.cps) |
 | `settings.cps.format` | string | markdown, or html for a CPS written in the website's old editor (shown as it is until someone converts it to Markdown) |
 | `settings.cps.text` | string | the CPS as stored; `pkiaas ca export --cps` writes it to a file |
 | `settings.cep` | object | Windows certificate enrollment (CEP/CES) with a user name and password |
-| `settings.cep.enabled` | boolean | whether Windows certificate enrollment (CEP/CES) is on |
+| `settings.cep.enabled` | boolean | Deprecated: whether the CA's legacy CEP setting is on. On a server with Windows enrollment policies it no longer changes, and the classic URLs answer while the CA's default Windows policy is enabled |
 | `settings.cep.credentialsSet` | boolean | whether a CEP user name and password are stored (they are never shown) |
 | `settings.serviceCertificates` | object | the key the OCSP responder and time-stamping certificates get when they are next made: when they expire (yearly) or are revoked |
 | `settings.serviceCertificates.keyType` | string or null | the key type, as `pkiaas key types` names it; null if the stored one is none of them (e.g. the retired dilithium) |
 | `settings.serviceCertificates.signatureAlgorithm` | string or null | the hash they are signed with: sha1, sha256, sha384 or sha512; null for ML-DSA and SLH-DSA keys, which have their own |
 | `idempotencyKey` | string | the Idempotency-Key it was sent with: the same command with `--idempotency-key` and this key, within 24 hours, gives this result again instead of a second CA |
+| `nextStep` | string or null | for an unsigned CA, the command that exports what it waits on: its CSR for another CA to sign (`--csr-only`), or its provisioning certificate for the IoT-HSM agent's provisioning wizard (`--iot-hsm`); null for a signed CA |
 
 Side effects:
 
 - creates a CA owned by the user's account on the server; with the `--idempotency-key` of an earlier run (within 24 hours), nothing new
-- the platform makes the CA's private key and keeps it; it never leaves the platform
-- the platform also makes the CA's OCSP responder certificate and copies the "Web Server" template to the CA
+- without `--iot-hsm`, the platform makes the CA's private key and keeps it; it never leaves the platform
+- with `--iot-hsm`, the platform makes only the provisioning certificate, self-signed with a throwaway key, then signs test certificates with its subject and extensions and removes the CA if they can't be signed; the CA's key is made on the HSM later, and no HSM is contacted
+- for a signed CA (without `--csr-only` or `--iot-hsm`), the platform also makes the CA's OCSP responder certificate
+- the platform copies the "Web Server" template to the CA
 - counts toward the limit of 20 CAs per user an hour
 - with `--signature-algorithm` sha1 (RSA and EC keys), prints a warning on standard error and asks for confirmation on the terminal (`--yes` skips the question)
 - with `--set`, keeps the new CA as the active one in the CLI's config.json, for this server
@@ -1840,10 +1857,10 @@ Side effects:
 
 ## pkiaas ca export
 
-Export a CA's certificate, its chain, the CSR of an unsigned CA, or its CPS.
+Export a CA's certificate, its chain, the CSR of an unsigned CA, the provisioning certificate of an IoT HSM CA, or its CPS.
 
 ```
-pkiaas ca export [--chain | --csr | --cps] [--format pem|der] [--out FILE] [--ca NAME|ID] [flags]
+pkiaas ca export [--chain | --csr | --provisioning-certificate | --cps] [--format pem|der] [--out FILE] [--ca NAME|ID] [flags]
 ```
 
 Export the certificate of a CA, by default the active CA. The chain (`--chain`) is the CA's certificate followed
@@ -1853,8 +1870,16 @@ The certificate of a root CA is what clients add to their trust store.
 
 A CA waiting for its signed certificate fails with ca_not_signed. With `--csr`, it exports such a CA's
 certificate signing request instead (e.g. of a CA made with `pkiaas ca create --csr-only`), for another CA to
-sign; the signed certificate is then imported on the website. A signed CA has no CSR to export (error
+sign; the signed certificate is then imported with `pkiaas ca import`. A signed CA has no CSR to export (error
 conflict). An `--out` file with a CSR is readable by its owner only, as for `pkiaas cert export --csr`.
+
+A CA whose key is on an IoT HSM (hsm is true in `pkiaas ca show --json`) has no CSR (error ca_on_hsm). With
+`--provisioning-certificate`, it exports such a CA's provisioning certificate while it waits for the HSM's
+certificate: a self-signed certificate the platform made when the CA was created, which the IoT-HSM agent's
+provisioning wizard takes as the template for the HSM's own certificate (its subject and extensions). The HSM's
+certificate is then imported on the website, twice, with an agent restart between; after the first import, until
+the second, this exports the HSM's certificate instead. A signed CA has none to export (error conflict), nor has a CA whose
+key is on the platform (error ca_not_hsm).
 
 With `--cps`, it exports the CA's certification practice statement, the text of its public page, as stored:
 Markdown, or HTML for a CPS written in the website's old editor (the result's format says which). Edit it and
@@ -1887,6 +1912,7 @@ Flags:
 | `--force` | bool | replace the `--out` file if it exists |
 | `--format` | string | pem or der (as OpenSSL's -outform). Default: `pem`. |
 | `-o`, `--out` | string | the file to write (default: standard output, as with -) |
+| `--provisioning-certificate` | bool | export the provisioning certificate of an IoT HSM CA that waits for the HSM's certificate instead |
 | `--server` | string | the PKIaaS server (default: the last one you logged in to) |
 
 Examples:
@@ -1897,6 +1923,7 @@ pkiaas ca export --out ca.pem
 pkiaas ca export --chain --out chain.pem --json
 pkiaas ca export --ca a1B2c3D4e5 --format der --out root.cer
 pkiaas ca export --csr --ca a1B2c3D4e5 --out ca.csr --json
+pkiaas ca export --provisioning-certificate --ca "Example HSM Root CA" --out provisioning.crt
 pkiaas ca export --cps > cps.md
 pkiaas ca export --cps --ca a1B2c3D4e5 --out cps.md --json
 ```
@@ -1909,12 +1936,113 @@ With `--json`, the result is an object with these fields:
 | `name` | string or null | the CA's name |
 | `file` | string | the file written (`--out`) |
 | `format` | string | pem or der (`--format`); for `--cps`, markdown or html, as the CPS is stored |
-| `content` | string | what the file holds: certificate, chain (`--chain`: the CA's certificate followed by those that issued it), csr (`--csr`) or cps (`--cps`) |
+| `content` | string | what the file holds: certificate, chain (`--chain`: the CA's certificate followed by those that issued it), csr (`--csr`), provisioning-certificate (`--provisioning-certificate`) or cps (`--cps`) |
 | `certificates` | integer | how many certificates the file holds; 0 for a CSR |
 
 Side effects:
 
 - with `--out`, writes the file (readable by everyone for certificates and the CPS, which are public; by its owner only for a CSR); otherwise writes to standard output and prints no result
+
+## pkiaas ca import
+
+Import the signed certificate of a CA that waits for it.
+
+```
+pkiaas ca import --cert FILE [--chain-file FILE] [--ca NAME|ID] [flags]
+```
+
+Import the certificate another CA signed for a CA, by default the active CA, as the website's Import Signed
+Certificate page does. The CA was made with `pkiaas ca create --csr-only`, and its CSR (`pkiaas ca export --csr`)
+was signed by another CA. Once imported, the CA is signed and can issue certificates.
+
+`--cert` is the signed certificate: PEM, DER or PKCS#7 (- for standard input). If the file holds more than one
+certificate, the first is the CA's and the others are taken as its chain. `--chain-file` holds the certificates that
+issued it, up to the root (PEM, DER or PKCS#7). An issuer that neither file holds is fetched by the server from the
+URL in the certificate it issued (Authority Information Access, "CA Issuers"); if it can't be, the command fails
+with chain_not_found: give it with `--chain-file`.
+
+The server checks the certificate before anything changes: it must be a CA certificate (basicConstraints CA:TRUE)
+for the CA's key, valid now, and certificates must be signable with it; its chain must lead to a self-signed root.
+A refused certificate fails with ca_certificate_refused, and the message says what to change. The CA's name
+becomes the certificate's common name. Importing needs the modify privilege in the CA.
+
+Running the command again with the same certificate is safe: on a signed CA it changes nothing, and it finishes an
+import that stopped after the certificate was stored (ca_import_unfinished). A signed CA's certificate is never
+replaced (error conflict). A CA whose key is on an IoT HSM (hsm is true in `pkiaas ca show --json`) fails with
+ca_on_hsm: its certificate is imported on the website for now.
+
+You can import at most 20 CA certificates an hour, refused ones included; beyond that the server refuses with
+http_429 and says when to try again.
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--cert` | string | the signed certificate (PEM, DER or PKCS#7; certificates after the first are its chain; - for standard input) |
+| `--chain-file` | string | the certificates that issued it, up to the root (PEM, DER or PKCS#7; - for standard input) |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+
+Examples:
+
+```sh
+pkiaas ca import --cert signed.pem --chain-file chain.pem
+pkiaas ca import --ca "Example Issuing CA" --cert signed.pem --json
+pkiaas ca import --ca a1B2c3D4e5 --cert fullchain.pem
+pkiaas ca import --ca "Example Issuing CA" --cert - --json < fullchain.pem
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `server` | string | the server |
+| `id` | string or null | the CA's ID; null if the account has no CAs |
+| `name` | string or null | the CA's name (its certificate's common name) |
+| `source` | string | how the CA was chosen: flag (`--ca`), environment (`PKIAAS_CA`), or as the active CA: set (with `pkiaas ca set`, or at login), website (the CA last used on the website), first (the first CA by name); none if the account has no CAs. For `pkiaas ca create`: created, or set with `--set` |
+| `signed` | boolean or null | false while the CA waits for its signed certificate to be imported |
+| `hsm` | boolean or null | whether the CA's private key is on the user's HSM rather than on the platform |
+| `keyType` | string or null | the algorithm of the CA's key, as OpenSSL names it, e.g. rsaEncryption, id-ecPublicKey, ML-DSA-65 |
+| `keySize` | integer or null | the key size in bits (the curve size for EC keys); null where it doesn't apply, e.g. ML-DSA |
+| `signatureAlgorithm` | string or null | the algorithm of the CA certificate's signature, as OpenSSL names it |
+| `serial` | string or null | the CA certificate's serial number (hex); null if unsigned |
+| `thumbprint` | string or null | the CA certificate's SHA-1 fingerprint (hex), as Windows shows it; null if unsigned |
+| `validFrom` | string or null | when the CA's certificate became valid (ISO 8601, UTC); null if unsigned |
+| `validTo` | string or null | when the CA's certificate expires (ISO 8601, UTC); null if unsigned |
+| `activeCertificates` | integer or null | how many certificates the CA issued that have neither expired nor been revoked |
+| `policyOid` | string or null | the certificate policy OID the CA puts in the certificates it issues; null if none |
+| `cep` | boolean or null | Deprecated: whether the CA's legacy CEP setting is on. On a server with Windows enrollment policies it no longer changes, and the classic URLs answer while the CA's default Windows policy is enabled |
+| `urls` | object or null | the CA's public services; null until the CA is signed |
+| `urls.certificate` | string | the CA's certificate (DER), as the certificates it issues name it (AIA caIssuers) |
+| `urls.chain` | string | the CA's certificate and those that issued it (PKCS#7, DER) |
+| `urls.crl` | string | the CRL (CRL distribution point) |
+| `urls.ocsp` | string | the OCSP responder (AIA OCSP) |
+| `urls.timestamp` | string | the RFC 3161 time-stamping service |
+| `urls.cps` | string | the CA's public page: its certification practice statement and downloads |
+| `urls.cep` | string | Windows certificate enrollment (CEP/CES) with a user name and password; works when cep is true; deprecated: on a server with Windows enrollment policies, these classic URLs lead to the CA's default Windows policy while it is enabled |
+| `urls.cepCertificate` | string | Windows certificate enrollment (CEP/CES) with a client certificate; works when cep is true; deprecated: on a server with Windows enrollment policies, these classic URLs lead to the CA's default Windows policy while it is enabled |
+| `settings` | object or null | the CA's settings, which `pkiaas ca update` changes (the website's Edit CA page); null if the account has no CAs |
+| `settings.policyOid` | string or null | the certificate policy OID the CA puts in certificates from templates with policies, next to the address of its CPS page; null if none is set |
+| `settings.cps` | object | the certification practice statement on the CA's public page (urls.cps) |
+| `settings.cps.format` | string | markdown, or html for a CPS written in the website's old editor (shown as it is until someone converts it to Markdown) |
+| `settings.cps.text` | string | the CPS as stored; `pkiaas ca export --cps` writes it to a file |
+| `settings.cep` | object | Windows certificate enrollment (CEP/CES) with a user name and password |
+| `settings.cep.enabled` | boolean | Deprecated: whether the CA's legacy CEP setting is on. On a server with Windows enrollment policies it no longer changes, and the classic URLs answer while the CA's default Windows policy is enabled |
+| `settings.cep.credentialsSet` | boolean | whether a CEP user name and password are stored (they are never shown) |
+| `settings.serviceCertificates` | object | the key the OCSP responder and time-stamping certificates get when they are next made: when they expire (yearly) or are revoked |
+| `settings.serviceCertificates.keyType` | string or null | the key type, as `pkiaas key types` names it; null if the stored one is none of them (e.g. the retired dilithium) |
+| `settings.serviceCertificates.signatureAlgorithm` | string or null | the hash they are signed with: sha1, sha256, sha384 or sha512; null for ML-DSA and SLH-DSA keys, which have their own |
+
+Side effects:
+
+- makes the certificate the CA's certificate on the server, with its chain; nothing changes when it is refused, or when the CA already has it
+- the server gives the CA its OCSP responder certificate, and the CA is signed: it can issue certificates
+- the CA's name becomes the certificate's common name
+- the server may fetch missing issuers from the URLs in the certificates (Authority Information Access)
+- the CA's log records the import, or why the certificate was refused
+- counts toward the limit of 20 CA certificate imports per user an hour
 
 ## pkiaas ca list
 
@@ -2048,7 +2176,7 @@ With `--json`, the result is an object with these fields:
 | `validTo` | string or null | when the CA's certificate expires (ISO 8601, UTC); null if unsigned |
 | `activeCertificates` | integer or null | how many certificates the CA issued that have neither expired nor been revoked |
 | `policyOid` | string or null | the certificate policy OID the CA puts in the certificates it issues; null if none |
-| `cep` | boolean or null | whether Windows certificate enrollment (CEP/CES) is on |
+| `cep` | boolean or null | Deprecated: whether the CA's legacy CEP setting is on. On a server with Windows enrollment policies it no longer changes, and the classic URLs answer while the CA's default Windows policy is enabled |
 | `urls` | object or null | the CA's public services; null until the CA is signed |
 | `urls.certificate` | string | the CA's certificate (DER), as the certificates it issues name it (AIA caIssuers) |
 | `urls.chain` | string | the CA's certificate and those that issued it (PKCS#7, DER) |
@@ -2056,15 +2184,15 @@ With `--json`, the result is an object with these fields:
 | `urls.ocsp` | string | the OCSP responder (AIA OCSP) |
 | `urls.timestamp` | string | the RFC 3161 time-stamping service |
 | `urls.cps` | string | the CA's public page: its certification practice statement and downloads |
-| `urls.cep` | string | Windows certificate enrollment (CEP/CES) with a user name and password; works when cep is true |
-| `urls.cepCertificate` | string | Windows certificate enrollment (CEP/CES) with a client certificate; works when cep is true |
+| `urls.cep` | string | Windows certificate enrollment (CEP/CES) with a user name and password; works when cep is true; deprecated: on a server with Windows enrollment policies, these classic URLs lead to the CA's default Windows policy while it is enabled |
+| `urls.cepCertificate` | string | Windows certificate enrollment (CEP/CES) with a client certificate; works when cep is true; deprecated: on a server with Windows enrollment policies, these classic URLs lead to the CA's default Windows policy while it is enabled |
 | `settings` | object or null | the CA's settings, which `pkiaas ca update` changes (the website's Edit CA page); null if the account has no CAs |
 | `settings.policyOid` | string or null | the certificate policy OID the CA puts in certificates from templates with policies, next to the address of its CPS page; null if none is set |
 | `settings.cps` | object | the certification practice statement on the CA's public page (urls.cps) |
 | `settings.cps.format` | string | markdown, or html for a CPS written in the website's old editor (shown as it is until someone converts it to Markdown) |
 | `settings.cps.text` | string | the CPS as stored; `pkiaas ca export --cps` writes it to a file |
 | `settings.cep` | object | Windows certificate enrollment (CEP/CES) with a user name and password |
-| `settings.cep.enabled` | boolean | whether Windows certificate enrollment (CEP/CES) is on |
+| `settings.cep.enabled` | boolean | Deprecated: whether the CA's legacy CEP setting is on. On a server with Windows enrollment policies it no longer changes, and the classic URLs answer while the CA's default Windows policy is enabled |
 | `settings.cep.credentialsSet` | boolean | whether a CEP user name and password are stored (they are never shown) |
 | `settings.serviceCertificates` | object | the key the OCSP responder and time-stamping certificates get when they are next made: when they expire (yearly) or are revoked |
 | `settings.serviceCertificates.keyType` | string or null | the key type, as `pkiaas key types` names it; null if the stored one is none of them (e.g. the retired dilithium) |
@@ -2094,7 +2222,9 @@ neither the policy nor the CPS address.
 `--cep` on\|off turns Windows certificate enrollment (CEP/CES) on or off. It needs a user name and password, which
 Windows clients enroll with: `--cep-username` with the password from `--cep-password-env` NAME (an environment
 variable) or `--cep-password-file` FILE (its first line; - for standard input), never as an argument. Both replace
-the stored ones; without them the stored ones are kept. The CA's CEP URLs are in `pkiaas ca show`.
+the stored ones; without them the stored ones are kept. The CA's CEP URLs are in `pkiaas ca show`. Deprecated:
+on a server with Windows enrollment policies (pkiaas windows), Windows enrollment is set up there, and these flags
+fail with cep_setting_moved.
 
 `--service-key-type` is the key of the CA's OCSP responder and time-stamping certificates, as `pkiaas key types`
 names it. `--service-signature-algorithm` is the hash they are signed with; ML-DSA and SLH-DSA keys have their own,
@@ -2157,7 +2287,7 @@ With `--json`, the result is an object with these fields:
 | `validTo` | string or null | when the CA's certificate expires (ISO 8601, UTC); null if unsigned |
 | `activeCertificates` | integer or null | how many certificates the CA issued that have neither expired nor been revoked |
 | `policyOid` | string or null | the certificate policy OID the CA puts in the certificates it issues; null if none |
-| `cep` | boolean or null | whether Windows certificate enrollment (CEP/CES) is on |
+| `cep` | boolean or null | Deprecated: whether the CA's legacy CEP setting is on. On a server with Windows enrollment policies it no longer changes, and the classic URLs answer while the CA's default Windows policy is enabled |
 | `urls` | object or null | the CA's public services; null until the CA is signed |
 | `urls.certificate` | string | the CA's certificate (DER), as the certificates it issues name it (AIA caIssuers) |
 | `urls.chain` | string | the CA's certificate and those that issued it (PKCS#7, DER) |
@@ -2165,15 +2295,15 @@ With `--json`, the result is an object with these fields:
 | `urls.ocsp` | string | the OCSP responder (AIA OCSP) |
 | `urls.timestamp` | string | the RFC 3161 time-stamping service |
 | `urls.cps` | string | the CA's public page: its certification practice statement and downloads |
-| `urls.cep` | string | Windows certificate enrollment (CEP/CES) with a user name and password; works when cep is true |
-| `urls.cepCertificate` | string | Windows certificate enrollment (CEP/CES) with a client certificate; works when cep is true |
+| `urls.cep` | string | Windows certificate enrollment (CEP/CES) with a user name and password; works when cep is true; deprecated: on a server with Windows enrollment policies, these classic URLs lead to the CA's default Windows policy while it is enabled |
+| `urls.cepCertificate` | string | Windows certificate enrollment (CEP/CES) with a client certificate; works when cep is true; deprecated: on a server with Windows enrollment policies, these classic URLs lead to the CA's default Windows policy while it is enabled |
 | `settings` | object or null | the CA's settings, which `pkiaas ca update` changes (the website's Edit CA page); null if the account has no CAs |
 | `settings.policyOid` | string or null | the certificate policy OID the CA puts in certificates from templates with policies, next to the address of its CPS page; null if none is set |
 | `settings.cps` | object | the certification practice statement on the CA's public page (urls.cps) |
 | `settings.cps.format` | string | markdown, or html for a CPS written in the website's old editor (shown as it is until someone converts it to Markdown) |
 | `settings.cps.text` | string | the CPS as stored; `pkiaas ca export --cps` writes it to a file |
 | `settings.cep` | object | Windows certificate enrollment (CEP/CES) with a user name and password |
-| `settings.cep.enabled` | boolean | whether Windows certificate enrollment (CEP/CES) is on |
+| `settings.cep.enabled` | boolean | Deprecated: whether the CA's legacy CEP setting is on. On a server with Windows enrollment policies it no longer changes, and the classic URLs answer while the CA's default Windows policy is enabled |
 | `settings.cep.credentialsSet` | boolean | whether a CEP user name and password are stored (they are never shown) |
 | `settings.serviceCertificates` | object | the key the OCSP responder and time-stamping certificates get when they are next made: when they expire (yearly) or are revoked |
 | `settings.serviceCertificates.keyType` | string or null | the key type, as `pkiaas key types` names it; null if the stored one is none of them (e.g. the retired dilithium) |
@@ -2386,8 +2516,8 @@ it, and revoking it again with another reason makes it final, from the time it w
 is final: it can't be undone or changed (error revocation_final).
 
 It asks for confirmation on a terminal; without one, give `--yes`. Revoking a certificate that is revoked with the
-same reason changes nothing and succeeds, so the command is safe to run again. Revoking needs a subscription,
-the user's or the CA owner's (error subscription_required).
+same reason changes nothing and succeeds, so the command is safe to run again. Revoking needs an active
+subscription that covers the CA, its owner's; the user's own doesn't count (error subscription_required).
 
 This command calls the PKIaaS server and needs a login.
 
@@ -2492,7 +2622,8 @@ Take a certificate that is on hold (revoked with reason certificateHold) off hol
 and OCSP responses show it as valid again. Other reasons are final (error revocation_final).
 
 A certificate that isn't revoked stays as it is, and the command succeeds, so it is safe to run again. Unrevoking
-needs a subscription, the user's or the CA owner's (error subscription_required).
+needs an active subscription that covers the CA, its owner's; the user's own doesn't count (error
+subscription_required).
 
 This command calls the PKIaaS server and needs a login.
 
@@ -3408,7 +3539,7 @@ Side effects:
 
 ## pkiaas request
 
-Request certificates from a CA, list the pending requests, approve or decline them.
+Request certificates from a CA, list the pending requests, approve, resend or decline them.
 
 ```
 pkiaas request [flags]
@@ -3420,11 +3551,12 @@ Commands:
 - [`pkiaas request create`](reference.md#pkiaas-request-create)
 - [`pkiaas request decline`](reference.md#pkiaas-request-decline)
 - [`pkiaas request list`](reference.md#pkiaas-request-list)
+- [`pkiaas request resend`](reference.md#pkiaas-request-resend)
 - [`pkiaas request show`](reference.md#pkiaas-request-show)
 
 ## pkiaas request approve
 
-Approve a request: the CA signs its CSR and issues the certificate.
+Approve a request: the CA issues the certificate, or emails the requester an approved voucher.
 
 ```
 pkiaas request approve ID [--subject DN] [--san NAME]... [--not-before TIME] [--not-after TIME] [--ca NAME|ID] [--out FILE|- [--chain] [--format pem|der] [--force]] [flags]
@@ -3435,9 +3567,16 @@ as the request's template says, as the website's Sign button does without change
 certificate is issued (on a CA whose key is on an IoT HSM, that can take a few seconds). The result's serial is
 the certificate's: `pkiaas cert export SERIAL` outputs it. Check the request first with `pkiaas request show`.
 
+A pendingApproval request without a CSR (hasCsr false) is approved as the website's Send Approved Voucher button
+does: it becomes preApproved for 24 hours (expiresAt), and the requester is emailed an approved voucher, with
+which they make the key and pick up the certificate. There is no certificate yet, so `--out` is refused for it. The
+voucher is never shown. If the mail server doesn't take the email, the error is email_failed: the request is
+approved all the same, and `pkiaas request resend ID` emails a new voucher.
+
 By default the certificate holds what the CSR asks for, as the template allows. `--subject`, `--san`, `--not-before`
 and `--not-after` change that, as the website's "Override requested attributes" and "Override validity time" do,
-for a request that is readyToBeSigned (statusDetail in `pkiaas request show`):
+for a request that waits for approval (pendingApproval in `pkiaas request show`); without a CSR, they go into
+the approved voucher:
   `--subject` DN     the subject in place of the CSR's, in RFC 4514 form ("CN=www.example.com,O=Example,C=US") or
                    OpenSSL's ("/C=US/O=Example/CN=www.example.com"), as `pkiaas csr create` takes it; the
                    template's subject attributes still win
@@ -3446,16 +3585,17 @@ for a request that is readyToBeSigned (statusDetail in `pkiaas request show`):
   `--not-after` TIME when the certificate expires, in place of the template's validity (RFC 3339, e.g.
                    2027-01-31T00:00:00Z); it is valid from now, or from `--not-before` TIME
 Without a subscription, while the CA has a validity limit (validityLimitDays), the validity can't be changed
-(subscription_required). Values OpenSSL won't take are refused (invalid_overrides), and nothing is signed.
+(subscription_required). Values OpenSSL won't take are refused (invalid_overrides), and nothing is signed or sent.
 
-Only a request that waits for approval (pendingApproval) and has a CSR can be approved; otherwise the error is
-request_not_approvable (no CSR, pending email confirmation, pre-approved, or changes to a request that isn't
-readyToBeSigned), request_declined, or request_processing while it is being signed. If the CA can't sign it (e.g.
-its IoT HSM doesn't answer), the error is signing_failed: the request waits for approval again, and the CA's log
-on the website says why.
+Only a request that waits for approval (pendingApproval) can be approved; otherwise the error is
+request_not_approvable (pending email confirmation, pre-approved for SCEP or an Apple profile, no valid email
+address for the voucher, or changes to a request that can't take them), request_declined, or request_processing while it is being signed. If
+the CA can't sign it (e.g. its IoT HSM doesn't answer), the error is signing_failed: the request waits for
+approval again, and the CA's log on the website says why.
 
-Approving a request that is issued already changes nothing and succeeds, so the command is safe to run again,
-e.g. after a lost connection; the certificate is never signed again, so changes given then aren't applied.
+Approving a request that is issued, or approved without a CSR, already changes nothing and succeeds, so the
+command is safe to run again, e.g. after a lost connection; the certificate is never signed again and no second
+voucher is sent, so changes given then aren't applied.
 
 With `--out` FILE, it also writes the issued certificate to the file (PEM, or DER with `--format` der; with
 `--chain`, followed by the certificates that issued it, up to the root), which is only replaced with `--force`; the
@@ -3501,21 +3641,23 @@ With `--json`, the result is an object with these fields:
 | `ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
 | `ca.name` | string or null | the CA's name (its certificate's common name) |
 | `id` | string | the request's ID |
-| `status` | string | issued |
-| `name` | string or null | the request's name (the CSR's common name) |
+| `status` | string | issued; for a request without a CSR, preApproved: the requester was emailed an approved voucher |
+| `name` | string or null | the request's name (the CSR's common name, or the requester's email address) |
 | `template` | string or null | the template's name |
 | `templateId` | string or null | the template's ID |
-| `serial` | string or null | the certificate's serial number: `pkiaas cert export SERIAL` outputs it |
+| `serial` | string or null | the certificate's serial number: `pkiaas cert export SERIAL` outputs it; null for a request without a CSR, whose certificate is issued when the requester picks it up |
+| `expiresAt` | string or null | for a request without a CSR, when its voucher expires (ISO 8601, UTC); null for an issued request |
 | `file` | string or null | the `--out` file the certificate was written to (with `--chain`, followed by its chain); null without `--out` |
 
 Side effects:
 
 - the CA signs the request's CSR and issues the certificate on the server, with the `--subject`, `--san` and validity changes if given; for a request issued already, nothing
+- for a request without a CSR, makes it preApproved for 24 hours and emails its requester an approved voucher, with the changes if given; for one approved so already, nothing
 - with `--out` FILE, writes the certificate to the file; with `--out` -, writes it to standard output and prints no result
 
 ## pkiaas request create
 
-Request a certificate with a CSR; it waits for approval, or is issued with --approve.
+Request a certificate with a CSR (it waits for approval, or is issued with --approve), or make a pre-approved request.
 
 ```
 pkiaas request create --csr FILE --template NAME|ID [--approve [--subject DN] [--san NAME]... [--not-before TIME] [--not-after TIME] [--out FILE|- [--chain] [--format pem|der] [--force]]] [--ca NAME|ID] [--idempotency-key KEY] [flags]
@@ -3549,10 +3691,41 @@ With `--approve`, `--out` FILE also writes the issued certificate to the file (P
 result names it (file). With `--out` -, standard output holds only the certificate, for piping, and there is no
 result (so no `--json`). The file is checked before anything is approved.
 
+pkiaas request create `--pre-approved` web\|apple\|scep `--template` NAME\|ID `--subject` DN [`--san` NAME]...
+[`--days` N \| `--not-after` TIME [`--not-before` TIME]] [`--email` ADDRESS \| `--out` FILE\|- [`--force`]] [`--ca` NAME\|ID]
+[`--idempotency-key` KEY]
+
+With `--pre-approved` web\|apple\|scep instead of `--csr`, the command makes a request that is approved already, as
+the website's Create Pre-Approved Request page does: the CA issues the certificate when the requester picks it up,
+within 24 hours, with the names and validity given here, whatever a CSR sent at pickup says (it only gives the
+key). web: the requester opens a voucher link, where the browser makes the key or they send a CSR; apple: an
+iPhone, iPad or Mac installs a profile from a link; scep: a SCEP client uses the SCEP URL and a challenge
+password. apple and scep need SCEP on in the template's settings.
+  `--subject` DN     the certificate's subject (needed, with a CN), in RFC 4514 or OpenSSL form, as for
+                   `pkiaas request approve`; the template's subject attributes still win
+  `--san` NAME       a subject alternative name (repeatable; list them all): dns:NAME, ip:ADDRESS,
+                   email:ADDRESS or uri:URI, or a bare name whose kind is guessed. Without it, none
+  `--days` N         the certificate is valid N days from when it is picked up, in place of the template's
+                   validity; or `--not-after` TIME (and `--not-before` TIME), as for `pkiaas request
+                   approve`; without `--not-before` it is valid from now, not from when it is picked up
+  `--email` ADDRESS  email the requester the pickup link (a CA may email 100 an hour: error http_429)
+Without `--email` nobody is emailed, and the pickup link is a secret that the server shows only once, to this
+command: save it with `--out` FILE, which writes it alone on one line, readable by you only (web: the voucher link;
+apple: the profile link; scep: the challenge password, with the SCEP URL in the result as scepUrl). Without `--out`
+it goes to standard output only when that is a terminal; in a pipe or captured output, or with `--json`, the
+command fails with secret_destination before it makes anything. `--out` - sends it to standard output anyway. Hand
+the file to the requester without reading it. A rerun with the same `--idempotency-key` gives the same request,
+but never its link again: the command fails with secret_shown; decline that request (`pkiaas request decline ID`)
+and make another. When the email fails, the request is made all the same and warning says so: run
+`pkiaas request resend ID` later. Without a subscription, while the CA has a validity limit, the validity can't
+be set (subscription_required).
+
 In Windows PowerShell 5.1, > and \| re-encode output, so write files with `--out` (PowerShell 7.4 and later
 keep the bytes).
 
 This command calls the PKIaaS server and needs a login.
+
+Its output (the pickup link (voucher link, profile link or SCEP challenge password), with --pre-approved and without --email) is a secret: it goes to `--out FILE`, to `--out -`, or to a terminal, never into a pipe without `--out -` or into a `--json` result (error `secret_destination`).
 
 Flags:
 
@@ -3562,12 +3735,15 @@ Flags:
 | `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
 | `--chain` | bool | with `--out`: add the CA's certificate and those that issued the CA, up to the root |
 | `--csr` | string | the CSR file, PEM or DER (- for standard input) |
+| `--days` | int | with `--pre-approved`: the certificate is valid this many days from pickup. Default: `0`. |
+| `--email` | string | with `--pre-approved`: email the requester the pickup link |
 | `--force` | bool | with `--out`: replace the file if it exists |
 | `--format` | string | with `--out`: pem or der (as OpenSSL's -outform). Default: `pem`. |
 | `--idempotency-key` | string | repeat an earlier run with this key instead of making a second request (default: a new random key) |
 | `--not-after` | string | the certificate expires at this time (RFC 3339) in place of the template's validity |
 | `--not-before` | string | the certificate is valid from this time (RFC 3339) in place of now; needs `--not-after` |
 | `-o`, `--out` | string | also write the issued certificate to this file; - for standard output, instead of the result |
+| `--pre-approved` | string | make a pre-approved request without a CSR, picked up with: web, apple or scep |
 | `--san` | string, repeatable | issue the certificate with this subject alternative name in place of the CSR's (repeatable) |
 | `--server` | string | the PKIaaS server (default: the last one you logged in to) |
 | `--subject` | string | issue the certificate with this subject (distinguished name) in place of the CSR's |
@@ -3583,6 +3759,9 @@ pkiaas request create --csr www.csr --template "Web Server" --approve --chain --
 pkiaas request create --csr www.csr --template "Web Server" --approve --not-after 2027-01-31T00:00:00Z --json
 pkiaas request create --csr - --template "Web Server" --json < www.csr
 pkiaas request create --csr www.csr --template f5IK8ghmT0 --ca a1B2c3D4e5 --idempotency-key 8e03978e-40d5-43e8-bc93-6894a57f9324 --json
+pkiaas request create --pre-approved web --template "Web Server" --subject "CN=device01" --email requester@example.com --json
+pkiaas request create --pre-approved web --template "Web Server" --subject "CN=device01" --san device01.example.com --out device01.voucher --json
+pkiaas request create --pre-approved scep --template Devices --subject "CN=printer01" --days 365 --out printer01.challenge --json
 ```
 
 With `--json`, the result is an object with these fields:
@@ -3593,20 +3772,28 @@ With `--json`, the result is an object with these fields:
 | `ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
 | `ca.name` | string or null | the CA's name (its certificate's common name) |
 | `id` | string | the request's ID |
-| `status` | string | pendingApproval: it waits for a member of the CA to approve it (pkiaas request approve, or the website's Pending Requests page); with `--approve`, issued |
-| `name` | string or null | the CSR's common name (or its first subject attribute), which the website shows as the request's name |
+| `status` | string | pendingApproval: it waits for a member of the CA to approve it (pkiaas request approve, or the website's Pending Requests page); with `--approve`, issued; with `--pre-approved`, preApproved: the certificate is issued when the requester picks it up |
+| `name` | string or null | the CSR's common name (or its first subject attribute), which the website shows as the request's name; with `--pre-approved`, the `--subject`'s CN |
 | `template` | string or null | the template's name |
 | `templateId` | string or null | the template's ID (`--template`) |
 | `requestedAt` | string or null | when it was requested (ISO 8601, UTC) |
 | `serial` | string or null | with `--approve`, the issued certificate's serial number (pkiaas cert export SERIAL); otherwise null |
 | `file` | string or null | with `--approve` `--out` FILE, the file the certificate was written to (with `--chain`, followed by its chain); otherwise null |
-| `idempotencyKey` | string | the Idempotency-Key it was sent with: the same command with `--idempotency-key` and this key, within 24 hours, gives this result again instead of a second request |
+| `idempotencyKey` | string | the Idempotency-Key it was sent with: the same command with `--idempotency-key` and this key, within 24 hours, gives this result again instead of a second request; with `--pre-approved` and without `--email` it fails with secret_shown then, since the pickup link is shown only once |
+| `pickup` | string, optional | only with `--pre-approved`: how the requester picks it up, web, apple or scep |
+| `expiresAt` | string, optional | only with `--pre-approved`: until when the requester can pick it up (ISO 8601, UTC), 24 hours from now; `pkiaas request resend ID` gives 24 more when it has an email address |
+| `emailed` | boolean, optional | only with `--pre-approved`: true when the requester was emailed the pickup link (`--email`); false when nobody was (see secretFile) or the email failed (see warning) |
+| `secretFile` | string, optional | only with `--pre-approved` without `--email`: the `--out` file the pickup link was written to, alone on one line, readable by its owner only (web: the voucher link; apple: the profile link; scep: the challenge password); it is shown only this once. Hand the file to the requester without reading it |
+| `scepUrl` | string, optional | only with `--pre-approved` scep without `--email`: the SCEP URL the requester's SCEP client uses with the challenge password |
+| `warning` | string, optional | only with `--pre-approved` `--email`, when the request was made but the email to the requester failed: run `pkiaas request resend ID` once the mail server takes it |
 
 Side effects:
 
 - creates a certificate request on the server, which waits for approval; with the `--idempotency-key` of an earlier run (within 24 hours), nothing new
 - with `--approve`, the CA signs the CSR and issues the certificate, with the `--subject`, `--san` and validity changes if given
 - with `--approve` `--out` FILE, writes the certificate to the file; with `--out` -, writes it to standard output and prints no result
+- with `--pre-approved`, creates a request that is approved already, which the requester picks up within 24 hours; with `--email`, emails them the pickup link; the CA's log records it
+- with `--pre-approved` without `--email`, writes the pickup link to the `--out` file, readable by the owner only; with `--out` - or to a terminal, writes it to standard output, the request's details to standard error, and no result
 
 ## pkiaas request decline
 
@@ -3671,10 +3858,10 @@ requests that wait for approval, for the requester's email confirmation or for t
 pre-approved certificate, and those being signed. Issued and declined requests aren't listed (`pkiaas request
 show ID` shows any request), nor are requests from ACME.
 
-pendingApproval: it waits for a member of the CA to approve it (approve it if hasCsr is true; one without a
-CSR needs an approved voucher, which only the website sends). pendingEmailVerification: it waits for the requester
-to confirm their email address. preApproved: it is issued when the requester picks it up with its voucher or SCEP
-challenge. processing: it is being signed; signing takes seconds, so one processing for more than 10 minutes
+pendingApproval: it waits for a member of the CA to approve it (`pkiaas request approve` issues it if
+hasCsr is true; without a CSR, it emails the requester an approved voucher). pendingEmailVerification: it waits for
+the requester to confirm their email address. preApproved: it is issued when the requester picks it up with its
+voucher, SCEP challenge or Apple profile (`pkiaas request resend` emails the requester a new link). processing: it is being signed; signing takes seconds, so one processing for more than 10 minutes
 (processingSince) is stuck. issued: the certificate is signed (serial). declined: it will never be issued.
 
 It lists the first `--limit` requests (default 50, at most 1000); total says how many match. `--search` keeps the
@@ -3718,10 +3905,70 @@ With `--json`, the result is an object with these fields:
 | `requests[].template` | string or null | the template's name |
 | `requests[].templateId` | string or null | the template's ID |
 | `requests[].requestedAt` | string or null | when it was requested (ISO 8601, UTC) |
-| `requests[].hasCsr` | boolean | it has a CSR, so `pkiaas request approve` can issue it; one without needs an approved voucher, which only the website sends |
+| `requests[].hasCsr` | boolean | it has a CSR, so `pkiaas request approve` issues it; approving one without emails the requester an approved voucher |
 | `requests[].source` | string or null | where it came from: scep, web, system, createCa, ces or api (this CLI and the new pages); null if unknown |
 | `requests[].expiresAt` | string or null | when the pre-approval (voucher, email confirmation or SCEP challenge) expires (ISO 8601, UTC); null if it never does |
 | `requests[].processingSince` | string or null | while it is processing, when signing started (ISO 8601, UTC); otherwise null |
+
+## pkiaas request resend
+
+Email the requester of a waiting request a new link.
+
+```
+pkiaas request resend ID [--ca NAME|ID] [--yes] [--idempotency-key KEY] [flags]
+```
+
+Resend the email of a request to a CA, by default the active CA, by its ID from `pkiaas request list`, as the
+website's Resend Email and Resend Email Verification buttons do: the requester gets a new email verification link
+(pendingEmailVerification), or a new voucher, SCEP challenge or Apple profile link (preApproved), which is valid
+for 24 more hours (expiresAt). Once the email has gone out, the links in earlier emails stop working. The link is
+never shown.
+
+It asks for confirmation on a terminal; without one, give `--yes`. A request that waits for approval, or has no
+valid email address, has nothing to resend (request_not_resendable); an issued, declined or processing request is
+request_issued, request_declined or request_processing. If the mail server doesn't take the email, the error is
+email_failed and nothing changed: the earlier links still work. A request can be resent at most 10 times an hour
+(http_429; the message says when to try again).
+
+Each run sends an email, unless it has the `--idempotency-key` of an earlier run (any text, e.g. a UUID): then,
+within 24 hours, it gives that run's result again and sends no second email. Without `--idempotency-key`, the CLI
+makes a key and reports it (idempotencyKey), and uses it when it retries by itself.
+
+This command calls the PKIaaS server and needs a login.
+
+Flags:
+
+| Flag | Type | Description |
+|---|---|---|
+| `--ca` | string | the CA to work in, by its name (any case) or ID from `pkiaas ca list` (default: `PKIAAS_CA`, else the active CA) |
+| `--idempotency-key` | string | makes a retry safe: the same key within 24 hours sends no second email (default: a new random key) |
+| `--server` | string | the PKIaaS server (default: the last one you logged in to) |
+| `--yes` | bool | resend without asking for confirmation |
+
+Examples:
+
+```sh
+pkiaas request resend k3J9xQ2mP7vR1sT8wY4zA6bC0dE5fG
+pkiaas request resend k3J9xQ2mP7vR1sT8wY4zA6bC0dE5fG --yes --json
+pkiaas request resend k3J9xQ2mP7vR1sT8wY4zA6bC0dE5fG --ca a1B2c3D4e5 --yes --idempotency-key 8e03978e-40d5-43e8-bc93-6894a57f9324 --json
+```
+
+With `--json`, the result is an object with these fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `ca` | object | the CA the request went to |
+| `ca.id` | string | the ID of the CA that issued the certificate, which `--ca` takes |
+| `ca.name` | string or null | the CA's name (its certificate's common name) |
+| `id` | string | the request's ID |
+| `status` | string | pendingEmailVerification or preApproved, as before |
+| `name` | string or null | the request's name (the requester's email address, or the CSR's common name) |
+| `expiresAt` | string or null | when the new link expires (ISO 8601, UTC): 24 hours from now for a preApproved request; null if it never does |
+| `idempotencyKey` | string | the Idempotency-Key it was sent with: the same command with `--idempotency-key` and this key, within 24 hours, gives this result again and sends no second email |
+
+Side effects:
+
+- emails the requester of the request a new link (email verification, voucher, SCEP challenge or Apple profile) and gives a preApproved request 24 more hours; once it is sent, links in earlier emails stop working; with the `--idempotency-key` of an earlier run within 24 hours, nothing
 
 ## pkiaas request show
 
@@ -3736,10 +3983,10 @@ create`: its status, template and source, and what its CSR asks for (subject, su
 so it can be checked before it is approved. The template, not the CSR, decides what the certificate holds.
 Once it is issued, serial is the certificate's serial number. Requests from ACME aren't shown.
 
-pendingApproval: it waits for a member of the CA to approve it (approve it if hasCsr is true; one without a
-CSR needs an approved voucher, which only the website sends). pendingEmailVerification: it waits for the requester
-to confirm their email address. preApproved: it is issued when the requester picks it up with its voucher or SCEP
-challenge. processing: it is being signed; signing takes seconds, so one processing for more than 10 minutes
+pendingApproval: it waits for a member of the CA to approve it (`pkiaas request approve` issues it if
+hasCsr is true; without a CSR, it emails the requester an approved voucher). pendingEmailVerification: it waits for
+the requester to confirm their email address. preApproved: it is issued when the requester picks it up with its
+voucher, SCEP challenge or Apple profile (`pkiaas request resend` emails the requester a new link). processing: it is being signed; signing takes seconds, so one processing for more than 10 minutes
 (processingSince) is stuck. issued: the certificate is signed (serial). declined: it will never be issued.
 
 This command calls the PKIaaS server and needs a login.
@@ -3775,7 +4022,7 @@ With `--json`, the result is an object with these fields:
 | `expiresAt` | string or null | when the pre-approval (voucher, email confirmation or SCEP challenge) expires (ISO 8601, UTC); null if it never does |
 | `processingSince` | string or null | while it is processing, when signing started (ISO 8601, UTC); otherwise null |
 | `serial` | string or null | once it is issued, the certificate's serial number (pkiaas cert export SERIAL); otherwise null |
-| `hasCsr` | boolean | it has a CSR, so `pkiaas request approve` can issue it |
+| `hasCsr` | boolean | it has a CSR, so `pkiaas request approve` issues it; approving one without emails the requester an approved voucher |
 | `subject` | string or null | the CSR's subject as OpenSSL prints it, e.g. C=US, O=Example, CN=www.example.com; null without a CSR |
 | `subjectAltNames` | string[] | the CSR's subject alternative names as OpenSSL writes them, e.g. DNS:www.example.com; empty without a CSR |
 | `keyType` | string or null | the algorithm of the CSR's key, as OpenSSL names it, e.g. rsaEncryption, id-ecPublicKey |
@@ -4023,11 +4270,6 @@ With `--json`, the result is an object with these fields:
 | `trial.certificate.extensions[].value` | string | its value, as text |
 | `scepPassphrase` | string, optional | what happened to the SCEP passphrase: set, removed, or with `--dry-run` would be set or would be removed (never the passphrase) |
 | `scepPassphraseFile` | string, optional | with `--scep-passphrase` new, the `--out` file it was written to, alone on one line, readable by its owner only |
-| `compatibility` | object[], optional | the uses of the template (today Windows enrollment, on a server with it) that the change makes it incompatible with, or compatible with again: its key usage, validity or certificate policies no longer suit what they ask, or suit it again; left out when there are none, or when the check couldn't run (a notice on standard error says so) |
-| `compatibility[].use` | string | what uses the template: Windows enrollment |
-| `compatibility[].compatible` | boolean | whether the template is compatible with it after the change (or would be, with `--dry-run`) |
-| `compatibility[].wasCompatible` | boolean | whether it was compatible before the change |
-| `compatibility[].problems` | string[] | why the template is incompatible, one sentence each; empty when compatible |
 
 Side effects:
 
@@ -4382,11 +4624,6 @@ With `--json`, the result is an object with these fields:
 | `trial.certificate.extensions[].value` | string | its value, as text |
 | `scepPassphrase` | string, optional | what happened to the SCEP passphrase: set, removed, or with `--dry-run` would be set or would be removed (never the passphrase) |
 | `scepPassphraseFile` | string, optional | with `--scep-passphrase` new, the `--out` file it was written to, alone on one line, readable by its owner only |
-| `compatibility` | object[], optional | the uses of the template (today Windows enrollment, on a server with it) that the change makes it incompatible with, or compatible with again: its key usage, validity or certificate policies no longer suit what they ask, or suit it again; left out when there are none, or when the check couldn't run (a notice on standard error says so) |
-| `compatibility[].use` | string | what uses the template: Windows enrollment |
-| `compatibility[].compatible` | boolean | whether the template is compatible with it after the change (or would be, with `--dry-run`) |
-| `compatibility[].wasCompatible` | boolean | whether it was compatible before the change |
-| `compatibility[].problems` | string[] | why the template is incompatible, one sentence each; empty when compatible |
 
 Side effects:
 
